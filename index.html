@@ -63,7 +63,7 @@ input.num.bad{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
 .ph select{padding:2px 4px;font-size:12px}
 .vol{color:#9aa7b5;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}.vol b{color:var(--text);font-weight:600}.hot{color:var(--yellow);font-weight:700}
 .st{padding:3px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;line-height:1.55}
-.chartWrap .st{position:absolute;left:6px;top:44px;z-index:4;pointer-events:none;border:none;background:rgba(18,24,33,0.72);border-radius:4px;padding:2px 6px;max-width:calc(100% - 90px)}
+.chartWrap .st{position:absolute;left:6px;top:44px;z-index:4;pointer-events:none;border:none;background:rgba(18,24,33,0.72);border-radius:4px;padding:2px 6px;max-width:calc(100% - 90px);white-space:normal}
 .st.open{white-space:normal}.st .v{font-weight:600}.st .sep{color:#3a4654;margin:0 5px}
 .chartWrap{position:relative;height:calc(100vh - 170px);min-height:360px}
 .chartWrap .chart{position:absolute;inset:0}
@@ -88,6 +88,7 @@ body{padding-left:42px}
 #dtb button:hover{background:#18212c;color:var(--text)}#dtb button.on{background:#24364a;color:#fff;border-color:#35506b}
 #dtb button.tog.on{color:var(--yellow);background:#2b2614;border-color:#5a4b1c}#dtb button.warn{color:var(--red);border-color:var(--red);background:#2a1416}
 #dtb svg,#mbar svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#dtb button.dis{opacity:.35}
 #dtb hr{width:24px;border:none;border-top:1px solid var(--border);margin:5px 0}
 #dtb button{position:relative}#dExport.saved::after{content:'✓';position:absolute;right:1px;bottom:0;font-size:9px;line-height:1;color:var(--green);font-weight:700}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);background:#1a2430;border:1px solid #2e3e50;color:var(--text);font-size:12px;padding:6px 12px;border-radius:7px;z-index:80;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;max-width:86vw;box-shadow:0 4px 14px rgba(0,0,0,.45)}
@@ -240,6 +241,9 @@ body{padding-left:42px}
     <div class="mrow"><label class="chk big" title="固定范围成交量分布（Fixed Range Volume Profile）"><input type="checkbox" id="mvpOn">手动 VP</label><button class="gear" data-sec="secMvp" title="参数">⚙</button></div>
     <div class="msec" id="secMvp">
       <div class="mleg">点左侧工具栏的 VP 图标 → 在任一图上拖动（或点起点、再点终点）框出时间范围；Esc 取消。点框选中，可拖动/拉左右边，按 Delete 或小工具条的 × 删除。自动使用最细的K线（通常 1分钟）计算。</div>
+      <div class="ctl" title="成交量：按 1分钟K线分布（上涨K/下跌K）；买卖分开 / Delta：用 OKX 逐笔成交的真实主动买卖方向（精确，不估算）">显示 <select id="mvpMode"><option value="vol">成交量</option><option value="bs">买卖分开</option><option value="delta">Delta</option></select></div>
+      <div class="ctl" title="买卖分开 / Delta 要下载范围内的全部逐笔成交（约 900 笔/秒）；超过这个笔数就不显示，避免等太久。BTC-USDT 现货约 300–2000 笔/分钟">逐笔上限 <input id="mvpCap" class="num" type="number" min="2" max="200" step="1">万笔</div>
+      <div class="mleg">买卖分开：每层左边=主动买、右边=主动卖（成交额 USDT）；Delta：框右侧条=主动买−主动卖（绿正红负）。数据来自 OKX 逐笔成交（约 3 个月内），POC/价值区也改用逐笔计算；标签显示全范围买、卖、Delta。</div>
       <div class="ctl" title="价格分层数 5–200（价格步长为 0 时使用）">分层数 <input id="mvpRows" class="num" type="number" min="5" max="200" step="1"></div>
       <div class="ctl" title="每层的价格高度，例如 50 = 每 50 USDT 一层；0 = 按分层数（超过 400 层时自动改用分层数）">价格步长 <input id="mvpTick" class="num" type="number" min="0" step="any" inputmode="decimal"></div>
       <div class="ctl" title="50–95">价值区 % <input id="mvpVa" class="num" type="number" min="50" max="95" step="1"></div>
@@ -249,7 +253,7 @@ body{padding-left:42px}
       <label class="chk" title="POC 线右端的小价格标签"><input type="checkbox" id="mvpTag">POC 价格</label>
       <label class="chk" title="POC 线一直延伸到图表右侧"><input type="checkbox" id="mvpExt">POC 向右延伸</label>
       <button class="rst" id="mvpClear" title="清除当前交易对三个图上的全部手动 VP">清除全部手动VP</button>
-      <div class="cpk" data-keys="mvpUp,mvpDn,mvpPoc,mvpVa,mvpBox"></div>
+      <div class="cpk" data-keys="mvpUp,mvpDn,mvpBuy,mvpSell,mvpDpos,mvpDneg,mvpPoc,mvpVa,mvpBox"></div>
     </div>
   </div>
 
@@ -343,6 +347,18 @@ function computeMVP(bars,o){
   return {lo,hi,step,rows,up,dn,tot,total,barLo,barHi,n:bars.length,pocIdx:poc,vaUp:u,vaDn:d,
     poc:lo+(poc+0.5)*step, vah:lo+(u+1)*step, val:lo+d*step, vaVol:acc};
 }
+// 逐笔成交的分布：px/q/b 为价格、成交额、是否主动买（1/0），取 [i0,i1)；分层规则与 computeMVP 相同（范围取 K线高低与成交价的并集）
+function computeDeltaVP(px,q,b,i0,i1,barLo,barHi,o){ o=o||{}; if(!(i1>i0)) return null;
+  let lo=barLo==null?Infinity:barLo, hi=barHi==null?-Infinity:barHi; for(let i=i0;i<i1;i++){ if(px[i]<lo) lo=px[i]; if(px[i]>hi) hi=px[i]; }
+  const bLo=lo,bHi=hi, maxRows=o.maxRows||400; let rows=Math.max(1,Math.round(o.rows||24)); const tick=+o.tick||0;
+  if(tick>0){ const l=Math.floor(lo/tick+1e-9)*tick; let h=Math.ceil(hi/tick-1e-9)*tick; if(h<=l) h=l+tick; const n=Math.round((h-l)/tick); if(n<=maxRows){ lo=l; hi=h; rows=n; } }
+  if(!(hi>lo)) hi=lo+Math.max(Math.abs(lo)*1e-6,1e-8);
+  const step=(hi-lo)/rows, up=new Float64Array(rows), dn=new Float64Array(rows); let buy=0,sell=0;
+  for(let i=i0;i<i1;i++){ const r=Math.min(rows-1,Math.max(0,Math.floor((px[i]-lo)/step+1e-9))); if(b[i]){ up[r]+=q[i]; buy+=q[i]; } else { dn[r]+=q[i]; sell+=q[i]; } }
+  const tot=new Float64Array(rows); let poc=0; for(let r=0;r<rows;r++){ tot[r]=up[r]+dn[r]; if(tot[r]>tot[poc]) poc=r; }
+  const total=buy+sell, target=total*(o.va==null?70:o.va)/100; let u=poc,d=poc,acc=tot[poc];
+  while(acc<target-1e-12*total&&(u<rows-1||d>0)){ const vu=u<rows-1?tot[u+1]:-1, vd=d>0?tot[d-1]:-1; if(vu>=vd){ u++; acc+=tot[u]; } else { d--; acc+=tot[d]; } }
+  return {lo,hi,step,rows,up,dn,tot,total,buy,sell,delta:buy-sell,trades:i1-i0,barLo:bLo,barHi:bHi,pocIdx:poc,vaUp:u,vaDn:d,poc:lo+(poc+0.5)*step,vah:lo+(u+1)*step,val:lo+d*step,vaVol:acc,exact:true}; }
 // 取 [t0,t1) 内的K线（ts 秒）
 function sliceBars(bars,t0,t1){ const out=[]; for(const b of bars||[]) if(b.ts>=t0&&b.ts<t1) out.push(b); return out; }
 // 按 ts 合并（后者覆盖前者，用于实时补尾），返回升序新数组
@@ -514,6 +530,7 @@ const CDEF={
   ma:{c:'#4aa3ff',a:0.85,n:'均量线'}, ma50:{c:'#ff9800',a:0.85,n:'MA50'},
   lowUpK:{c:'#8a8f98',n:'缩量阳K'}, lowDnK:{c:'#5c6170',n:'缩量阴K'}, lowVolUp:{c:'#8a8f98',a:0.45,n:'缩量阳量'}, lowVolDn:{c:'#5c6170',a:0.45,n:'缩量阴量'},
   mvpUp:{c:'#2196f3',a:0.6,n:'上涨量'}, mvpDn:{c:'#fbc02d',a:0.6,n:'下跌量'}, mvpPoc:{c:'#ff3b30',a:1,n:'POC'}, mvpVa:{c:'#b388ff',a:0.8,n:'VAH/VAL'}, mvpBox:{c:'#4aa3ff',a:0.06,n:'范围框'},
+  mvpBuy:{c:'#26a69a',a:0.7,n:'主动买'}, mvpSell:{c:'#ef5350',a:0.7,n:'主动卖'}, mvpDpos:{c:'#00e676',a:0.85,n:'Delta+'}, mvpDneg:{c:'#ff1744',a:0.85,n:'Delta−'},
   drTrend:{c:'#4aa3ff',n:'趋势线'}, drLine:{c:'#f5c542',n:'水平/垂直线'}, drRect:{c:'#b388ff',a:0.15,n:'矩形'}, drFib:{c:'#ff9800',n:'斐波那契'}, drText:{c:'#d6dde6',n:'文字'},
   drPos:{c:'#d6dde6',n:'仓位入场线'}, drTp:{c:'#26a69a',a:0.22,n:'止盈区'}, drSl:{c:'#ef5350',a:0.22,n:'止损区'}, drMeasure:{c:'#4aa3ff',a:0.15,n:'测量'} };
 function loadColors(sc){ const o={}; sc=sc&&typeof sc==='object'?sc:{};
@@ -539,7 +556,7 @@ const state = {
   colors: loadColors(saved.colors),
   low: (()=>{ const l=saved.low||{}, m=Number(l.mult); return { on:l.on!==false, mult:(isFinite(m)&&m>=0.1&&m<=1)?Math.round(m*100)/100:0.5 }; })(),
   mvp: (()=>{ const m=saved.mvp||{}, tk=Number(m.tick); return { on:m.on!==false, rows:vInt(m.rows,5,200)||24, tick:(isFinite(tk)&&tk>=0&&tk<=1e6)?tk:0, va:vInt(m.va,50,95)||70, width:vInt(m.width,10,100)||40,
-    vaOn:m.vaOn!==false, box:m.box!==false, tag:m.tag!==false, ext:!!m.ext }; })(),
+    vaOn:m.vaOn!==false, box:m.box!==false, tag:m.tag!==false, ext:!!m.ext, mode:['vol','bs','delta'].includes(m.mode)?m.mode:'vol', dCap:vInt(m.dCap,2,200)||20 }; })(),
   draw: (()=>{ const d=saved.draw||{}; return {magnet:!!d.magnet, lockAll:!!d.lockAll, hidden:!!d.hidden}; })(),
   panels: [], ws:null, wsTimer:null, pingTimer:null, retry:0, gen:0, lastPrice:null,
 };
@@ -600,7 +617,7 @@ function buildPanels(){
     initDrawPanel(p); if(DR.tool!=='cursor') p.drwOv.style.display='block';
     state.panels.push(p);
   });
-  renderPanelMa(); if(typeof alRenderTfs==='function') alRenderTfs();
+  renderPanelMa(); if(typeof alRenderTfs==='function') alRenderTfs(); if(typeof uhUi==='function') uhUi();
 }
 // 各图单独均量周期（放在“指标”菜单 → 成交量 ⚙ 里）
 function renderPanelMa(){
@@ -816,8 +833,35 @@ const dList=p=>{ const k=dKey(); if(!Array.isArray(DR.store[k])) DR.store[k]=[];
 const VPK=()=>state.symbol+'|VP';
 const mvpList=()=>{ const k=VPK(); if(!Array.isArray(DR.store[k])) DR.store[k]=[]; return DR.store[k]; };   // 共享（与周期无关）
 function dSave(){ for(const k of Object.keys(DR.store)) if(!DR.store[k]||!DR.store[k].length) delete DR.store[k];   // _ 开头为缓存，不保存
+  uhRecord();   // 撤销记录
   const st=syncStamp(DR.store,DR.snap,DR.tomb,Date.now()); DR.snap=st.snap;   // 云同步：标记修改时间 / 删除记录
   try{ const j=drawJson(); LS.setItem(DRAW_KEY,j); DR.savedJ=j; if(st.changed) LS.setItem('vp_tomb',JSON.stringify(DR.tomb)); savedTick(); if(st.changed) csKick(); return true; }catch(e){ saveFail(e); return false; } }
+// ---- 撤销 / 重做（Ctrl+Z / Cmd+Z 撤销；Ctrl+Y / Ctrl+Shift+Z 重做）：按交易对各自保存最多 100 步 ----
+// 每次 dSave 自动比较前后差异（新建 / 删除 / 移动 / 改属性 / 🔔 / 导入 都经过 dSave）；撤销 = 把相关画图改回去再 dSave → 对云同步来说就是一次新的修改（删除 → 删除记录；恢复 → 新的修改时间，比删除记录新，所以会“复活”）
+const UH={last:null,st:{},mute:false,MAX:100};
+const uhSig=d=>JSON.stringify(d,(k,v)=>k[0]==='_'||k==='u'?undefined:v);
+function uhMap(){ const m=new Map(); for(const k of Object.keys(DR.store)){ if(!/\|(D|VP)$/.test(k)||!Array.isArray(DR.store[k])) continue; DR.store[k].forEach((d,i)=>{ if(d&&d.id!=null) m.set(k+'#'+d.id,{j:uhSig(d),i}); }); } return m; }
+function uhRecord(){ const cur=uhMap(), last=UH.last||new Map(); UH.last=cur; if(UH.mute) return;
+  const by={}, add=(k,b,a,bi)=>{ const sym=k.slice(0,k.indexOf('|')); (by[sym]=by[sym]||[]).push({k,b,a,bi}); };
+  for(const [k,v] of cur){ const o=last.get(k); if(!o) add(k,null,v.j,null); else if(o.j!==v.j) add(k,o.j,v.j,o.i); }
+  for(const [k,o] of last) if(!cur.has(k)) add(k,o.j,null,o.i);
+  const now=Date.now();
+  for(const [sym,ch] of Object.entries(by)){ const S=UH.st[sym]=UH.st[sym]||{u:[],r:[]}, top=S.u[S.u.length-1];
+    if(top&&now-top.t<800&&ch.every(c=>c.b&&c.a)&&ch.every(c=>top.ch.some(x=>x.k===c.k&&x.a))&&ch.length===top.ch.length){ ch.forEach(c=>{ top.ch.find(x=>x.k===c.k).a=c.a; }); top.t=now; }   // 连续调颜色等：合并成一步
+    else { S.u.push({ch,t:now}); if(S.u.length>UH.MAX) S.u.shift(); }
+    S.r=[]; }
+  uhUi(); }
+function uhApply(ch,w){ for(const c of ch){ const i=c.k.indexOf('#'), sk=c.k.slice(0,i), id=c.k.slice(i+1), v=c[w]; let L=DR.store[sk]; if(!Array.isArray(L)) L=DR.store[sk]=[];
+    const j=L.findIndex(d=>d&&String(d.id)===id);
+    if(v==null){ if(j>=0) L.splice(j,1); }
+    else { const o=JSON.parse(v); if(j>=0) L[j]=o; else L.splice(w==='b'&&c.bi!=null?Math.min(c.bi,L.length):L.length,0,o); } } }
+function uhStep(redo){ if(DR.drag||DR.draft||DR.edit) return false; const S=UH.st[state.symbol]; const from=S&&(redo?S.r:S.u); if(!from||!from.length){ toast(redo?'没有可以重做的操作':'没有可以撤销的操作'); return false; }
+  const e=from.pop(); uhApply(e.ch,redo?'a':'b'); UH.mute=true; try{ dSave(); } finally{ UH.mute=false; } (redo?S.u:S.r).push(e);
+  if(DR.sel&&DR.sel.id!=='tmp'&&!selD()) DR.sel=null; if(e.ch.some(c=>c.k.includes('|VP#'))) mvpLoadAll(); redrawAll(); posMiniBar(); if(typeof alRenderList==='function') alRenderList();
+  const n=e.ch.length; toast(`${redo?'↷ 重做':'↶ 撤销'}${n>1?`（${n} 个画图）`:''}`); uhUi(); return true; }
+const uhUndo=()=>uhStep(false), uhRedo=()=>uhStep(true);
+function uhUi(){ const S=UH.st[state.symbol], u=$('dUndo'), r=$('dRedo'); if(u) u.classList.toggle('dis',!(S&&S.u.length)); if(r) r.classList.toggle('dis',!(S&&S.r.length)); }
+UH.last=uhMap();
 const drawJson=()=>{ const o={}; for(const k of Object.keys(DR.store)) if(DR.store[k]&&DR.store[k].length) o[k]=DR.store[k]; return JSON.stringify(o,(k,v)=>k[0]==='_'?undefined:v); };   // 空列表不算改动
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const selD=()=>{ const s=DR.sel; if(!s) return null; if(s.id==='tmp') return DR.tmp&&DR.tmp.p===s.p?DR.tmp.d:null; return dList(s.p).find(d=>d.id===s.id)||mvpList().find(d=>d.id===s.id)||null; };
@@ -881,7 +925,7 @@ function drawMVP(p){
   ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,paneH); ctx.clip();
   const Y=v=>yOfP(p,v), list=M.on&&!state.draw.hidden?mvpList().slice():[];
   const dr=DR.draft&&DR.draft.p===p&&DR.draft.type==='mvp'&&DR.draft.d; if(dr&&M.on) list.push(dr);
-  for(const pr of list){ const isDraft=pr===dr, r=isDraft?null:mvpCalc(p,pr), sp=mvpSpanL(p.candles,TF_SEC[p.tf],pr.t0,pr.t1); if(!sp) continue;
+  for(const pr of list){ const isDraft=pr===dr; let r=isDraft?null:mvpCalc(p,pr); const sp=mvpSpanL(p.candles,TF_SEC[p.tf],pr.t0,pr.t1); if(!sp) continue;
     const x0=xOfL(p,sp[0]-0.5), x1=xOfL(p,sp[1]+0.5); if(x0==null||x1==null) continue;   // 框：t0 所在K线左边 → t1 前一刻所在K线右边（大周期上至少 1 根宽）
     let hi,lo; if(r){ hi=r.barHi; lo=r.barLo; } else { const bs=sliceBars(p.candles,pr.t0,pr.t1); if(!bs.length&&!isDraft) continue; hi=-Infinity; lo=Infinity; bs.forEach(b=>{ if(b.high>hi) hi=b.high; if(b.low<lo) lo=b.low; }); }
     const L=Math.min(x0,x1), R=Math.max(x0,x1), bw=Math.max(1,R-L); let top=0,bh=paneH;
@@ -889,6 +933,7 @@ function drawMVP(p){
     if(isDraft){ ctx.fillStyle=CR('mvpBox',0.12); ctx.fillRect(L,top,bw,bh); ctx.strokeStyle=CR('mvpBox',0.9); ctx.setLineDash([4,3]); ctx.lineWidth=1; ctx.strokeRect(Math.round(L)+0.5,Math.round(top)+0.5,Math.round(bw)-1,Math.round(bh)-1); ctx.setLineDash([]); continue; }
     const sel=!!(DR.sel&&DR.sel.id===pr.id); p.mvpHit.push({id:pr.id,L,R,top,bot:top+bh});
     if(!r||R<0||L>W) continue;
+    let dz=null, ku='mvpUp', kd='mvpDn'; if(M.mode!=='vol'){ trEnsure(pr,false); const x=mvpDeltaCalc(pr,r); if(x&&x.st==='ok'){ dz=x; r=x; ku='mvpBuy'; kd='mvpSell'; } }   // 逐笔：买卖分开 / Delta
     if(M.box){ ctx.fillStyle=CA('mvpBox'); ctx.fillRect(L,top,bw,bh); }
     if(M.box||sel){ ctx.strokeStyle=sel?CR('mvpBox',1):CR('mvpBox',Math.min(1,(state.colors.mvpBox.a||0)*4+0.15)); ctx.lineWidth=1; ctx.setLineDash(sel?[4,3]:[]); ctx.strokeRect(Math.round(L)+0.5,Math.round(top)+0.5,Math.round(bw)-1,Math.round(bh)-1); ctx.setLineDash([]); }
     let mx=0; for(let k=0;k<r.rows;k++) if(r.tot[k]>mx) mx=r.tot[k];
@@ -896,7 +941,11 @@ function drawMVP(p){
       for(let k=0;k<r.rows;k++){ const t=r.tot[k]; if(!(t>0)) continue; const a=Y(r.lo+(k+1)*r.step), b=Y(r.lo+k*r.step); if(a==null||b==null) continue;
         const y=Math.min(a,b), hh=Math.abs(b-a), gap=hh>3?1:0, len=t/mx*maxLen, ul=len*r.up[k]/t, am=(!M.vaOn||(k>=r.vaDn&&k<=r.vaUp))?1:0.45;
         if(y>paneH||y+hh<0) continue;
-        ctx.fillStyle=CA('mvpUp',am); ctx.fillRect(L,y+gap/2,ul,Math.max(0.6,hh-gap)); ctx.fillStyle=CA('mvpDn',am); ctx.fillRect(L+ul,y+gap/2,len-ul,Math.max(0.6,hh-gap)); } }
+        ctx.fillStyle=CA(ku,am); ctx.fillRect(L,y+gap/2,ul,Math.max(0.6,hh-gap)); ctx.fillStyle=CA(kd,am); ctx.fillRect(L+ul,y+gap/2,len-ul,Math.max(0.6,hh-gap)); } }
+    if(dz&&M.mode==='delta'){ let mxd=0; for(let k=0;k<r.rows;k++){ const v=Math.abs(r.up[k]-r.dn[k]); if(v>mxd) mxd=v; }   // Delta 条：从框右边向左，绿=主动买多，红=主动卖多
+      if(mxd>0){ const maxLen=bw*Math.min(0.45,M.width/100*0.6); for(let k=0;k<r.rows;k++){ const v=r.up[k]-r.dn[k]; if(!v) continue; const a=Y(r.lo+(k+1)*r.step), b=Y(r.lo+k*r.step); if(a==null||b==null) continue;
+          const y=Math.min(a,b), hh=Math.abs(b-a), gap=hh>3?1:0, len=Math.max(1,Math.abs(v)/mxd*maxLen); if(y>paneH||y+hh<0) continue; ctx.fillStyle=CA(v>0?'mvpDpos':'mvpDneg'); ctx.fillRect(R-len,y+gap/2,len,Math.max(0.6,hh-gap)); }
+        ctx.fillStyle=CR('mvpBox',0.5); ctx.fillRect(Math.round(R)-1,top,1,bh); } }
     if(M.vaOn){ ctx.strokeStyle=CA('mvpVa'); ctx.lineWidth=1; ctx.setLineDash([4,3]); [r.vah,r.val].forEach(v=>{ const y=Y(v); if(y==null) return; ctx.beginPath(); ctx.moveTo(L,Math.round(y)+0.5); ctx.lineTo(R,Math.round(y)+0.5); ctx.stroke(); }); ctx.setLineDash([]); }
     const yp=Y(r.poc); if(yp!=null){ const xe=M.ext?W:R; ctx.strokeStyle=CA('mvpPoc'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(L,Math.round(yp)+0.5); ctx.lineTo(xe,Math.round(yp)+0.5); ctx.stroke();
       if(M.tag) priceTag(ctx,r.poc,Math.min(xe,W),yp,CA('mvpPoc'),L+2); }
@@ -906,13 +955,83 @@ function updMvpStatus(p){ const el=p.mvpStEl; if(!el) return; const pr=DR.sel?mv
   const show=v=>{ const s=p.stEl; if(!s) return; s.style.display=v?'':'none'; if(v){ const o=p.wrap.querySelector('.ohlc'); s.style.top=((o&&o.offsetHeight?o.offsetTop+o.offsetHeight:4)+3)+'px'; } };
   if(!pr||!state.mvp.on){ if(el.innerHTML) el.innerHTML=''; show(false); return; } const r=mvpCalc(p,pr); if(!r){ el.innerHTML=''; show(false); return; } show(true);
   const fine=mvpFine(pr), d=DR.cache.get(mvpCk(pr,fine)), ld=d&&d.loading?' 加载中…':'';
-  el.innerHTML=`手动VP <span class="v" style="color:${C('mvpPoc')}">POC ${fmt(r.poc)}</span>`+(state.mvp.vaOn?` VAH <span class="v">${fmt(r.vah)}</span> VAL <span class="v">${fmt(r.val)}</span>`:'')+` · ${r.fine}×${r.n}根${mvpLive(p,pr)?' · 实时':''}${ld}<span class="sep">|</span>`;
+  const dz=state.mvp.mode!=='vol'?mvpDeltaCalc(pr,r):null, Q=dz&&dz.st==='ok'?dz:r, sg=v=>(v>0?'+':'')+fmtVol(v);
+  let dtx=''; if(dz){ const st=dz.st;
+    if(st==='ok'){ const pc=dz.total?dz.delta/dz.total*100:0; dtx=` · 买 <span class="v" style="color:${C('mvpBuy')}">${fmtVol(dz.buy)}</span> 卖 <span class="v" style="color:${C('mvpSell')}">${fmtVol(dz.sell)}</span> Delta <span class="v" style="color:${dz.delta>=0?C('mvpDpos'):C('mvpDneg')}">${sg(dz.delta)}</span> (${pc>=0?'+':''}${pc.toFixed(1)}%) · 逐笔 ${dz.trades.toLocaleString()} 笔`; }
+    else if(st==='load') dtx=` · Delta 加载逐笔中 ${Math.round((dz.prog||0)*100)}%${dz.got?`（${dz.got.toLocaleString()} 笔）`:''}`;
+    else if(st==='big') dtx=` · Delta：约 ${Math.round((dz.est||0)/1e4)} 万笔，超过上限 ${state.mvp.dCap} 万（缩小范围或在设置里提高上限）`;
+    else if(st==='old') dtx=' · Delta：超过约 3 个月，交易所不提供逐笔数据';
+    else if(st==='src') dtx=' · Delta 只支持 OKX 数据源';
+    else if(st==='empty') dtx=' · 范围内没有逐笔成交';
+    else dtx=' · Delta 加载失败，稍后自动重试'; }
+  el.innerHTML=`手动VP <span class="v" style="color:${C('mvpPoc')}">POC ${fmt(Q.poc)}</span>`+(state.mvp.vaOn?` VAH <span class="v">${fmt(Q.vah)}</span> VAL <span class="v">${fmt(Q.val)}</span>`:'')+(dz&&dz.st==='ok'?'':` · ${r.fine}×${r.n}根`)+`${mvpLive(p,pr)?' · 实时':''}${ld}${dtx}<span class="sep">|</span>`;
   el.title=`范围 ${fmtT(pr.t0,p.tf)} → ${fmtT(pr.t1,p.tf)} (UTC+8)，高 ${fmt(r.barHi)} 低 ${fmt(r.barLo)}，总成交额 ${fmtVol(r.total)} ${quoteCcy()}。Delete 删除`; }
 function mvpAdd(p,t0,t1){ if(!(t1>t0)) return null; const list=mvpList(); const pr={id:newId(),type:'mvp',t0,t1}; list.push(pr); dSave();
   if(!state.mvp.on){ state.mvp.on=true; $('mvpOn').checked=true; save(); syncDis(); }
   dSelect(p,pr.id); mvpLoad(p,pr,false); return pr; }
 function mvpClearAll(){ delete DR.store[VPK()]; dSave(); DR.sel=null; redrawAll(); log('手动VP：已清除 '+state.symbol+' 的全部手动成交量分布'); }
 function mvpLoadAll(){ mvpList().forEach(pr=>mvpLoad(null,pr,false)); redrawAll(); }
+// ---- 手动VP 的买卖量 / Delta：OKX 逐笔成交（history-trades，含主动买/卖方向）→ 每个价格层精确的主动买入、主动卖出成交额（USDT） ----
+// 只用交易所真实逐笔数据，不估算：交易所只保留约 3 个月逐笔；范围内成交笔数超过上限时不显示（不显示部分数据）
+const TRD={map:new Map(),stamps:[],inst:new Map()};
+async function trJson(url){ for(let k=0;k<6;k++){ let w; while((w=limDelay(TRD.stamps,9,1000,Date.now()))>0) await sleep(w+5); TRD.stamps.push(Date.now());   // history-trades 限流 20 次/2 秒，这里 ≤ 9 次/秒
+    const j=await (await fetch(url,{cache:'no-store'})).json(); if(j.code==='50011'){ await sleep(700*(k+1)); continue; } if(j.code!=='0') throw new Error('OKX: '+(j.msg||j.code)); return j.data; }
+  throw new Error('OKX: 请求过于频繁'); }
+// 成交额换算：现货 sz=基础币；U 本位合约 sz=张 × ctVal（基础币）；币本位合约 sz=张 × ctVal（USD）
+async function trInst(sym){ if(TRD.inst.has(sym)) return TRD.inst.get(sym); let info={kind:'spot'};
+  if(okxIsDeriv(sym)){ const tp=/-SWAP$/i.test(sym)?'SWAP':'FUTURES', d=(await okxJson(`https://www.okx.com/api/v5/public/instruments?instType=${tp}&instId=${encodeURIComponent(sym)}`)).data[0];
+    if(!d) throw new Error('找不到合约信息'); info={kind:d.ctType==='inverse'?'inverse':'linear',ctVal:+d.ctVal}; }
+  TRD.inst.set(sym,info); return info; }
+const trQuote=(info,px,sz)=>info.kind==='spot'?px*sz:info.kind==='linear'?sz*info.ctVal*px:sz*info.ctVal;
+// 往回翻页取逐笔：先按时间（type=2，取 toMs 之前），再按成交 ID（type=1，不重不漏）；遇到 ts < fromMs 或 ID ≤ stopId 停止。返回升序（按 ID）
+async function trFetchBack(sym,info,fromMs,toMs,stopId,onPage,alive){ const out=[]; let minId=Infinity, url=`https://www.okx.com/api/v5/market/history-trades?instId=${encodeURIComponent(sym)}&type=2&after=${Math.floor(toMs)}&limit=100`, ended=false;
+  for(;;){ if(!alive()) throw Object.assign(new Error('cancel'),{cancel:true}); const rows=await trJson(url); if(!rows.length){ ended=true; break; } let stop=false, oldest=Infinity;
+    for(const r of rows){ const id=+r.tradeId, ts=+r.ts; if(id>=minId) continue; if(stopId!=null&&id<=stopId){ stop=true; continue; } if(ts<fromMs){ stop=true; continue; } if(ts>=toMs) continue;
+      out.push([id,ts,+r.px,trQuote(info,+r.px,+r.sz),r.side==='buy'?1:0]); }
+    for(const r of rows){ const id=+r.tradeId; if(id<minId) minId=id; if(+r.ts<oldest) oldest=+r.ts; }
+    if(onPage&&onPage(out.length,oldest)===false) throw Object.assign(new Error('big'),{big:true});
+    if(stop) break; url=`https://www.okx.com/api/v5/market/history-trades?instId=${encodeURIComponent(sym)}&type=1&after=${minId}&limit=100`; }
+  out.reverse(); return {rows:out,ended}; }
+const trKey=pr=>state.source+'|'+state.symbol+'|'+pr.id;
+// 确保这个手动VP 范围内的逐笔数据齐全（缺左边 / 右边 / 实时尾部 就补拉）
+function trEnsure(pr,tail){ if(state.source!=='okx'||state.mvp.mode==='vol') return; const key=trKey(pr); let T=TRD.map.get(key);
+  const t0=pr.t0*1000, now=nowSrv(), t1=Math.min(pr.t1*1000,now);
+  if(!T){ T={key,id:[],ts:[],px:[],q:[],b:[],cf:null,ct:null,loading:false,err:'',prog:0,ver:0,got:0}; TRD.map.set(key,T); }
+  if(T.loading) return; if(T.err&&T.errFor===pr.t0+'|'+pr.t1+'|'+state.mvp.dCap) return;
+  let job=null;
+  if(T.cf==null) job={from:t0,to:t1,where:'all'};
+  else if(t0<T.cf) job={from:t0,to:T.cf,where:'left',stopId:null};
+  else if(t1>T.ct+(tail?0:1000)&&(tail||pr.t1*1000<=now)) job={from:T.ct-3000,to:t1,where:'right',stopId:T.id.length?T.id[T.id.length-1]:null};
+  if(!job) return;
+  if(job.where!=='right'&&now-t0>92*864e5){ T.err='old'; T.errFor=pr.t0+'|'+pr.t1+'|'+state.mvp.dCap; return; }
+  const sym=state.symbol, cap=state.mvp.dCap*1e4, span=job.to-job.from, base=T.id.length;
+  T.loading=true; T.err=''; T.prog=0; const alive=()=>state.symbol===sym&&state.mvp.mode!=='vol'&&mvpList().some(x=>x.id===pr.id);
+  (async()=>{ try{ const info=await trInst(sym);
+      // 长范围：分成最多 4 段并行拉取（共用限流），每段 [a,b) 互不重叠
+      const NC=job.where==='right'?1:Math.max(1,Math.min(4,Math.ceil(span/600000))), cut=k=>job.from+span*k/NC, got=new Array(NC).fill(0), done=new Array(NC).fill(0);
+      const onP=k=>(n,oldest)=>{ got[k]=n; done[k]=Math.min(1,(cut(k+1)-oldest)/(span/NC)); const N=got.reduce((x,y)=>x+y,0), pg=done.reduce((x,y)=>x+y,0)/NC; T.got=N; T.prog=pg;
+          const est=pg>0.02?N/pg:N; T.est=est; if(base+N>cap||(pg>0.05&&N>2000&&base+est>cap*1.3)) return false; if(n%2000<100) scheduleVP(); };
+      const parts=await Promise.all([...Array(NC)].map((_,k)=>trFetchBack(sym,info,cut(k),cut(k+1),job.stopId,onP(k),()=>alive()&&!(T.err==='big'))));
+      const r={rows:[].concat(...parts.map(x=>x.rows)).sort((x,y)=>x[0]-y[0]),ended:parts[0].ended};
+      if(job.where==='all'&&r.ended&&(!r.rows.length||r.rows[0][1]>t0+120000)){ T.err='old'; T.errFor=pr.t0+'|'+pr.t1+'|'+state.mvp.dCap; return; }
+      const R=r.rows, put=(arr,pos)=>{ const cols=[[],[],[],[],[]]; for(const x of arr) for(let c=0;c<5;c++) cols[c].push(x[c]);
+        const ks=['id','ts','px','q','b']; ks.forEach((k,c)=>{ T[k]=pos==='left'?cols[c].concat(T[k]):T[k].concat(cols[c]); }); };
+      if(job.where==='all'){ put(R,'right'); T.cf=job.from; T.ct=job.to; }
+      else if(job.where==='left'){ const mn=T.id.length?T.id[0]:Infinity; put(R.filter(x=>x[0]<mn),'left'); T.cf=job.from; }
+      else { const mx=T.id.length?T.id[T.id.length-1]:-Infinity; put(R.filter(x=>x[0]>mx),'right'); T.ct=job.to; }
+      T.ver++; T.prog=1; if(job.where!=='right') log(`手动VP Delta：逐笔成交 ${T.id.length.toLocaleString()} 笔（OKX history-trades，精确买卖方向）`); }
+    catch(e){ if(e.cancel){} else if(e.big){ T.err='big'; T.errFor=pr.t0+'|'+pr.t1+'|'+state.mvp.dCap; if(job.where==='all'){ T.id=[];T.ts=[];T.px=[];T.q=[];T.b=[];T.cf=null;T.ct=null; } }
+      else { T.err='net'; T.errMsg=e.message; T.errFor=pr.t0+'|'+pr.t1+'|'+state.mvp.dCap; setTimeout(()=>{ if(T.err==='net'){ T.err=''; scheduleVP(); } },15000); } }
+    finally{ T.loading=false; scheduleVP(); } })(); }
+const lowerTs=(a,x)=>{ let lo=0,hi=a.length; while(lo<hi){ const m=(lo+hi)>>1; if(a[m]<x) lo=m+1; else hi=m; } return lo; };
+// 用逐笔数据算的分布（与 computeMVP 相同的分层规则）；r.up=主动买、r.dn=主动卖
+function mvpDeltaCalc(pr,base){ if(state.source!=='okx') return {st:'src'}; const T=TRD.map.get(trKey(pr)); if(!T) return {st:'load',prog:0};
+  if(T.err) return {st:T.err,est:T.est,msg:T.errMsg}; const t0=pr.t0*1000, t1=pr.t1*1000;
+  if(T.cf==null||T.cf>t0||(T.ct<Math.min(t1,nowSrv()-10000)&&T.loading)) return {st:'load',prog:T.prog,got:T.got,est:T.est};
+  const i0=lowerTs(T.ts,t0), i1=lowerTs(T.ts,t1), M=state.mvp, sig=T.ver+'|'+i0+'|'+i1+'|'+M.rows+'|'+M.tick+'|'+M.va+'|'+(base?base.barLo+'|'+base.barHi:'');
+  if(pr._dsig===sig) return pr._dres; pr._dsig=sig;
+  pr._dres=computeDeltaVP(T.px,T.q,T.b,i0,i1,base?base.barLo:null,base?base.barHi:null,{rows:M.rows,tick:M.tick,va:M.va}); if(pr._dres){ pr._dres.st='ok'; pr._dres.live=T.loading; } else pr._dres={st:'empty'}; return pr._dres; }
+
 
 // ---- 画图：绘制 ----
 const DEFC={trend:'drTrend',hline:'drLine',hray:'drLine',vline:'drLine',rect:'drRect',fib:'drFib',text:'drText',long:'drPos',short:'drPos',measure:'drMeasure'};
@@ -1066,6 +1185,7 @@ const ICON={
   pen:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',
   ext:'<path d="M3 17 17 7"/><circle cx="6" cy="15" r="1.6"/><path d="m15 5 4 0 0 4"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', redo:'<path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>',
   bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 // ---- 自动保存提示 / 失败提示 / 导出导入 ----
@@ -1132,7 +1252,7 @@ async function csPullRemote(id){ const r=await gh('GET','/gists/'+id,null,CS.eta
   CS.etag=r.headers.get('etag'); CS.remote=p; return p; }
 function csApply(m){ if(DR.drag||DR.draft) return false;   // 正在画/拖动时先不覆盖，下次再合并
   for(const k of Object.keys(DR.store)) delete DR.store[k]; for(const [k,v] of Object.entries(m.drawings)) DR.store[k]=v.slice();
-  DR.tomb=m.tomb; DR.snap=syncSnap(DR.store);
+  DR.tomb=m.tomb; DR.snap=syncSnap(DR.store); UH.last=uhMap();   // 云端来的改动不进撤销记录
   try{ const j=drawJson(); LS.setItem(DRAW_KEY,j); DR.savedJ=j; LS.setItem('vp_tomb',JSON.stringify(DR.tomb)); }catch(e){ saveFail(e); }
   if(DR.sel&&DR.sel.id!=='tmp'&&!selD()) DR.sel=null; mvpLoadAll(); redrawAll(); posMiniBar(); return true; }
 async function csSync(why){ if(!csTok()){ csSet('off','未开启'); return; }
@@ -1172,7 +1292,8 @@ function buildToolbar(){
     `<button id="dMagnet" class="tog" title="磁铁：吸附到K线的开/高/低/收" aria-label="磁铁">${svg('magnet')}</button>`+
     `<button id="dLock" class="tog" title="锁定全部画图（不能拖动）" aria-label="锁定全部画图">${svg('lock')}</button>`+
     `<button id="dHide" class="tog" title="隐藏 / 显示全部画图" aria-label="隐藏全部画图">${svg('eye')}</button>`+
-    `<button id="dTrash" title="删除全部画图（当前交易对三个周期，需再点一次确认）" aria-label="删除全部画图">${svg('trash')}</button><hr>`+
+    `<button id="dTrash" title="删除全部画图（当前交易对三个周期，需再点一次确认）" aria-label="删除全部画图">${svg('trash')}</button>`+
+    `<button id="dUndo" class="dis" title="撤销（Ctrl+Z / ⌘Z）" aria-label="撤销">${svg('undo')}</button><button id="dRedo" class="dis" title="重做（Ctrl+Y / Ctrl+Shift+Z / ⌘⇧Z）" aria-label="重做">${svg('redo')}</button><hr>`+
     `<button id="dExport" title="导出画图（备份成 JSON 文件，含全部交易对的画图、手动VP、设置和布局；自动保存后这里会闪一下 ✓）" aria-label="导出画图">${svg('exp')}</button>`+
     `<button id="dImport" title="导入画图（从导出的 JSON 文件恢复，可选合并或替换）" aria-label="导入画图">${svg('imp')}</button><input type="file" id="dImportFile" accept=".json,application/json" hidden>`+
     `<button id="dCloud" class="cs-off" title="云同步：未开启（点击设置）" aria-label="云同步">${svg('cloud')}</button>`;
@@ -1184,7 +1305,8 @@ function buildToolbar(){
   $('dHide').onclick=()=>{ D.hidden=!D.hidden; save(); ui(); if(D.hidden){ DR.sel=null; } redrawAll(); posMiniBar(); };
   const tb=$('dTrash'); let tT=0; tb.onclick=()=>{ if(!tb.classList.contains('warn')){ tb.classList.add('warn'); tb.title='再点一次确认删除全部画图'; clearTimeout(tT); tT=setTimeout(()=>{ tb.classList.remove('warn'); tb.title='删除全部画图（当前交易对三个周期，需再点一次确认）'; },3000); return; }
     clearTimeout(tT); tb.classList.remove('warn'); dClearAll(); };
-  ui(); setTool('cursor'); initIO(); initCloud();
+  $('dUndo').onclick=()=>uhUndo(); $('dRedo').onclick=()=>uhRedo();
+  ui(); setTool('cursor'); initIO(); initCloud(); uhUi();
   $('dtbToggle').innerHTML=svg('pen'); $('dtbToggle').onclick=e=>{ e.stopPropagation(); toggleTb(); }; }
 function toggleTb(v){ const n=$('dtb'), on=v==null?!n.classList.contains('open'):v; n.classList.toggle('open',on); $('dtbToggle').classList.toggle('on',on); }
 // ---- 选中后的小工具条 ----
@@ -1262,18 +1384,21 @@ function initDrawControls(){
   numCtl('mvpRows',5,200,()=>M.rows,n=>{ M.rows=n; re(); });
   numCtl('mvpVa',50,95,()=>M.va,n=>{ M.va=n; re(); });
   numCtl('mvpW',10,100,()=>M.width,n=>{ M.width=n; re(); });
+  $('mvpMode').value=M.mode; $('mvpMode').onchange=e=>{ M.mode=e.target.value; re(); scheduleVP(); };
+  numCtl('mvpCap',2,200,()=>M.dCap,n=>{ M.dCap=n; re(); });
   const tk=$('mvpTick'); tk.value=M.tick||0;
   const onTk=commit=>{ const s=tk.value.trim(), n=Number(s), ok=s!==''&&isFinite(n)&&n>=0&&n<=1e6; tk.classList.toggle('bad',!ok); if(ok){ if(n!==M.tick){ M.tick=n; re(); } } else if(commit){ tk.value=M.tick; tk.classList.remove('bad'); } };
   tk.addEventListener('input',()=>onTk(false)); tk.addEventListener('change',()=>onTk(true));
   const cb=$('mvpClear'); let armT=0; cb.onclick=()=>{ if(!cb.classList.contains('warn')){ cb.classList.add('warn'); cb.textContent='再点一次确认清除'; clearTimeout(armT); armT=setTimeout(()=>{ cb.classList.remove('warn'); cb.textContent='清除全部手动VP'; },3000); return; }
     clearTimeout(armT); cb.classList.remove('warn'); cb.textContent='清除全部手动VP'; mvpClearAll(); };
   buildToolbar(); buildMiniBar();
-  document.addEventListener('keydown',e=>{ const tg=e.target&&e.target.tagName; if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA') return;
+  document.addEventListener('keydown',e=>{ const tg=e.target&&e.target.tagName; if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||(e.target&&e.target.isContentEditable)) return;
+    if((e.ctrlKey||e.metaKey)&&!e.altKey){ const k=e.code==='KeyZ'?'z':e.code==='KeyY'?'y':(e.key||'').toLowerCase(); if(k==='z'||k==='y'){ e.preventDefault(); if(k==='y'||e.shiftKey) uhRedo(); else uhUndo(); return; } }
     if(e.key==='Escape'){ if(DR.draft||DR.tool!=='cursor') setTool('cursor'); else if(DR.tmp){ const p=DR.tmp.p; DR.tmp=null; if(DR.sel&&DR.sel.id==='tmp') DR.sel=null; drawDrawings(p); } else if(DR.sel) dSelect(DR.sel.p,null); }
     else if((e.key==='Delete'||e.key==='Backspace')&&DR.sel){ e.preventDefault(); dDel(DR.sel.p,DR.sel.id); } });
   document.addEventListener('pointerdown',e=>{ if(innerWidth<=900&&$('dtb').classList.contains('open')&&!e.target.closest('#dtb,#dtbToggle')) toggleTb(false); });
   // 实时：范围包含未收盘K线的手动VP，每 5 秒补拉一次最新细周期K线
-  setInterval(()=>{ if(document.hidden||!M.on) return; mvpList().forEach(pr=>{ if(mvpLive(null,pr)) mvpLoad(null,pr,true); }); },5000);
+  setInterval(()=>{ if(document.hidden||!M.on) return; mvpList().forEach(pr=>{ if(mvpLive(null,pr)) mvpLoad(null,pr,true); if(M.mode!=='vol'&&pr.t1*1000>nowSrv()-5000) trEnsure(pr,true); }); },5000);
 }
 
 function upsert(p,c){
@@ -1670,7 +1795,7 @@ function initControls(){
 }
 if(!LWC){ document.body.innerHTML='<p style="padding:20px">图表库加载失败，请检查网络（需要访问 unpkg.com 或 jsdelivr.net）。</p>'; return; }
 initControls(); restart();
-window.__al={TG,tgPush,tgCall,tgClaim,AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
+window.__ud={UH,uhUndo,uhRedo,uhMap}; window.__dv={TRD,trEnsure,mvpDeltaCalc,computeDeltaVP,trFetchBack,trInst}; window.__al={TG,tgPush,tgCall,tgClaim,AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
 })();
 </script>
 </body>
