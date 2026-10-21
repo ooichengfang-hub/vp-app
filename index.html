@@ -16,8 +16,8 @@ header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 
 header{border-bottom:1px solid var(--border);padding-bottom:10px}
 #menuBtn{background:#1d2a38;border-color:#2c3e52;font-weight:600;cursor:pointer}#menuBtn[aria-expanded="true"]{background:#2a3b4f;color:#fff}
 #menuMask{display:none;position:fixed;inset:0;z-index:40;background:transparent}#menuMask.on{display:block}
-#menu{position:fixed;z-index:50;top:52px;right:14px;width:380px;max-height:calc(100vh - 70px);overflow:auto;background:#141c26;border:1px solid #2a3846;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.55);padding:6px 12px 10px}
-#menu[hidden]{display:none}
+#menu,#amenu{position:fixed;z-index:50;top:52px;right:14px;width:380px;max-height:calc(100vh - 70px);overflow:auto;background:#141c26;border:1px solid #2a3846;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.55);padding:6px 12px 10px}
+#menu[hidden],#amenu[hidden]{display:none}
 .mhd{display:flex;align-items:center;justify-content:space-between;padding:4px 0 6px;border-bottom:1px solid var(--border);font-size:14px}
 .x{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px}
 .mg{border-bottom:1px solid var(--border);padding:7px 0}
@@ -116,12 +116,24 @@ body{padding-left:42px}
   #dtbToggle{display:flex;position:fixed;left:8px;bottom:14px;z-index:36;width:40px;height:40px;border-radius:50%;padding:0;align-items:center;justify-content:center;background:#1d2a38;border:1px solid #2c3e52;color:#cfd8e3;box-shadow:0 4px 14px rgba(0,0,0,.5)}
   #dtbToggle.on{background:#24364a;color:var(--yellow)}#dtbToggle svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}}
 .rst.warn{color:var(--red);border-color:var(--red)}
+#alBtn{background:#1d2a38;border-color:#2c3e52;font-weight:600;cursor:pointer;position:relative}#alBtn[aria-expanded="true"]{background:#2a3b4f;color:#fff}
+#alBtn.act{color:var(--yellow)}#alBtn.lock::after{content:'';position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+#aMask{display:none;position:fixed;inset:0;z-index:40;background:transparent}#aMask.on{display:block}
+.alT{background:none;border:1px solid var(--border);color:var(--muted);font-size:11px;padding:1px 7px;border-radius:5px;cursor:pointer}.alT:hover{color:var(--text)}
+.alTf{display:flex;gap:4px;flex-wrap:wrap;align-items:center}.alTf button{font-size:11px;padding:1px 6px;border-radius:5px;color:var(--muted);background:none;border:1px solid var(--border);cursor:pointer}
+.alTf button.on{color:#fff;background:#24364a;border-color:#35506b}.alTf button.na{opacity:.4}
+#alLock{display:none;color:var(--yellow);font-size:11px;padding:4px 0 0}#alLock.on{display:block}
+#alList,#alLog{width:100%;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}#alList div,#alLog div{display:flex;justify-content:space-between;gap:6px;padding:2px 0;border-bottom:1px dashed #1a222c}
+#alLog{max-height:170px;overflow:auto;padding-top:4px}#alLog .k{color:var(--text);text-align:right}#alLog .e{color:#55606c;white-space:nowrap;flex-shrink:0}
+#alList .x{font-size:12px;padding:0 4px}
+#alVol{width:90px;accent-color:var(--orange)}
+#toast.al{border-color:#8a6d1c;color:#ffe08a}
 #log{padding:0 14px 20px;color:var(--muted);font-size:12px}
 #log div{padding:2px 0;border-bottom:1px dashed #1a222c}
 .foot{color:#55606c;font-size:11px;padding:0 14px 20px;line-height:1.6}
 @media (max-width:900px){#grid.v{grid-template-columns:minmax(0,1fr)}#grid.v .chartWrap{height:360px;min-height:0}#grid.h{gap:4px;padding:8px 4px}#grid.h .chartWrap{height:62vh;min-height:300px}#grid.h .ph{padding:3px 4px}#grid.h .ohlc,#grid.h .vleg{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;max-width:calc(100% - 64px)}#grid.h .vol{overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:11px}.right{margin-left:0}
-  #menu{left:0;right:0;top:auto;bottom:0;width:auto;max-height:82vh;border-radius:14px 14px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
-  #menuMask.on{background:rgba(0,0,0,.45)}#menuBtn{margin-left:auto}}
+  #menu,#amenu{left:0;right:0;top:auto;bottom:0;width:auto;max-height:82vh;border-radius:14px 14px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  #menuMask.on,#aMask.on{background:rgba(0,0,0,.45)}#alBtn{margin-left:auto}}
 </style>
 </head>
 <body>
@@ -136,11 +148,52 @@ body{padding-left:42px}
     <div id="clock" style="font-variant-numeric:tabular-nums">--</div>
     <div><span id="connDot" class="dot wait"></span><span id="connTxt">连接中…</span></div>
     <button id="layBtn" aria-label="切换布局"></button>
+    <button id="alBtn" aria-haspopup="dialog" aria-expanded="false" title="条件提醒（声音）">提醒 ▾</button>
     <button id="menuBtn" aria-haspopup="dialog" aria-expanded="false">指标 ▾</button>
   </div>
 </header>
 <nav id="dtb" aria-label="画图工具"></nav><button id="dtbToggle" title="画图工具" aria-label="画图工具"></button>
 <div id="menuMask"></div>
+<div id="aMask"></div>
+<div id="amenu" role="dialog" aria-label="提醒设置" hidden>
+  <div class="mhd"><b>提醒</b><button id="amenuClose" class="x" title="关闭 (Esc)">✕</button></div>
+  <div class="mg">
+    <div class="mrow"><label class="chk big"><input type="checkbox" id="alSound">声音</label><span class="ctl">音量 <input id="alVol" type="range" min="0" max="100" step="1"></span></div>
+    <div class="msec open" style="padding-left:2px">
+      <label class="chk" title="浏览器/系统通知（开启时会请求权限）"><input type="checkbox" id="alNotif">系统通知</label>
+      <div class="ctl" title="同一个提醒两次响铃之间至少间隔的秒数">冷却 <input id="alCool" class="num" type="number" min="5" max="3600" step="1">秒</div>
+      <div id="alLock">🔇 浏览器还没允许播放声音 —— 点一下页面任意位置即可开启</div>
+    </div>
+  </div>
+  <div class="mg">
+    <div class="mrow"><label class="chk big"><input type="checkbox" id="alPx">价格触及</label><span><button class="alT" data-tone="up" title="试听">♪</button> <button class="gear" data-sec="secAlPx" title="设置">⚙</button></span></div>
+    <div class="msec" id="secAlPx">
+      <div class="mleg">选中 水平线 / 水平射线 / 趋势线 / 矩形 → 小工具条点 🔔 开启。价格穿过线（趋势线按当前时间的位置）或进入矩形的价格区间时响铃；价格离开超过「重新触发距离」后才会再次提醒。</div>
+      <div class="ctl">价格 <input id="alPxIn" class="num" style="width:100px" type="number" step="any" inputmode="decimal" placeholder="如 68000"><button class="alT" id="alPxAdd" title="在当前交易对画一条带提醒的水平线">添加提醒线</button></div>
+      <div class="ctl" title="触发后，价格要离开这个百分比才会重新提醒">重新触发距离 <input id="alRearm" class="num" type="number" min="0.01" max="5" step="0.01" inputmode="decimal">%</div>
+      <div id="alList"></div>
+    </div>
+  </div>
+  <div class="mg">
+    <div class="mrow"><label class="chk big"><input type="checkbox" id="alLow">缩量</label><span><button class="alT" data-tone="low" title="试听">♪</button> <button class="gear" data-sec="secAlLow" title="设置">⚙</button></span></div>
+    <div class="msec" id="secAlLow">
+      <div class="ctl" title="已收盘K线的 USDT 成交量 < 均量 × 倍数（0.05–1）">成交量 &lt; 均量 × <input id="alLowX" class="num" type="number" min="0.05" max="1" step="0.05" inputmode="decimal"></div>
+      <div class="alTf" id="alLowTf" title="哪些周期（只对三个图里正在显示的周期有效）"></div>
+    </div>
+  </div>
+  <div class="mg">
+    <div class="mrow"><label class="chk big"><input type="checkbox" id="alHot">放量</label><span><button class="alT" data-tone="hot" title="试听">♪</button> <button class="gear" data-sec="secAlHot" title="设置">⚙</button></span></div>
+    <div class="msec" id="secAlHot">
+      <div class="ctl" title="已收盘K线的 USDT 成交量 > 均量 × 倍数（1–10）">成交量 &gt; 均量 × <input id="alHotX" class="num" type="number" min="1" max="10" step="0.1" inputmode="decimal"></div>
+      <div class="alTf" id="alHotTf" title="哪些周期（只对三个图里正在显示的周期有效）"></div>
+    </div>
+  </div>
+  <div class="mg">
+    <div class="mrow"><span class="big">最近触发 <span id="alCnt" style="color:var(--muted);font-weight:400"></span></span><button class="alT" id="alClr">清空</button></div>
+    <div id="alLog"></div>
+  </div>
+  <div class="mft"><span>只在本页面打开时提醒 · 设置自动保存 · 时间 UTC+8</span></div>
+</div>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="csDlg" hidden><div class="box" role="dialog" aria-label="云同步"><b>云同步（私有 GitHub Gist）</b><div class="msg">画图和手动VP 自动同步到你 GitHub 账号里的私有 Gist <code>vp-app-drawings.json</code>，任何设备填同一个令牌即可看到同样的画图。令牌需要 <b>gist</b> 权限，只保存在本浏览器里。<br><span class="warn">⚠ 只在自己的设备上使用，不要在公用电脑上保存令牌。</span></div><input id="csTok" type="password" autocomplete="off" spellcheck="false" placeholder="粘贴 GitHub 令牌（需要 gist 权限）"><div class="msg" id="csMsg"></div><div class="btns"><button id="csClear" title="从本浏览器删除令牌（云端数据保留）">清除</button><button id="csClose">关闭</button><button id="csSave" class="pri">保存并同步</button></div></div></div>
 <div id="ioDlg" hidden><div class="box" role="dialog" aria-label="导入画图"><b>导入画图</b><div class="msg" id="ioMsg"></div><label class="chk" title="同时恢复文件里的指标设置、颜色和布局（会刷新页面）"><input type="checkbox" id="ioCfg">同时恢复设置和布局</label><div class="btns"><button id="ioCancel">取消</button><button id="ioReplace" title="删除现有的全部画图，换成文件里的">替换</button><button id="ioMerge" class="pri" title="保留现有画图，加入文件里的（相同的不重复）">合并</button></div></div></div>
@@ -531,7 +584,7 @@ function buildPanels(){
     initDrawPanel(p); if(DR.tool!=='cursor') p.drwOv.style.display='block';
     state.panels.push(p);
   });
-  renderPanelMa();
+  renderPanelMa(); if(typeof alRenderTfs==='function') alRenderTfs();
 }
 // 各图单独均量周期（放在“指标”菜单 → 成交量 ⚙ 里）
 function renderPanelMa(){
@@ -908,6 +961,7 @@ function renderD(p,ctx,d,W,H,sel,draft){
   else if(T==='text'){ const fs=d.fs||13; ctx.font=`${fs}px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif`; ctx.textBaseline='top'; ctx.textAlign='left'; ctx.fillStyle=col; ctx.fillText(d.text||'',g.xs[0],g.ys[0]);
     if(sel){ ctx.setLineDash([3,2]); ctx.lineWidth=1; ctx.strokeStyle=hexA(col,0.6); ctx.strokeRect(g.box.L-2.5,g.box.T-2.5,g.box.R-g.box.L+5,g.box.B-g.box.T+5); } }
   ctx.setLineDash([]);
+  if(d.al&&!draft&&AL_TYPES.has(T)) alBellAt(p,ctx,d,g,W,col);
   if(sel&&!draft) g.handles.forEach(hd=>handleDot(ctx,hd.x,hd.y,T==='long'||T==='short'?(hd.k==='tp'?C('drTp'):hd.k==='sl'?C('drSl'):col):col));
   return g; }
 function drawDrawings(p){
@@ -995,7 +1049,8 @@ const ICON={
   trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
   pen:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',
   ext:'<path d="M3 17 17 7"/><circle cx="6" cy="15" r="1.6"/><path d="m15 5 4 0 0 4"/>',
-  x:'<path d="M6 6l12 12M18 6 6 18"/>'};
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 // ---- 自动保存提示 / 失败提示 / 导出导入 ----
 let toastT=0; function toast(msg,kind){ const t=$('toast'); if(!t) return; t.textContent=msg; t.className='on '+(kind||''); clearTimeout(toastT); toastT=setTimeout(()=>{ t.className=kind||''; },kind==='err'?5000:3500); }
@@ -1119,7 +1174,7 @@ function toggleTb(v){ const n=$('dtb'), on=v==null?!n.classList.contains('open')
 // ---- 选中后的小工具条 ----
 function buildMiniBar(){ const m=document.createElement('div'); m.className='mbar'; m.id='mbar'; m.style.display='none';
   m.innerHTML=`<label class="mb mbc" title="颜色"><input type="color"></label><button class="mb mbw" title="线宽 / 字号">1</button><button class="mb mbd" title="实线 / 虚线 / 点线"><svg viewBox="0 0 24 24"><path class="dl" d="M3 12h18"/></svg></button>`+
-    `<button class="mb mbe" title="延长：不延长 / 向右射线 / 双向">${svg('ext')}</button><button class="mb mbl" title="锁定（不能拖动）">${svg('lock')}</button><button class="mb mbx" title="删除 (Delete)">${svg('x')}</button>`;
+    `<button class="mb mbe" title="延长：不延长 / 向右射线 / 双向">${svg('ext')}</button><button class="mb mbal" title="价格提醒：触及/穿越时响铃（点击开关）">${svg('bell')}</button><button class="mb mbl" title="锁定（不能拖动）">${svg('lock')}</button><button class="mb mbx" title="删除 (Delete)">${svg('x')}</button>`;
   m.addEventListener('pointerdown',e=>e.stopPropagation()); m.addEventListener('mousedown',e=>e.stopPropagation()); m.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
   const cur=()=>{ const d=selD(); return d?[DR.sel.p,d]:[null,null]; }, done=(p)=>{ if(DR.sel&&DR.sel.id!=='tmp'){ dSave(); state.panels.forEach(drawDrawings); } else drawDrawings(p); };
   m.querySelector('.mbc input').addEventListener('input',e=>{ const [p,d]=cur(); if(!d) return; d.c=e.target.value; done(p); });
@@ -1128,6 +1183,7 @@ function buildMiniBar(){ const m=document.createElement('div'); m.className='mba
   m.querySelector('.mbe').onclick=()=>{ const [p,d]=cur(); if(!d) return; d.ext=((d.ext||0)+1)%3; done(p); };
   m.querySelector('.mbl').onclick=()=>{ const [p,d]=cur(); if(!d) return; d.locked=!d.locked; done(p); if(d.type==='mvp') redrawAll(); else drawMVP(p); };
   m.querySelector('.mbx').onclick=()=>{ const [p,d]=cur(); if(!d) return; dDel(p,DR.sel.id); };
+  m.querySelector('.mbal').onclick=()=>{ const [p,d]=cur(); if(!d||DR.sel.id==='tmp') return; alToggleD(d); done(p); posMiniBar(); };
   document.body.appendChild(m); }
 function posMiniBar(){ const m=$('mbar'); if(!m) return; const d=selD(), p=DR.sel&&DR.sel.p;
   if(!d||!p||DR.drag&&DR.drag.moved||(state.draw.hidden&&DR.sel.id!=='tmp')){ m.style.display='none'; return; }
@@ -1140,6 +1196,7 @@ function posMiniBar(){ const m=$('mbar'); if(!m) return; const d=selD(), p=DR.se
   m.querySelector('.mbc input').value=dCol(d)||'#ffffff'; m.querySelector('.mbw').textContent=T==='text'?(d.fs||13):(d.w||1);
   m.querySelector('.mbd .dl').setAttribute('stroke-dasharray',['','4 3','1.5 2.5'][d.ds||0]); m.querySelector('.mbe').classList.toggle('on',!!d.ext); m.querySelector('.mbe').title='延长：'+['不延长','向右射线','双向延长'][d.ext||0]+'（点击切换）';
   m.querySelector('.mbl').classList.toggle('on',!!d.locked);
+  const ab=m.querySelector('.mbal'); ab.style.display=AL_TYPES.has(T)&&DR.sel.id!=='tmp'?'':'none'; ab.classList.toggle('on',!!d.al); ab.title=d.al?'价格提醒：已开启（点击关闭）':'价格提醒：触及/穿越时响铃（点击开启）';
   m.style.display='flex'; const {W,H}=dims(p), mw=m.offsetWidth||160, mh=m.offsetHeight||28;
   let left=Math.max(4,Math.min(W-mw-4,(Math.max(0,box.L)+Math.min(W,box.R))/2-mw/2)); const ex=(T==='long'||T==='short')?22:T==='measure'?38:0; let top=box.T-mh-10-ex; if(top<4) top=Math.min(H-mh-4,box.B+10+ex); if(top<4) top=4;
   m.style.left=Math.round(left)+'px'; m.style.top=Math.round(top)+'px'; }
@@ -1209,7 +1266,8 @@ function upsert(p,c){
   if(last&&c.ts===last.ts) arr[arr.length-1]=c;
   else { if(last) last.confirm=true; arr.push(c); var isNew=true; }
   p.series.update(toBar(c)); updVolLast(p);
-  if(isNew){ setHotMarkers(p); updLegendCount(p); }
+  if(isNew){ setHotMarkers(p); updLegendCount(p); if(arr.length>=2) alVolCheck(p,arr.length-2); }
+  if(c.confirm) alVolCheck(p,arr.length-1);
   if(p.syncTs==null||p.syncTs===c.ts) updOhlc(p, p.syncTs==null?-1:arr.length-1, p.syncTs!=null&&hoverP!==p); // 上一根收盘：“放量·实时”→“放量”
 }
 function onCandle(tf,c){
@@ -1263,7 +1321,7 @@ function updateCountdown(p){
   ax.className='axcd'+(warn?' warn':''); ax.textContent=txt;
 }
 function cdLoop(){ state.panels.forEach(updateCountdown); setTimeout(cdLoop,1000-(nowSrv()%1000)+5); } // 对齐到整秒
-function setPrice(v){ const el=$('price'); if(state.lastPrice!=null&&v!==state.lastPrice) el.className='price '+(v>state.lastPrice?'up':'down'); state.lastPrice=v; el.textContent=fmt(v); document.title=`${fmt(v)} · ${state.symbol} 三周期K线`; }
+function setPrice(v){ alPriceTick(v,state.lastPrice==null); const el=$('price'); if(state.lastPrice!=null&&v!==state.lastPrice) el.className='price '+(v>state.lastPrice?'up':'down'); state.lastPrice=v; el.textContent=fmt(v); document.title=`${fmt(v)} · ${state.symbol} 三周期K线`; }
 
 function closeWs(){ clearInterval(state.pingTimer); clearTimeout(state.wsTimer); if(state.ws){ const w=state.ws; w.onclose=w.onerror=w.onmessage=w.onopen=null; try{w.close()}catch(e){} state.ws=null; } }
 function connectWs(gen){
@@ -1311,6 +1369,140 @@ async function restart(){
     state.wsTimer=setTimeout(()=>{ if(gen===state.gen) restart(); },10000);
   }
 }
+
+// ---------- 条件提醒（声音 / 通知 / 页面提示）：价格触及画图、缩量、放量 ----------
+// 设置存在 localStorage 'vp_alert'；画图上的提醒开关存在画图数据 d.al=1（随导出/导入/云同步一起保存，旧数据没有这个字段 = 不提醒）
+const AL_KEY='vp_alert', AL_LOG_KEY='vp_alert_log', AL_TYPES=new Set(['hline','hray','trend','rect']), AL_LOG_MAX=20;
+const AL=(()=>{ let o={}; try{ o=JSON.parse(LS.getItem(AL_KEY)||'{}')||{}; }catch(e){ o={}; }
+  const num=(v,a,b,d)=>{ const n=Number(v); return isFinite(n)&&n>=a&&n<=b?n:d; }, tfs=(v,d)=>Array.isArray(v)?v.filter(t=>TFS.includes(t)):d;
+  const c={ sound:o.sound!==false, vol:num(o.vol,0,100,70), notif:!!o.notif, cool:Math.round(num(o.cool,5,3600,60)), rearm:num(o.rearm,0.01,5,0.1),
+    px:{on:!o.px||o.px.on!==false},
+    low:{on:!!(o.low&&o.low.on), x:num(o.low&&o.low.x,0.05,1,0.5), tfs:tfs(o.low&&o.low.tfs,['15m','1H'])},
+    hot:{on:!!(o.hot&&o.hot.on), x:num(o.hot&&o.hot.x,1,10,2), tfs:tfs(o.hot&&o.hot.tfs,['15m','1H'])} };
+  let lg=[]; try{ lg=JSON.parse(LS.getItem(AL_LOG_KEY)||'[]'); if(!Array.isArray(lg)) lg=[]; }catch(e){ lg=[]; }
+  return {cfg:c, log:lg.slice(0,AL_LOG_MAX), ps:new Map(), volDone:new Set(), fired:[]}; })();
+function alSave(){ try{ LS.setItem(AL_KEY,JSON.stringify(AL.cfg)); }catch(e){ saveFail(e); } }
+// ---- 声音（WebAudio 合成，不用外部文件）；浏览器要求用户先点一下/按键才能出声 ----
+const AU={ctx:null,played:[]};
+const AC=window.AudioContext||window.webkitAudioContext;
+function auLocked(){ return !AU.ctx||AU.ctx.state!=='running'; }
+function auUnlock(){ if(!AC) return; try{ if(!AU.ctx){ AU.ctx=new AC(); AU.ctx.onstatechange=alLockUi; } if(AU.ctx.state==='suspended') AU.ctx.resume().then(alLockUi,()=>{}); }catch(e){} alLockUi(); }
+const AL_TONES={   // [频率Hz, 时长s, 延迟s, 波形]
+  up:[[660,.13,0],[880,.22,.15]],                         // 向上穿越：低→高
+  dn:[[880,.13,0],[660,.22,.15]],                         // 向下穿越：高→低
+  rect:[[784,.11,0],[988,.11,.13],[1175,.24,.26]],        // 进入矩形：三连音
+  low:[[392,.22,0,'triangle'],[294,.34,.26,'triangle']],  // 缩量：低沉两声
+  hot:[[1046,.07,0,'square'],[1046,.07,.11,'square'],[1397,.16,.22,'square']] };   // 放量：急促三声
+function alPlay(kind){ if(!AL.cfg.sound) return 'off'; const seq=AL_TONES[kind]||AL_TONES.up; if(auLocked()){ auUnlock(); if(auLocked()) return 'locked'; }
+  const ac=AU.ctx, t0=ac.currentTime+0.02, vol=Math.pow(AL.cfg.vol/100,1.6)*0.6; if(!(vol>0)) return 'mute';
+  for(const [fq,du,dl,ty] of seq){ const o=ac.createOscillator(), g=ac.createGain(), t=t0+dl, pk=vol*(ty==='square'?0.35:ty==='triangle'?1:0.8);
+    o.type=ty||'sine'; o.frequency.setValueAtTime(fq,t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002,pk),t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+du);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+du+0.03); }
+  AU.played.push({kind,at:Date.now()}); if(AU.played.length>50) AU.played.shift(); return 'ok'; }
+function alAnyOn(){ const c=AL.cfg; return c.px.on&&alDrawn().length>0||c.low.on||c.hot.on; }
+function alLockUi(){ const lk=AL.cfg.sound&&auLocked(), b=$('alBtn'); if(b){ b.classList.toggle('lock',lk&&alAnyOn()); b.classList.toggle('act',alAnyOn()); b.title=lk&&alAnyOn()?'条件提醒：声音还没开启，点一下页面任意位置':'条件提醒（声音）'; }
+  const h=$('alLock'); if(h) h.classList.toggle('on',lk); }
+// ---- 触发 ----
+const alTime=t=>{ const d=new Date(t+TZ*1000), p=n=>String(n).padStart(2,'0'); return `${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`; };
+function alFire(kind,msg,tag){ const now=Date.now(), r=alPlay(kind);
+  AL.log.unshift({t:now,k:kind,m:msg}); AL.log.length=Math.min(AL.log.length,AL_LOG_MAX); try{ LS.setItem(AL_LOG_KEY,JSON.stringify(AL.log)); }catch(e){}
+  AL.fired.push({kind,msg,tag,at:now,sound:r}); if(AL.fired.length>100) AL.fired.shift();
+  toast('🔔 '+msg+(r==='locked'?'（声音被浏览器拦截：点一下页面即可开启）':''),'al'); log('提醒：'+msg); alRenderLog();
+  if(AL.cfg.notif&&window.Notification&&Notification.permission==='granted'){ try{ const n=new Notification(state.symbol+' 提醒',{body:msg,tag:tag||kind,renotify:true}); n.onclick=()=>{ window.focus(); n.close(); }; }catch(e){} }
+  return r; }
+// ---- 价格触及：水平线/射线 = 固定价格；趋势线 = 当前时间在线上的价格；矩形 = 价格进入上下边之间 ----
+const alDrawn=()=>dList().filter(d=>d&&d.al&&AL_TYPES.has(d.type)&&Array.isArray(d.pts)&&d.pts.length);
+const alName=d=>({hline:'水平线',hray:'水平射线',trend:'趋势线',rect:'矩形'})[d.type]||d.type;
+function alLevel(d,t){ const P=d.pts;
+  if(d.type==='hline') return {x:P[0].p};
+  if(d.type==='hray') return t>=P[0].t?{x:P[0].p}:null;
+  if(d.type==='rect'){ if(P.length<2) return null; return {lo:Math.min(P[0].p,P[1].p),hi:Math.max(P[0].p,P[1].p)}; }
+  if(d.type==='trend'){ if(P.length<2||P[0].t===P[1].t) return null; const [a,b]=P, ext=d.ext||0, t0=Math.min(a.t,b.t), t1=Math.max(a.t,b.t);
+    const on=ext===2||(t>=t0&&t<=t1)||(ext===1&&(b.t>a.t?t>=a.t:t<=a.t)); if(!on) return null; return {x:a.p+(b.p-a.p)*(t-a.t)/(b.t-a.t)}; }
+  return null; }
+function alPriceTick(price,reset){ if(reset) AL.ps.clear(); if(price==null||!isFinite(price)) return; const C0=AL.cfg; if(!C0.px.on) return;
+  const now=Date.now(), t=nowSrv()/1000, cool=C0.cool*1000, ra=C0.rearm/100, seen=new Set();
+  for(const d of alDrawn()){ const lv=alLevel(d,t), sig=JSON.stringify([d.type,d.pts,d.ext||0]); seen.add(d.id); let st=AL.ps.get(d.id);
+    if(!st||st.sig!==sig){ st={sig,armed:true,last:st?st.last:0,side:null,inside:null,far:false}; AL.ps.set(d.id,st); }   // 新开启 / 被移动：只记录当前位置，不响
+    if(!lv){ st.side=null; st.inside=null; st.far=false; continue; }
+    if(!st.armed&&st.far) st.armed=true;   // 上一次价格已离开足够远 → 重新武装
+    if(lv.x!=null){ const side=price>=lv.x?1:-1;
+      if(st.side!=null&&side!==st.side&&st.armed&&now-st.last>=cool){ st.armed=false; st.last=now;
+        alFire(side>0?'up':'dn',`价格${side>0?'向上突破':'向下跌破'}${alName(d)} ${fmt(lv.x)}（现价 ${fmt(price)}）`,'px'+d.id); }
+      st.side=side; st.far=Math.abs(price-lv.x)>=lv.x*ra; }
+    else { const inside=price>=lv.lo&&price<=lv.hi;
+      if(st.inside===false&&inside&&st.armed&&now-st.last>=cool){ st.armed=false; st.last=now; alFire('rect',`价格进入矩形 ${fmt(lv.lo)} – ${fmt(lv.hi)}（现价 ${fmt(price)}）`,'px'+d.id); }
+      st.inside=inside; st.far=!inside&&Math.min(Math.abs(price-lv.lo),Math.abs(price-lv.hi))>=price*ra; } }
+  for(const k of [...AL.ps.keys()]) if(!seen.has(k)) AL.ps.delete(k); }
+// ---- 缩量 / 放量：每根已收盘K线只判断一次（同一周期多个图只算一次）；补数据时的旧K线不提醒 ----
+function alVolCheck(p,i){ const C0=AL.cfg; if(!C0.low.on&&!C0.hot.on) return; const a=p.candles, c=a[i]; if(!c) return; const dur=TF_SEC[p.tf];
+  if(i<a.length-1&&!(a[i+1].ts>c.ts)) return; if(i===a.length-1&&!c.confirm) return;
+  if(c.ts+dur<nowSrv()/1000-dur-120) return;   // 太旧（重连补数据）
+  const key=state.symbol+'|'+p.tf+'|'+c.ts; if(AL.volDone.has(key)) return; AL.volDone.add(key); if(AL.volDone.size>500) AL.volDone.delete(AL.volDone.values().next().value);
+  const m=maAt(a,i,maN(p)); if(m==null||!(m>0)) return; const r=c.vol/m, tm=fmtT(c.ts,p.tf).slice(5);
+  if(C0.low.on&&C0.low.tfs.includes(p.tf)&&c.vol<m*C0.low.x) alFire('low',`${TF_CN[p.tf]} 缩量：${tm} 收盘量 ${fmtVol(c.vol)} = ${r.toFixed(2)}×均量（< ${C0.low.x}×）`,'low'+p.tf);
+  else if(C0.hot.on&&C0.hot.tfs.includes(p.tf)&&c.vol>m*C0.hot.x) alFire('hot',`${TF_CN[p.tf]} 放量：${tm} 收盘量 ${fmtVol(c.vol)} = ${r.toFixed(2)}×均量（> ${C0.hot.x}×）`,'hot'+p.tf); }
+// ---- 画图上的提醒开关 / 按价格添加 ----
+function alToggleD(d){ if(!d||!AL_TYPES.has(d.type)) return; if(d.al) delete d.al; else { d.al=1; AL.ps.delete(d.id); if(!AL.cfg.px.on){ AL.cfg.px.on=true; alSave(); const e=$('alPx'); if(e) e.checked=true; } }
+  toast(d.al?`🔔 已开启提醒：${alName(d)}${d.type==='rect'?'':' '+fmt(d.pts[0].p)}`:`已关闭提醒：${alName(d)}`,'ok'); auUnlock(); alRenderList(); alLockUi(); }
+function alAddLevel(v){ const n=Number(v); if(!isFinite(n)||n<=0){ toast('请输入有效的价格','err'); return null; }
+  const p=state.panels[0]; const last=p&&p.candles[p.candles.length-1]; const t=last?last.ts:Math.floor(Date.now()/1000);
+  const d={id:newId(),type:'hline',pts:[{t,p:n}],c:'#f5c542',w:1,ds:1,al:1}; dList(p).push(d); dSave(); AL.ps.delete(d.id);
+  if(!AL.cfg.px.on){ AL.cfg.px.on=true; alSave(); $('alPx').checked=true; } alPriceTick(state.lastPrice,false); redrawAll(); alRenderList(); alLockUi();
+  toast(`🔔 已添加提醒线 ${fmt(n)}`,'ok'); return d; }
+// 画在图上的小铃铛（只占几个像素，不加文字）
+function alBellAt(p,ctx,d,g,W,col){ let x,y; ctx.font='9px -apple-system,"Trebuchet MS",Roboto,sans-serif';
+  if(d.type==='hline'||d.type==='hray'){ x=W-ctx.measureText(fmt(d.pts[0].p)).width-13; y=g.ys[0]-6; }
+  else if(d.type==='rect'){ x=g.box.R-7; y=g.box.T+7; }
+  else { const [x1,y1,x2,y2]=g.seg||[g.xs[0],g.ys[0],g.xs[1],g.ys[1]]; const r=x2>=x1; x=Math.min(W-8,Math.max(8,r?x2:x1))-(r?6:-6); const k=x2!==x1?(y2-y1)/(x2-x1):0; y=y1+k*(x-x1)-8; }
+  if(!isFinite(x)||!isFinite(y)) return; ctx.save(); ctx.globalAlpha=AL.cfg.px.on?1:0.35; ctx.fillStyle=col; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(x-4,y+3); ctx.lineTo(x+4,y+3); ctx.lineTo(x+3,y+1.5); ctx.lineTo(x+3,y-1); ctx.arc(x,y-1,3,0,Math.PI,true); ctx.lineTo(x-3,y+1.5); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(x,y+4.4,1.1,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+// ---- 菜单 UI ----
+function alRenderList(){ const box=$('alList'); if(!box) return; const L=alDrawn(); box.innerHTML='';
+  if(!L.length){ box.innerHTML='<div><span>还没有开启提醒的画图</span></div>'; return; }
+  L.forEach(d=>{ const r=document.createElement('div'), lv=alLevel(d,nowSrv()/1000);
+    const txt=d.type==='rect'?`${fmt(Math.min(d.pts[0].p,d.pts[1].p))} – ${fmt(Math.max(d.pts[0].p,d.pts[1].p))}`:lv&&lv.x!=null?fmt(lv.x):'（当前不在线段范围）';
+    r.innerHTML=`<span><span style="color:${dCol(d)}">■</span> ${alName(d)} ${txt}</span><button class="x" title="关闭这条提醒（保留画图）">🔕</button>`;
+    r.querySelector('button').onclick=()=>{ delete d.al; dSave(); redrawAll(); posMiniBar(); alRenderList(); alLockUi(); };
+    box.appendChild(r); }); }
+function alRenderLog(){ const box=$('alLog'); if(!box) return; $('alCnt').textContent=AL.log.length?`(${AL.log.length})`:'';
+  box.innerHTML=AL.log.length?'':'<div><span class="e">暂无</span></div>';
+  AL.log.forEach(e=>{ const r=document.createElement('div'); r.innerHTML=`<span class="e">${alTime(e.t)}</span><span class="k"></span>`; r.querySelector('.k').textContent=e.m; box.appendChild(r); }); }
+function alRenderTfs(){ [['alLowTf','low'],['alHotTf','hot']].forEach(([id,k])=>{ const box=$(id); if(!box) return; const S=AL.cfg[k]; box.innerHTML='<span style="color:var(--muted);font-size:11px">周期</span>';
+  TFS.forEach(tf=>{ const b=document.createElement('button'), shown=state.tfs.includes(tf); b.textContent=tf; b.className=(S.tfs.includes(tf)?'on':'')+(shown?'':' na');
+    b.title=shown?'':'这个周期不在三个图里，不会判断（先把某个图切到这个周期）';
+    b.onclick=()=>{ const i=S.tfs.indexOf(tf); if(i>=0) S.tfs.splice(i,1); else S.tfs.push(tf); alSave(); alRenderTfs(); }; box.appendChild(b); }); }); }
+function alNum(id,min,max,get,set){ const el=$(id); el.value=get();
+  const chk=commit=>{ const s=el.value.trim(), n=Number(s), ok=s!==''&&isFinite(n)&&n>=min&&n<=max; el.classList.toggle('bad',!ok); if(ok){ if(n!==get()){ set(n); alSave(); } } else if(commit){ el.value=get(); el.classList.remove('bad'); } };
+  el.addEventListener('input',()=>chk(false)); el.addEventListener('change',()=>chk(true)); }
+function initAlerts(){ const C0=AL.cfg, btn=$('alBtn'), m=$('amenu'), mask=$('aMask');
+  ['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev,auUnlock,{capture:true,passive:true}));
+  const place=()=>{ if(innerWidth>900){ const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+6)+'px'; m.style.right=Math.max(8,Math.round(innerWidth-r.right))+'px'; } else { m.style.top=''; m.style.right=''; } };
+  const open=v=>{ m.hidden=!v; mask.classList.toggle('on',v); btn.setAttribute('aria-expanded',v); if(v){ place(); alRenderList(); alRenderLog(); alRenderTfs(); alLockUi(); } };
+  btn.onclick=e=>{ e.stopPropagation(); open(m.hidden); }; $('amenuClose').onclick=()=>open(false); mask.onclick=()=>open(false);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!m.hidden) open(false); });
+  document.addEventListener('mousedown',e=>{ if(!m.hidden&&!m.contains(e.target)&&e.target!==btn) open(false); });
+  addEventListener('resize',()=>{ if(!m.hidden) place(); });
+  m.querySelectorAll('.gear').forEach(g=>g.onclick=()=>{ const s=$(g.dataset.sec); s.classList.toggle('open'); g.classList.toggle('on',s.classList.contains('open')); });
+  m.querySelectorAll('[data-tone]').forEach(b=>b.onclick=()=>{ auUnlock(); const was=C0.sound; C0.sound=true; const r=alPlay(b.dataset.tone); C0.sound=was; if(r==='locked') toast('浏览器还没允许播放声音，请再点一次','err'); else if(r==='mute') toast('音量是 0','err'); });
+  const ck=(id,get,set)=>{ const e=$(id); e.checked=get(); e.onchange=()=>{ set(e.checked); alSave(); alLockUi(); redrawAll(); }; };
+  ck('alSound',()=>C0.sound,v=>{ C0.sound=v; if(v) auUnlock(); });
+  ck('alPx',()=>C0.px.on,v=>{ C0.px.on=v; AL.ps.clear(); alPriceTick(state.lastPrice,false); });
+  ck('alLow',()=>C0.low.on,v=>{ C0.low.on=v; }); ck('alHot',()=>C0.hot.on,v=>{ C0.hot.on=v; });
+  const nt=$('alNotif'); nt.checked=C0.notif&&!!window.Notification&&Notification.permission==='granted';
+  nt.onchange=async()=>{ if(!nt.checked){ C0.notif=false; alSave(); return; }
+    if(!window.Notification){ nt.checked=false; toast('这个浏览器不支持系统通知','err'); return; }
+    let pm=Notification.permission; if(pm==='default'){ try{ pm=await Notification.requestPermission(); }catch(e){ pm='denied'; } }
+    if(pm!=='granted'){ nt.checked=false; C0.notif=false; alSave(); toast('通知权限被拒绝：请在浏览器网站设置里允许通知','err'); return; }
+    C0.notif=true; alSave(); toast('已开启系统通知','ok'); };
+  const vs=$('alVol'); vs.value=C0.vol; vs.oninput=()=>{ C0.vol=+vs.value; alSave(); }; vs.onchange=()=>{ auUnlock(); alPlay('up'); };
+  alNum('alCool',5,3600,()=>C0.cool,n=>{ C0.cool=Math.round(n); }); alNum('alRearm',0.01,5,()=>C0.rearm,n=>{ C0.rearm=n; });
+  alNum('alLowX',0.05,1,()=>C0.low.x,n=>{ C0.low.x=n; }); alNum('alHotX',1,10,()=>C0.hot.x,n=>{ C0.hot.x=n; });
+  const pin=$('alPxIn'); $('alPxAdd').onclick=()=>{ if(alAddLevel(pin.value)) pin.value=''; }; pin.addEventListener('keydown',e=>{ if(e.key==='Enter'&&alAddLevel(pin.value)) pin.value=''; });
+  $('alClr').onclick=()=>{ AL.log=[]; try{ LS.removeItem(AL_LOG_KEY); }catch(e){} alRenderLog(); };
+  alRenderTfs(); alRenderLog(); alLockUi(); setInterval(alLockUi,3000);
+  window.__alMenu=open; }
 
 // ---------- 控件 ----------
 function numCtl(id,min,max,get,set){
@@ -1397,14 +1589,14 @@ function initControls(){
   const onLm=commit=>{ const s=lm.value.trim(), n=Number(s), ok=s!==''&&isFinite(n)&&n>=0.1&&n<=1; lm.classList.toggle('bad',!ok); if(ok){ const v=Math.round(n*100)/100; if(v!==LO.mult){ LO.mult=v; lowAll(); } } else if(commit){ lm.value=LO.mult; lm.classList.remove('bad'); } };
   lm.addEventListener('input',()=>onLm(false)); lm.addEventListener('change',()=>onLm(true));
   initDrawControls();
-  initMenu(); buildColorUI();
+  initMenu(); buildColorUI(); initAlerts();
   cdLoop(); setInterval(syncServerTime,10*60*1000); // 每10分钟重新校准
   const tick=()=>{ $('clock').textContent=new Date(nowSrv()).toLocaleString('zh-CN',{timeZone:'Asia/Singapore',hour12:false})+' (UTC+8)'; }; tick(); setInterval(tick,1000);
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&(!state.ws||state.ws.readyState>1)) resync(state.gen); });
 }
 if(!LWC){ document.body.innerHTML='<p style="padding:20px">图表库加载失败，请检查网络（需要访问 unpkg.com 或 jsdelivr.net）。</p>'; return; }
 initControls(); restart();
-window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
+window.__al={AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
 })();
 </script>
 </body>
