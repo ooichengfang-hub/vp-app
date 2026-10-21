@@ -128,6 +128,9 @@ body{padding-left:42px}
 #alList .x{font-size:12px;padding:0 4px}
 #alVol{width:90px;accent-color:var(--orange)}
 #toast.al{border-color:#8a6d1c;color:#ffe08a}
+.tgmsg{width:100%;font-size:11.5px;color:var(--muted);min-height:14px}.tgmsg.ok{color:#7ee2b8}.tgmsg.err{color:#ffb4b4}
+.rt{display:flex;gap:10px;width:100%;font-size:11px}.rt .chk{font-size:11px}
+#tgTok,#tgChat{width:190px}
 #log{padding:0 14px 20px;color:var(--muted);font-size:12px}
 #log div{padding:2px 0;border-bottom:1px dashed #1a222c}
 .foot{color:#55606c;font-size:11px;padding:0 14px 20px;line-height:1.6}
@@ -172,6 +175,7 @@ body{padding-left:42px}
       <div class="ctl">价格 <input id="alPxIn" class="num" style="width:100px" type="number" step="any" inputmode="decimal" placeholder="如 68000"><button class="alT" id="alPxAdd" title="在当前交易对画一条带提醒的水平线">添加提醒线</button></div>
       <div class="ctl" title="触发后，价格要离开这个百分比才会重新提醒">重新触发距离 <input id="alRearm" class="num" type="number" min="0.01" max="5" step="0.01" inputmode="decimal">%</div>
       <div id="alList"></div>
+      <div class="rt"><span style="color:var(--muted)">提醒方式</span><label class="chk"><input type="checkbox" data-rt="px.s">声音</label><label class="chk"><input type="checkbox" data-rt="px.t">Telegram</label></div>
     </div>
   </div>
   <div class="mg">
@@ -179,6 +183,7 @@ body{padding-left:42px}
     <div class="msec" id="secAlLow">
       <div class="ctl" title="已收盘K线的 USDT 成交量 < 均量 × 倍数（0.05–1）">成交量 &lt; 均量 × <input id="alLowX" class="num" type="number" min="0.05" max="1" step="0.05" inputmode="decimal"></div>
       <div class="alTf" id="alLowTf" title="哪些周期（只对三个图里正在显示的周期有效）"></div>
+      <div class="rt"><span style="color:var(--muted)">提醒方式</span><label class="chk"><input type="checkbox" data-rt="low.s">声音</label><label class="chk"><input type="checkbox" data-rt="low.t">Telegram</label></div>
     </div>
   </div>
   <div class="mg">
@@ -186,6 +191,17 @@ body{padding-left:42px}
     <div class="msec" id="secAlHot">
       <div class="ctl" title="已收盘K线的 USDT 成交量 > 均量 × 倍数（1–10）">成交量 &gt; 均量 × <input id="alHotX" class="num" type="number" min="1" max="10" step="0.1" inputmode="decimal"></div>
       <div class="alTf" id="alHotTf" title="哪些周期（只对三个图里正在显示的周期有效）"></div>
+      <div class="rt"><span style="color:var(--muted)">提醒方式</span><label class="chk"><input type="checkbox" data-rt="hot.s">声音</label><label class="chk"><input type="checkbox" data-rt="hot.t">Telegram</label></div>
+    </div>
+  </div>
+  <div class="mg">
+    <div class="mrow"><label class="chk big"><input type="checkbox" id="tgOn">Telegram 推送</label><button class="gear" data-sec="secTg" title="设置">⚙</button></div>
+    <div class="msec" id="secTg">
+      <div class="mleg">手机收提醒：Telegram 里找 @BotFather → /newbot 建一个机器人，复制它给的 Token；再打开你的机器人发一句话，然后点「自动获取」。令牌只保存在本浏览器（不会导出、不会云同步）；只需要在一台设备上设置。</div>
+      <div class="ctl">Bot Token <input id="tgTok" type="password" autocomplete="off" spellcheck="false" placeholder="123456789:AAH…"></div>
+      <div class="ctl">Chat ID <input id="tgChat" type="text" autocomplete="off" spellcheck="false" inputmode="numeric" placeholder="例如 123456789"><button class="alT" id="tgFind" title="读取机器人最近收到的私聊，自动填入你的 Chat ID">自动获取</button></div>
+      <button class="alT" id="tgTest">发送测试</button>
+      <div id="tgMsg" class="tgmsg"></div>
     </div>
   </div>
   <div class="mg">
@@ -1011,7 +1027,7 @@ function finishDraft(p,b,moved){ const dr=DR.draft; if(!dr) return; DR.draft=nul
   const d=makeD(p,type,dr.a,b||dr.b,moved);
   if(type==='mvp'){ mvpAdd(p,d.t0,d.t1); return; }
   if(type==='text'){ openText(p,null,d.pts[0]); return; }
-  d.id=type==='measure'?'tmp':newId(); d.c=C(DEFC[type]); d.w=type==='trend'||type==='fib'?1.5:1; d.ds=0;
+  d.id=type==='measure'?'tmp':newId(); if(type!=='measure') d.tf=p.tf; d.c=C(DEFC[type]); d.w=type==='trend'||type==='fib'?1.5:1; d.ds=0;
   if(type==='measure'){ DR.tmp={p,d}; dSelect(p,'tmp'); return; }
   dList(p).push(d); dSave(); dSelect(p,d.id); }
 // ---- 文字输入 ----
@@ -1377,6 +1393,7 @@ const AL=(()=>{ let o={}; try{ o=JSON.parse(LS.getItem(AL_KEY)||'{}')||{}; }catc
   const num=(v,a,b,d)=>{ const n=Number(v); return isFinite(n)&&n>=a&&n<=b?n:d; }, tfs=(v,d)=>Array.isArray(v)?v.filter(t=>TFS.includes(t)):d;
   const c={ sound:o.sound!==false, vol:num(o.vol,0,100,70), notif:!!o.notif, cool:Math.round(num(o.cool,5,3600,60)), rearm:num(o.rearm,0.01,5,0.1),
     px:{on:!o.px||o.px.on!==false},
+    route:(()=>{ const r=o.route||{}, g=k=>({s:!r[k]||r[k].s!==false,t:!r[k]||r[k].t!==false}); return {px:g('px'),low:g('low'),hot:g('hot')}; })(),
     low:{on:!!(o.low&&o.low.on), x:num(o.low&&o.low.x,0.05,1,0.5), tfs:tfs(o.low&&o.low.tfs,['15m','1H'])},
     hot:{on:!!(o.hot&&o.hot.on), x:num(o.hot&&o.hot.x,1,10,2), tfs:tfs(o.hot&&o.hot.tfs,['15m','1H'])} };
   let lg=[]; try{ lg=JSON.parse(LS.getItem(AL_LOG_KEY)||'[]'); if(!Array.isArray(lg)) lg=[]; }catch(e){ lg=[]; }
@@ -1404,9 +1421,10 @@ function alLockUi(){ const lk=AL.cfg.sound&&auLocked(), b=$('alBtn'); if(b){ b.c
   const h=$('alLock'); if(h) h.classList.toggle('on',lk); }
 // ---- 触发 ----
 const alTime=t=>{ const d=new Date(t+TZ*1000), p=n=>String(n).padStart(2,'0'); return `${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`; };
-function alFire(kind,msg,tag){ const now=Date.now(), r=alPlay(kind);
+function alFire(kind,msg,tag,tg){ const now=Date.now(), rk=kind==='low'||kind==='hot'?kind:'px', rt=AL.cfg.route[rk], r=rt.s?alPlay(kind):'route';
+  const tr=rt.t&&tg?tgPush(tg.text,tg.key):null; if(tr) tr.then(v=>{ const f=AL.fired.find(x=>x.at===now&&x.tag===tag); if(f) f.tg=v; });
   AL.log.unshift({t:now,k:kind,m:msg}); AL.log.length=Math.min(AL.log.length,AL_LOG_MAX); try{ LS.setItem(AL_LOG_KEY,JSON.stringify(AL.log)); }catch(e){}
-  AL.fired.push({kind,msg,tag,at:now,sound:r}); if(AL.fired.length>100) AL.fired.shift();
+  AL.fired.push({kind,msg,tag,at:now,sound:r,tg:tr?'pending':'off',tgText:tg&&tg.text}); if(AL.fired.length>100) AL.fired.shift();
   toast('🔔 '+msg+(r==='locked'?'（声音被浏览器拦截：点一下页面即可开启）':''),'al'); log('提醒：'+msg); alRenderLog();
   if(AL.cfg.notif&&window.Notification&&Notification.permission==='granted'){ try{ const n=new Notification(state.symbol+' 提醒',{body:msg,tag:tag||kind,renotify:true}); n.onclick=()=>{ window.focus(); n.close(); }; }catch(e){} }
   return r; }
@@ -1428,10 +1446,12 @@ function alPriceTick(price,reset){ if(reset) AL.ps.clear(); if(price==null||!isF
     if(!st.armed&&st.far) st.armed=true;   // 上一次价格已离开足够远 → 重新武装
     if(lv.x!=null){ const side=price>=lv.x?1:-1;
       if(st.side!=null&&side!==st.side&&st.armed&&now-st.last>=cool){ st.armed=false; st.last=now;
-        alFire(side>0?'up':'dn',`价格${side>0?'向上突破':'向下跌破'}${alName(d)} ${fmt(lv.x)}（现价 ${fmt(price)}）`,'px'+d.id); }
+        alFire(side>0?'up':'dn',`价格${side>0?'向上突破':'向下跌破'}${alName(d)} ${fmt(lv.x)}（现价 ${fmt(price)}）`,'px'+d.id,
+          {text:`${side>0?'🔔':'🔻'} ${state.symbol} ${side>0?'向上突破':'向下跌破'} ${fmt(lv.x)}（${d.tf?d.tf+' ':''}${alName(d)}）\n现价 ${fmt(price)} · ${tgTime()} (UTC+8)`,key:state.symbol+'|px|'+d.id+'|'+side}); }
       st.side=side; st.far=Math.abs(price-lv.x)>=lv.x*ra; }
     else { const inside=price>=lv.lo&&price<=lv.hi;
-      if(st.inside===false&&inside&&st.armed&&now-st.last>=cool){ st.armed=false; st.last=now; alFire('rect',`价格进入矩形 ${fmt(lv.lo)} – ${fmt(lv.hi)}（现价 ${fmt(price)}）`,'px'+d.id); }
+      if(st.inside===false&&inside&&st.armed&&now-st.last>=cool){ st.armed=false; st.last=now; alFire('rect',`价格进入矩形 ${fmt(lv.lo)} – ${fmt(lv.hi)}（现价 ${fmt(price)}）`,'px'+d.id,
+        {text:`🟪 ${state.symbol} 进入矩形 ${fmt(lv.lo)} – ${fmt(lv.hi)}${d.tf?'（'+d.tf+' 矩形）':''}\n现价 ${fmt(price)} · ${tgTime()} (UTC+8)`,key:state.symbol+'|rect|'+d.id}); }
       st.inside=inside; st.far=!inside&&Math.min(Math.abs(price-lv.lo),Math.abs(price-lv.hi))>=price*ra; } }
   for(const k of [...AL.ps.keys()]) if(!seen.has(k)) AL.ps.delete(k); }
 // ---- 缩量 / 放量：每根已收盘K线只判断一次（同一周期多个图只算一次）；补数据时的旧K线不提醒 ----
@@ -1440,8 +1460,9 @@ function alVolCheck(p,i){ const C0=AL.cfg; if(!C0.low.on&&!C0.hot.on) return; co
   if(c.ts+dur<nowSrv()/1000-dur-120) return;   // 太旧（重连补数据）
   const key=state.symbol+'|'+p.tf+'|'+c.ts; if(AL.volDone.has(key)) return; AL.volDone.add(key); if(AL.volDone.size>500) AL.volDone.delete(AL.volDone.values().next().value);
   const m=maAt(a,i,maN(p)); if(m==null||!(m>0)) return; const r=c.vol/m, tm=fmtT(c.ts,p.tf).slice(5);
-  if(C0.low.on&&C0.low.tfs.includes(p.tf)&&c.vol<m*C0.low.x) alFire('low',`${TF_CN[p.tf]} 缩量：${tm} 收盘量 ${fmtVol(c.vol)} = ${r.toFixed(2)}×均量（< ${C0.low.x}×）`,'low'+p.tf);
-  else if(C0.hot.on&&C0.hot.tfs.includes(p.tf)&&c.vol>m*C0.hot.x) alFire('hot',`${TF_CN[p.tf]} 放量：${tm} 收盘量 ${fmtVol(c.vol)} = ${r.toFixed(2)}×均量（> ${C0.hot.x}×）`,'hot'+p.tf); }
+  const tgv=(ic,nm,op,x)=>({text:`${ic} ${state.symbol} ${nm} ${p.tf} 成交额 ${fmtVol(c.vol)} ${quoteCcy()} = ${r.toFixed(2)}×均量（${op} ${x}×）\nK线 ${tgTime(c.ts*1000)} 收盘价 ${fmt(c.close)} · ${tgTime()} (UTC+8)`,key:key+'|'+nm});
+  if(C0.low.on&&C0.low.tfs.includes(p.tf)&&c.vol<m*C0.low.x) alFire('low',`${TF_CN[p.tf]} 缩量：${tm} 收盘量 ${fmtVol(c.vol)} = ${r.toFixed(2)}×均量（< ${C0.low.x}×）`,'low'+p.tf,tgv('📉','缩量','<',C0.low.x));
+  else if(C0.hot.on&&C0.hot.tfs.includes(p.tf)&&c.vol>m*C0.hot.x) alFire('hot',`${TF_CN[p.tf]} 放量：${tm} 收盘量 ${fmtVol(c.vol)} = ${r.toFixed(2)}×均量（> ${C0.hot.x}×）`,'hot'+p.tf,tgv('📈','放量','>',C0.hot.x)); }
 // ---- 画图上的提醒开关 / 按价格添加 ----
 function alToggleD(d){ if(!d||!AL_TYPES.has(d.type)) return; if(d.al) delete d.al; else { d.al=1; AL.ps.delete(d.id); if(!AL.cfg.px.on){ AL.cfg.px.on=true; alSave(); const e=$('alPx'); if(e) e.checked=true; } }
   toast(d.al?`🔔 已开启提醒：${alName(d)}${d.type==='rect'?'':' '+fmt(d.pts[0].p)}`:`已关闭提醒：${alName(d)}`,'ok'); auUnlock(); alRenderList(); alLockUi(); }
@@ -1458,6 +1479,57 @@ function alBellAt(p,ctx,d,g,W,col){ let x,y; ctx.font='9px -apple-system,"Trebuc
   if(!isFinite(x)||!isFinite(y)) return; ctx.save(); ctx.globalAlpha=AL.cfg.px.on?1:0.35; ctx.fillStyle=col; ctx.setLineDash([]);
   ctx.beginPath(); ctx.moveTo(x-4,y+3); ctx.lineTo(x+4,y+3); ctx.lineTo(x+3,y+1.5); ctx.lineTo(x+3,y-1); ctx.arc(x,y-1,3,0,Math.PI,true); ctx.lineTo(x-3,y+1.5); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.arc(x,y+4.4,1.1,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+// ---- Telegram 推送：令牌 / Chat ID 只存在本浏览器 localStorage 'vp_tg'（不进 HTML、导出文件、Gist 同步） ----
+// api.telegram.org 的 CORS 预检（OPTIONS）返回 501 → 只用“简单请求”：POST application/x-www-form-urlencoded（URLSearchParams），不触发预检，响应带 ACAO:* 可读
+const TG_KEY='vp_tg', TG_MAX=20, TG_WIN=60000, TG_QMAX=10, TG_DEDUP=4000;
+const TG=(()=>{ let o={}; try{ o=JSON.parse(LS.getItem(TG_KEY)||'{}')||{}; }catch(e){ o={}; }
+  return {on:!!o.on, token:typeof o.token==='string'?o.token:'', chat:typeof o.chat==='string'||typeof o.chat==='number'?String(o.chat):'', stamps:[], q:[], timer:0, dropped:0, sent:[], base:'https://api.telegram.org'}; })();
+function tgSave(){ try{ LS.setItem(TG_KEY,JSON.stringify({on:TG.on,token:TG.token,chat:TG.chat})); }catch(e){ saveFail(e); } }
+const tgReady=()=>TG.on&&!!TG.token&&!!TG.chat;
+function tgErr(j,status){ const d=(j&&j.description)||''; const c=(j&&j.error_code)||status;
+  if(c===401||c===404&&/not found/i.test(d)&&!/chat/i.test(d)) return 'Bot Token 不对（Telegram 返回 Unauthorized），请重新复制 @BotFather 给的令牌';
+  if(/chat not found/i.test(d)) return '找不到这个 Chat ID：请确认填的是你自己的 ID，并且先给机器人发过一句话';
+  if(c===403) return '机器人不能给这个聊天发消息（被屏蔽或没点过 Start）：在 Telegram 里打开你的机器人，点 Start / 发一句话';
+  if(c===409) return '这个机器人设置了 webhook，无法自动获取 Chat ID，请手动填写';
+  if(c===429) return 'Telegram 限流，请稍后再试';
+  return 'Telegram 错误：'+(d||('HTTP '+c)); }
+async function tgCall(method,params){ if(!TG.token) return {ok:false,err:'请先填写 Bot Token'};
+  let r; try{ r=await fetch(`${TG.base}/bot${TG.token}/${method}`,{method:'POST',body:new URLSearchParams(params||{}),cache:'no-store'}); }
+  catch(e){ return {ok:false,net:true,err:'网络错误：连不上 api.telegram.org（检查网络；部分网络会屏蔽 Telegram）'}; }
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(j&&j.ok) return {ok:true,result:j.result};
+  return {ok:false,code:(j&&j.error_code)||r.status,retry:j&&j.parameters&&j.parameters.retry_after,err:tgErr(j,r.status)}; }
+const tgSendNow=text=>tgCall('sendMessage',{chat_id:TG.chat,text,disable_web_page_preview:'true'});
+// 同一浏览器多个标签页：用 Web Locks 抢锁 + localStorage 记录已发的提醒（同一 key 4 秒内只发一次；同一个提醒的冷却至少 5 秒，所以不会误吞）→ 只有一个标签页会发
+async function tgClaim(key){ const run=()=>{ let m={}; try{ m=JSON.parse(LS.getItem('vp_tg_sent')||'{}')||{}; }catch(e){ m={}; } const now=Date.now();
+    for(const k of Object.keys(m)) if(now-m[k]>TG_DEDUP) delete m[k]; if(m[key]) return false; m[key]=now; try{ LS.setItem('vp_tg_sent',JSON.stringify(m)); }catch(e){} return true; };
+  if(navigator.locks&&navigator.locks.request){ try{ return await navigator.locks.request('vp_tg_send',run); }catch(e){} } return run(); }
+// 限流：每分钟最多 TG_MAX 条；多出的排队（最多 TG_QMAX 条），再多就丢弃并记日志
+function tgPump(){ clearTimeout(TG.timer); TG.timer=0; if(!TG.q.length) return;
+  const w=limDelay(TG.stamps,TG_MAX,TG_WIN,Date.now()); if(w>0){ TG.timer=setTimeout(tgPump,w+20); return; }
+  const it=TG.q.shift(); TG.stamps.push(Date.now());
+  tgSendNow(it.text).then(r=>{ TG.sent.push({text:it.text,ok:r.ok,err:r.err,at:Date.now()}); if(TG.sent.length>100) TG.sent.shift();
+    if(!r.ok){ if(r.code===429&&r.retry&&!it.re){ it.re=1; TG.q.unshift(it); TG.timer=setTimeout(tgPump,r.retry*1000+50); return; }
+      log('Telegram 推送失败：'+r.err); tgStatus('✗ 推送失败：'+r.err,'err'); } }).finally(()=>{ if(TG.q.length&&!TG.timer) tgPump(); }); }
+async function tgPush(text,key){ if(!tgReady()) return 'off'; if(key&&!(await tgClaim(key))) return 'dup';
+  if(TG.q.length>=TG_QMAX){ TG.dropped++; log(`Telegram：1 分钟内提醒超过 ${TG_MAX} 条，排队已满，丢弃 1 条（累计 ${TG.dropped}）`); return 'drop'; }
+  TG.q.push({text}); if(TG.q.length===1&&!TG.timer){ const w=limDelay(TG.stamps,TG_MAX,TG_WIN,Date.now()); if(w>0) log(`Telegram：1 分钟内已发 ${TG_MAX} 条，后面的排队发送`); tgPump(); } return 'queued'; }
+function tgStatus(msg,kind){ const e=$('tgMsg'); if(!e) return; e.textContent=msg; e.className='tgmsg '+(kind||''); }
+const tgTime=t=>{ const d=new Date((t==null?nowSrv():t)+TZ*1000), p=n=>String(n).padStart(2,'0'); return `${p(d.getUTCMonth()+1)}/${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`; };
+function initTg(){ const on=$('tgOn'), tk=$('tgTok'), ch=$('tgChat');
+  on.checked=TG.on; tk.value=TG.token; ch.value=TG.chat;
+  on.onchange=()=>{ TG.on=on.checked; tgSave(); if(TG.on&&!TG.token) tgStatus('填写 Bot Token 和 Chat ID 后点「发送测试」',''); };
+  tk.onchange=()=>{ TG.token=tk.value.trim(); tk.value=TG.token; tgSave(); if(TG.token&&!/^\d{5,}:[\w-]{30,}$/.test(TG.token)) tgStatus('令牌格式看起来不对，应类似 123456789:AAH…','err'); else tgStatus('',''); };
+  ch.onchange=()=>{ TG.chat=ch.value.trim(); ch.value=TG.chat; tgSave(); };
+  $('tgFind').onclick=async()=>{ tk.onchange(); if(!TG.token){ tgStatus('请先填写 Bot Token','err'); return; } tgStatus('正在获取…','');
+    const r=await tgCall('getUpdates',{limit:'100',allowed_updates:'["message","edited_message","my_chat_member"]'}); if(!r.ok){ tgStatus('✗ '+r.err,'err'); return; }
+    let id=null, name=''; for(const u of r.result||[]){ const m=u.message||u.edited_message||u.my_chat_member; const c=m&&m.chat; if(c&&c.type==='private'){ id=c.id; name=[c.first_name,c.last_name].filter(Boolean).join(' ')||c.username||''; } }
+    if(id==null){ tgStatus('没找到私聊：先在 Telegram 里给你的机器人发一句话（例如 hi），再点「自动获取」','err'); return; }
+    TG.chat=String(id); ch.value=TG.chat; tgSave(); tgStatus(`✓ 已获取 Chat ID ${id}${name?'（'+name+'）':''}，可以点「发送测试」`,'ok'); };
+  $('tgTest').onclick=async()=>{ tk.onchange(); ch.onchange(); if(!TG.token||!TG.chat){ tgStatus('请先填写 Bot Token 和 Chat ID','err'); return; } tgStatus('正在发送…','');
+    const r=await tgSendNow(`✅ vp-app 测试消息\n${state.symbol} 提醒会推送到这里 · ${tgTime()} (UTC+8)`);
+    tgStatus(r.ok?'✓ 发送成功，请看手机 Telegram'+(TG.on?'':'（记得勾选「Telegram 推送」）'):'✗ '+r.err,r.ok?'ok':'err'); };
+  tgStatus(tgReady()?'已开启':'', tgReady()?'ok':''); }
 // ---- 菜单 UI ----
 function alRenderList(){ const box=$('alList'); if(!box) return; const L=alDrawn(); box.innerHTML='';
   if(!L.length){ box.innerHTML='<div><span>还没有开启提醒的画图</span></div>'; return; }
@@ -1501,6 +1573,8 @@ function initAlerts(){ const C0=AL.cfg, btn=$('alBtn'), m=$('amenu'), mask=$('aM
   alNum('alLowX',0.05,1,()=>C0.low.x,n=>{ C0.low.x=n; }); alNum('alHotX',1,10,()=>C0.hot.x,n=>{ C0.hot.x=n; });
   const pin=$('alPxIn'); $('alPxAdd').onclick=()=>{ if(alAddLevel(pin.value)) pin.value=''; }; pin.addEventListener('keydown',e=>{ if(e.key==='Enter'&&alAddLevel(pin.value)) pin.value=''; });
   $('alClr').onclick=()=>{ AL.log=[]; try{ LS.removeItem(AL_LOG_KEY); }catch(e){} alRenderLog(); };
+  m.querySelectorAll('[data-rt]').forEach(e=>{ const [k,w]=e.dataset.rt.split('.'); e.checked=!!C0.route[k][w]; e.onchange=()=>{ C0.route[k][w]=e.checked; alSave(); }; });
+  initTg();
   alRenderTfs(); alRenderLog(); alLockUi(); setInterval(alLockUi,3000);
   window.__alMenu=open; }
 
@@ -1596,7 +1670,7 @@ function initControls(){
 }
 if(!LWC){ document.body.innerHTML='<p style="padding:20px">图表库加载失败，请检查网络（需要访问 unpkg.com 或 jsdelivr.net）。</p>'; return; }
 initControls(); restart();
-window.__al={AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
+window.__al={TG,tgPush,tgCall,tgClaim,AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
 })();
 </script>
 </body>
