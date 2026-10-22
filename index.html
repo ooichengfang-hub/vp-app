@@ -164,6 +164,22 @@ body{padding-left:42px}
 #posPanel .ppnote{font-size:11px;color:#6f7c8a;line-height:1.5;margin-top:10px}
 #posPanel .emp{color:#6f7c8a;font-size:11.5px;padding:2px 0}
 @media (max-width:900px){#posPanel{left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;max-height:82vh;border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom)}}
+.qpos{position:absolute;z-index:7;top:6px;right:62px;display:flex;gap:3px;align-items:center;opacity:.82;transition:opacity .15s}.qpos:hover{opacity:1}
+.qpos button{border:1px solid #2c3e52;background:rgba(20,28,38,.85);color:#cfd8e3;border-radius:4px;font-size:11px;line-height:1;padding:4px 7px;cursor:pointer;font-weight:700;touch-action:manipulation}
+.qpos .qL{color:#26a69a;border-color:rgba(38,166,154,.55)}.qpos .qL:hover{background:rgba(38,166,154,.25)}.qpos .qS{color:#ef5350;border-color:rgba(239,83,80,.55)}.qpos .qS:hover{background:rgba(239,83,80,.22)}
+.qpos .qD{font-weight:500;color:#9fb0c2;padding:4px 6px}.qpos .qD:hover{color:#fff}
+@media (max-width:900px){.qpos button{padding:6px 9px;font-size:12px}}
+#qpMenu,#qpPop{position:fixed;z-index:60;background:#141c26;border:1px solid #2a3846;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.55);font-size:12.5px;color:#e6edf3}
+#qpMenu[hidden],#qpPop[hidden]{display:none}
+#qpMenu{min-width:170px;padding:4px}#qpMenu .qh{padding:5px 8px 6px;border-bottom:1px solid #223040;margin-bottom:3px;font-size:12px;white-space:nowrap}
+#qpMenu .qi{display:block;width:100%;text-align:left;background:none;border:none;color:#e6edf3;padding:7px 9px;border-radius:5px;cursor:pointer;font-size:12.5px;white-space:nowrap}#qpMenu .qi:hover{background:#22313f}
+#qpMenu .qi.L,#qpMenu .L{color:#26a69a}#qpMenu .qi.S,#qpMenu .S{color:#ef5350}#qpMenu .qi.warn{color:#ffb74d}#qpMenu .up{color:#26a69a}#qpMenu .dn{color:#ef5350}
+#qpPop{width:236px;padding:8px 10px}#qpPop .r{display:flex;align-items:center;gap:5px;margin:5px 0}#qpPop .r>span:first-child{width:46px;flex:none;color:var(--muted);font-size:12px}
+#qpPop input{width:62px;background:#0f151d;border:1px solid #2a3846;color:#e6edf3;border-radius:5px;padding:3px 5px;font-size:12.5px}
+#qpPop .ch{display:flex;gap:3px;flex-wrap:wrap;margin:0 0 4px 51px}#qpPop .ch button{background:#0f151d;border:1px solid #2a3846;color:#aab6c4;border-radius:4px;font-size:11px;padding:2px 6px;cursor:pointer}#qpPop .ch button.on{border-color:#2f6aa0;color:#fff;background:#1d3550}
+#qpPop .ft{display:flex;gap:6px;margin-top:7px}#qpPop .ft button{background:#1d2a38;border:1px solid #2c3e52;color:#cfd8e3;border-radius:5px;padding:3px 9px;cursor:pointer;font-size:12px}#qpPop .ft .pri{background:#24507a;border-color:#2f6aa0;color:#fff}
+#qpPop .nt{font-size:11px;color:#6f7c8a;margin-top:5px;line-height:1.45}#qpPop .er{color:#ef5350;font-size:11px}
+.chartWrap.dhovy .chart *{cursor:ns-resize!important}
 .mbar .mbpos{width:auto;padding:0 5px;font-weight:700;font-size:10.5px;color:#ffd166}
 #aiPanel{position:fixed;z-index:46;top:56px;right:10px;width:400px;max-width:calc(100vw - 20px);max-height:calc(100vh - 70px);display:flex;flex-direction:column;background:#141c26;border:1px solid #2a3846;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.55);font-size:13px}
 #aiPanel[hidden]{display:none}
@@ -239,6 +255,19 @@ body{padding-left:42px}
 <nav id="dtb" aria-label="画图工具"></nav><button id="dtbToggle" title="画图工具" aria-label="画图工具"></button>
 <div id="menuMask"></div>
 <div id="aMask"></div>
+<div id="qpMenu" role="menu" hidden></div>
+<div id="qpPop" role="dialog" aria-label="一键开仓默认值" hidden>
+  <div style="font-weight:600;margin-bottom:4px">一键开仓默认值</div>
+  <div class="r"><span>杠杆</span><input id="qpLev" type="number" min="1" max="125" step="1" inputmode="numeric">x</div>
+  <div class="ch"><button data-lev="5">5x</button><button data-lev="10">10x</button><button data-lev="20">20x</button><button data-lev="50">50x</button><button data-lev="100">100x</button></div>
+  <div class="r"><span>保证金</span><input id="qpM" type="number" min="0" step="any" inputmode="decimal">USDT</div>
+  <div class="ch"><button data-m="50">50</button><button data-m="100">100</button><button data-m="500">500</button><button data-m="1000">1000</button></div>
+  <div class="r"><span>止盈</span><input id="qpTp" type="number" min="0" step="0.1" inputmode="decimal" placeholder="不设">%</div>
+  <div class="r"><span>止损</span><input id="qpSl" type="number" min="0" step="0.1" inputmode="decimal" placeholder="不设">%</div>
+  <div id="qpErr" class="er"></div>
+  <div class="ft"><button id="qpOk" class="pri">完成</button><button id="qpAdv">完整表单…</button></div>
+  <div class="nt">止盈/止损按开仓价的 % 自动设置（空 = 不设）。只是计算器，不会下单。</div>
+</div>
 <div id="posPanel" role="dialog" aria-label="持仓盈亏" hidden>
   <div class="pphd"><b>持仓盈亏</b><span class="pptag">计算器 · 不下单</span><span class="sp"></span><button id="posClose" class="x" title="关闭">✕</button></div>
   <div class="ppbody">
@@ -261,7 +290,7 @@ body{padding-left:42px}
     <div id="posList"></div>
     <div class="pph">已平仓<span class="sp"></span><span id="posHTot"></span><button id="posHClr" class="b2" title="清空已平仓记录">清空</button></div>
     <div id="posHist"></div>
-    <div class="ppnote">按 USDT 本位永续、逐仓估算；现价 = 图上最新成交价（不是标记价格）。盈亏 = 未扣手续费；净 = 扣开仓+平仓手续费。强平价是估算值，实际以交易所为准。<br>也可以用画图工具里的「多头/空头仓位」直接在图上画，选中后点工具条上的「持仓」改杠杆和保证金。</div>
+    <div class="ppnote">按 USDT 本位永续、逐仓估算；现价 = 图上最新成交价（不是标记价格）。盈亏 = 未扣手续费；净 = 扣开仓+平仓手续费。强平价是估算值，实际以交易所为准。<br>更快：图右上角「多 / 空」一键按现价开仓（快捷键 B / S）；右键或 Shift+点击（手机长按）图表 → 在此价开仓；拖动开仓/止盈/止损线调整；点图上的盈亏标签 → 平仓 / 删除 / 编辑。也可以用画图工具的「多头/空头仓位」画。</div>
   </div>
 </div>
 <div id="aiPanel" role="dialog" aria-label="AI 解释" hidden>
@@ -1010,7 +1039,7 @@ function buildPanels(){
     chart.timeScale().subscribeVisibleLogicalRangeChange(()=>histCheck(p));   // 向左滚到头 → 加载更早K线
     // 拖动价格轴没有事件 → 低频重绘（只画，不重算）
     p.redrawTimer=setInterval(()=>{ drawMVP(p); drawDrawings(p); },700);
-    initDrawPanel(p); if(DR.tool!=='cursor') p.drwOv.style.display='block';
+    initDrawPanel(p); qpInitPanel(p); if(DR.tool!=='cursor') p.drwOv.style.display='block';
     state.panels.push(p);
   });
   renderPanelMa(); if(typeof alRenderTfs==='function') alRenderTfs(); if(typeof uhUi==='function') uhUi();
@@ -1237,13 +1266,13 @@ function dSave(){ for(const k of Object.keys(DR.store)) if(!DR.store[k]||!DR.sto
 const UH={last:null,st:{},mute:false,MAX:100};
 const uhSig=d=>JSON.stringify(d,(k,v)=>k[0]==='_'||k==='u'?undefined:v);
 function uhMap(){ const m=new Map(); for(const k of Object.keys(DR.store)){ if(!/\|(D|VP)$/.test(k)||!Array.isArray(DR.store[k])) continue; DR.store[k].forEach((d,i)=>{ if(d&&d.id!=null) m.set(k+'#'+d.id,{j:uhSig(d),i}); }); } return m; }
-function uhRecord(){ const cur=uhMap(), last=UH.last||new Map(); UH.last=cur; if(UH.mute) return;
+function uhRecord(){ const cur=uhMap(), last=UH.last||new Map(), split=!!UH.split; UH.split=false; UH.last=cur; if(UH.mute) return;   // split：拖动结束 = 单独一步，不合并
   const by={}, add=(k,b,a,bi)=>{ const sym=k.slice(0,k.indexOf('|')); (by[sym]=by[sym]||[]).push({k,b,a,bi}); };
   for(const [k,v] of cur){ const o=last.get(k); if(!o) add(k,null,v.j,null); else if(o.j!==v.j) add(k,o.j,v.j,o.i); }
   for(const [k,o] of last) if(!cur.has(k)) add(k,o.j,null,o.i);
   const now=Date.now();
   for(const [sym,ch] of Object.entries(by)){ const S=UH.st[sym]=UH.st[sym]||{u:[],r:[]}, top=S.u[S.u.length-1];
-    if(top&&now-top.t<800&&ch.every(c=>c.b&&c.a)&&ch.every(c=>top.ch.some(x=>x.k===c.k&&x.a))&&ch.length===top.ch.length){ ch.forEach(c=>{ top.ch.find(x=>x.k===c.k).a=c.a; }); top.t=now; }   // 连续调颜色等：合并成一步
+    if(top&&now-top.t<800&&!split&&top.ch.every(x=>x.b)&&ch.every(c=>c.b&&c.a)&&ch.every(c=>top.ch.some(x=>x.k===c.k&&x.a))&&ch.length===top.ch.length){ ch.forEach(c=>{ top.ch.find(x=>x.k===c.k).a=c.a; }); top.t=now; }   // 连续调颜色等：合并成一步
     else { S.u.push({ch,t:now}); if(S.u.length>UH.MAX) S.u.shift(); }
     S.r=[]; }
   uhUi(); }
@@ -1487,7 +1516,7 @@ function renderD(p,ctx,d,W,H,sel,draft){
       const rr=pm?pm.rr:pc.rr; label(ctx,[pm?`${T==='long'?'多':'空'} ${pm.lev}x ${fmt(e)} · 保证金 ${Math.round(pm.margin).toLocaleString('en-US')}${rr!=null?' · 盈亏比 '+rr.toFixed(2):''}`:`${T==='long'?'多':'空'} ${fmt(e)} · 盈亏比 ${pc.rr!=null?pc.rr.toFixed(2):'--'}`],cx,g.yE+(tpUp?3:-19),'rgba(40,52,66,0.92)','c'); }
     else if(pm){}
     else { ctx.font='9px -apple-system,"Trebuchet MS",Roboto,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='right'; ctx.fillStyle=col; ctx.fillText(pc.rr!=null?pc.rr.toFixed(1)+'R':'',b.R-2,g.yE+(g.yT<g.yE?6:-6)); }
-    if(pm&&pm.cur){ const up=pm.cur.pnl>=0, lb=label(ctx,[`${T==='long'?'多':'空'} ${pm.lev}x  ${pmSg(pm.cur.pnl)} USDT  ${pmSg(pm.cur.roe,1)}%`],Math.max(b.L+60,b.R-6),sel?(((ps.tpOff?(ps.slOff?T==='long':g.yS>g.yE):g.yT<g.yE))?g.yE-21:g.yE+3):g.yE-9,up?'rgba(38,166,154,0.92)':'rgba(239,83,80,0.92)','r'); d._pl=lb; } }
+    if(pm&&pm.cur){ const up=pm.cur.pnl>=0, lb=label(ctx,[`${T==='long'?'多':'空'} ${pm.lev}x  ${pmSg(pm.cur.pnl)} USDT  ${pmSg(pm.cur.roe,1)}%`],Math.max(b.L+60,b.R-6),((ps.tpOff?(ps.slOff?T==='long':g.yS>g.yE):g.yT<g.yE))?g.yE-21:g.yE+3,up?'rgba(38,166,154,0.92)':'rgba(239,83,80,0.92)','r'); g.pl=lb; } }
   else if(T==='measure'){ const [x1,x2]=g.xs,[y1,y2]=g.ys, up=d.pts[1].p>=d.pts[0].p, mc=up?C('drMeasure'):C('drSl'), b=g.box;
     ctx.setLineDash([]); ctx.fillStyle=hexA(mc,state.colors.drMeasure.a); ctx.fillRect(b.L,b.T,b.R-b.L,b.B-b.T); ctx.strokeStyle=mc; ctx.lineWidth=1;
     const xm=(x1+x2)/2, ym=(y1+y2)/2; line(xm,y1,xm,y2); line(x1,ym,x2,ym);
@@ -1517,6 +1546,7 @@ function hitTest(p,x,y){ if(state.draw.hidden&&!(DR.tmp&&DR.tmp.p===p)) return n
     else { const g=p.drGeo&&p.drGeo.get(DR.sel.id); if(g) for(const hd of g.handles) if(Math.hypot(x-hd.x,y-hd.y)<=8) return {d:sd,k:hd.k}; } }
   if(DR.tmp&&DR.tmp.p===p){ const g=p.drGeo&&p.drGeo.get('tmp'); if(g&&g.hit(x,y)) return {d:DR.tmp.d,k:'move',tmp:true}; }
   if(state.draw.hidden) return null;
+  { const q=qpHit(p,x,y); if(q) return q; }   // 持仓：标签 / 止盈止损线 / 开仓线
   const L=dList(p); for(let i=L.length-1;i>=0;i--){ const d=L[i]; if(d.type==='mvp') continue; const g=p.drGeo&&p.drGeo.get(d.id); if(g&&g.hit(x,y)) return {d,k:'move'}; }
   const hs=(p.mvpHit||[]).filter(h=>x>=h.L&&x<=h.R&&y>=h.top&&y<=h.bot).sort((a,b)=>(a.R-a.L)-(b.R-b.L));
   if(hs.length){ const d=mvpList().find(q=>q.id===hs[0].id); if(d) return {d,k:'move'}; }
@@ -1529,6 +1559,8 @@ function dClearAll(){ Object.keys(DR.store).forEach(k=>{ if(k.split('|')[0]===st
 // ---- 拖动 ----
 const clone=d=>JSON.parse(JSON.stringify(d,(k,v)=>k[0]==='_'?undefined:v));
 function applyDrag(p,dg,x,y){ const d=dg.d, o=dg.orig, T=d.type;
+  if(dg.k==='lbl') dg.k='move';   // 拖动标签 = 整体移动；只点不拖 = 菜单
+  if(dg.k==='eL'||dg.k==='tpL'||dg.k==='slL'){ qpDragLine(p,dg,y); return; }
   if(dg.k==='move'){ const L0=LOfX(p,dg.x0), L1=LOfX(p,x), p0=pOfY(p,dg.y0), p1=pOfY(p,y); if(L0==null||L1==null||p0==null||p1==null) return; const dL=Math.round(L1-L0), dp=p1-p0;
     if(T==='mvp'){ d.t0=shiftT(p,o.t0,dL); d.t1=shiftT(p,o.t1,dL); return; }
     d.pts=o.pts.map(q=>({t:shiftT(p,q.t,dL),p:q.p+dp})); if(o.tp!=null){ d.tp=o.tp+dp; d.sl=o.sl+dp; } return; }
@@ -1773,10 +1805,11 @@ function initDrawPanel(p){
   wrap.addEventListener('touchmove',e=>{ if(DR.drag&&DR.drag.p===p){ e.stopPropagation(); e.preventDefault(); } },{capture:true,passive:false});
   wrap.addEventListener('pointermove',e=>{ const dg=DR.drag;
     if(dg&&dg.p===p){ const [x,y]=pos(e); if(!dg.moved&&Math.hypot(x-dg.x0,y-dg.y0)<3) return; dg.moved=true; applyDrag(p,dg,x,y); if(dg.d.type==='mvp') state.panels.forEach(drawMVP); else if(DR.tmp&&dg.d===DR.tmp.d) drawDrawings(p); else state.panels.forEach(drawDrawings); return; }
-    if(DR.tool==='cursor'&&!DR.drag&&e.pointerType==='mouse'){ const [x,y]=pos(e), h=hitTest(p,x,y); wrap.classList.toggle('dhov',!!h); wrap.classList.toggle('dhovh',!!(h&&h.k!=='move')); } });
+    if(DR.tool==='cursor'&&!DR.drag&&e.pointerType==='mouse'){ const [x,y]=pos(e), h=hitTest(p,x,y); wrap.classList.toggle('dhov',!!h); wrap.classList.toggle('dhovh',!!(h&&h.k!=='move'&&!/L$/.test(h.k))); wrap.classList.toggle('dhovy',!!(h&&/^(eL|tpL|slL)$/.test(h.k))); } });
   const up=e=>{ const dg=DR.drag;
     if(dg&&dg.p===p){ DR.drag=null; try{ wrap.releasePointerCapture(e.pointerId); }catch(er){}
-      if(dg.moved){ if(dg.d.type==='mvp'){ dSave(); mvpLoad(p,dg.d,false); } else if(!(DR.tmp&&dg.d===DR.tmp.d)) dSave(); }
+      if(!dg.moved&&dg.k==='lbl'&&e.type==='pointerup'){ redrawAll(); qpPosMenu(p,dg.d,e.clientX,e.clientY); return; }
+      if(dg.moved){ if(dg.d.type==='mvp'){ dSave(); mvpLoad(p,dg.d,false); } else if(!(DR.tmp&&dg.d===DR.tmp.d)){ UH.split=true; dSave(); } }
       if(DR.tmp&&dg.d===DR.tmp.d){ drawDrawings(p); } else redrawAll(); return; }
     if(blank&&e.type==='pointerup'){ const [x,y]=pos(e); if(Math.hypot(x-blank.x,y-blank.y)<4&&DR.sel&&!(DR.sel.p===p&&DR.sel.id==='tmp')) dSelect(DR.sel.p,null); } blank=null; };
   wrap.addEventListener('pointerup',up); wrap.addEventListener('pointercancel',up);
@@ -2847,6 +2880,99 @@ function initPos(){ const D=POS.def;
   posModeLabels(); posFormFill({side:'long',entry:null,mode:D.mode,v:D.v,lev:D.lev,tp:null,sl:null,fee:D.fee,mmr:D.mmr}); posEditUi();
   setInterval(()=>{ posBadge(); const pp=$('posPanel'); if(!pp.hidden){ posModeLabels(); posRender(false); } },1000); posBadge();
   window.__pos={POS,pmCalc,pmMargin,pmValid,posList,posOf,posApply,posSubmit,posEditD,posCloseD,posDelD,posOpen,posRender,posAlertCheck,posFormRead,posFormFill,posFormReset,setPrice,aiDesc,dims}; }
+// ================= 快速持仓：图上一键开仓 / 在此价开仓 / 拖动调整 / 标签操作 =================
+// 默认值（本地保存）：杠杆、保证金 USDT、止盈 %、止损 %（空 = 不设）
+const QP_KEY='vp_pos_quick';
+const QP=(()=>{ let o={}; try{ o=JSON.parse(LS.getItem(QP_KEY)||'{}')||{}; }catch(e){ o={}; } const n=(v,a,b,d)=>{ if(v===null||v===''||v===undefined) return d; v=Number(v); return isFinite(v)&&v>=a&&v<=b?v:d; };
+  return {lev:Math.round(n(o.lev,1,125,20)), m:n(o.m,0.01,1e9,100), tp:n(o.tp,0.01,100,null), sl:n(o.sl,0.01,100,null)}; })();
+const qpSave=()=>{ try{ LS.setItem(QP_KEY,JSON.stringify(QP)); }catch(e){} qpChips(); };
+const qpNum=v=>String(+(+v).toPrecision(6));
+function qpChipText(){ return `${QP.lev}x · ${qpNum(QP.m)}U`+(QP.tp||QP.sl?` · ${QP.tp?'+'+qpNum(QP.tp)+'%':'–'}/${QP.sl?'−'+qpNum(QP.sl)+'%':'–'}`:''); }
+function qpChips(){ document.querySelectorAll('.qpos .qD').forEach(b=>{ b.textContent=qpChipText(); b.title=`一键开仓默认：杠杆 ${QP.lev}x，保证金 ${qpNum(QP.m)} USDT，止盈 ${QP.tp?QP.tp+'%':'不设'}，止损 ${QP.sl?QP.sl+'%':'不设'}（点击修改）`; }); }
+// 开仓：按价格（默认现价），用默认值；返回新画图
+function posQuick(side,price,p){ const E=price!=null?price:state.lastPrice; if(!(E>0)){ toast('还没有现价，不能开仓','err'); return null; }
+  const lg=side!=='short', s=lg?1:-1, tp=QP.tp?E*(1+s*QP.tp/100):null, sl=QP.sl?E*(1-s*QP.sl/100):null;
+  const d={id:newId(),tf:(p||state.panels[0]||{}).tf||'15m',c:C('drPos'),w:1,ds:0};
+  posApply(d,{side:lg?'long':'short',entry:E,mode:'margin',v:QP.m,lev:QP.lev,tp,sl,fee:POS.def.fee,mmr:POS.def.mmr}); d.pos.man=true;
+  dList().push(d); dSave(); const pp=p||state.panels[0]; if(pp) dSelect(pp,d.id); else redrawAll(); posMiniBar(); alLockUi(); posRender(true); posBadge();
+  toast(`已开 ${lg?'多':'空'} ${QP.lev}x @ ${fmt(E)} · 保证金 ${qpNum(QP.m)}U（拖动线调整，点标签平仓）`,'ok'); return d; }
+// ---- 每个图的 多 / 空 / 默认值 小按钮 ----
+function qpBar(p){ if(p.qbar&&p.qbar.isConnected) return; const b=document.createElement('div'); b.className='qpos';
+  b.innerHTML=`<button class="qL" title="按现价开多（快捷键 B）">多</button><button class="qS" title="按现价开空（快捷键 S）">空</button><button class="qD"></button>`;
+  ['pointerdown','mousedown','touchstart','dblclick','contextmenu'].forEach(ev=>b.addEventListener(ev,e=>e.stopPropagation(),{passive:ev!=='contextmenu'}));
+  b.querySelector('.qL').onclick=()=>posQuick('long',null,p); b.querySelector('.qS').onclick=()=>posQuick('short',null,p);
+  b.querySelector('.qD').onclick=e=>{ e.stopPropagation(); qpPopOpen(b.querySelector('.qD')); };
+  p.wrap.appendChild(b); p.qbar=b; qpChips(); qpPlace(p); }
+function qpPlace(p){ if(!p.qbar) return; let psW=56; try{ psW=p.chart.priceScale('right').width()||psW; }catch(e){} p.qbar.style.right=(psW+6)+'px'; const o=p.wrap.querySelector('.ohlc'); const t=o&&o.offsetHeight?o.offsetTop+o.offsetHeight+4:6; if(Math.abs((p.qbarT||0)-t)>2){ p.qbarT=t; p.qbar.style.top=t+'px'; } }
+// ---- 默认值小弹窗 ----
+function qpPopOpen(anchor){ const m=$('qpPop'); qpMenuClose(); if(!m.hidden&&m._a===anchor){ qpPopClose(); return; } m._a=anchor;
+  const v=(id,x)=>{ $(id).value=x==null?'':qpNum(x); }; v('qpLev',QP.lev); v('qpM',QP.m); v('qpTp',QP.tp); v('qpSl',QP.sl); qpPopUi();
+  m.hidden=false; const r=anchor.getBoundingClientRect(), mw=m.offsetWidth||230, mh=m.offsetHeight||200;
+  let left=Math.min(innerWidth-mw-6,Math.max(6,r.right-mw)), top=r.bottom+4; if(top+mh>innerHeight-6) top=Math.max(6,r.top-mh-4); m.style.left=left+'px'; m.style.top=top+'px'; }
+function qpPopClose(){ const m=$('qpPop'); if(m) m.hidden=true; }
+function qpPopUi(){ document.querySelectorAll('#qpPop [data-lev]').forEach(b=>b.classList.toggle('on',+b.dataset.lev===QP.lev)); document.querySelectorAll('#qpPop [data-m]').forEach(b=>b.classList.toggle('on',+b.dataset.m===QP.m)); }
+function qpPopRead(){ const n=id=>{ const s=String($(id).value).trim(); return s===''?null:Number(s); }, lev=n('qpLev'), m=n('qpM'), tp=n('qpTp'), sl=n('qpSl'); let bad='';
+  if(lev!=null&&lev>=1&&lev<=125) QP.lev=Math.round(lev); else bad='杠杆 1–125';
+  if(m!=null&&m>0) QP.m=m; else bad=bad||'保证金要大于 0';
+  if(tp==null) QP.tp=null; else if(tp>0&&tp<=100) QP.tp=tp; else bad=bad||'止盈 % 要 > 0';
+  if(sl==null) QP.sl=null; else if(sl>0&&sl<=100) QP.sl=sl; else bad=bad||'止损 % 要 > 0';
+  $('qpErr').textContent=bad; qpSave(); qpPopUi(); }
+// ---- 图上菜单：在此价开仓 / 持仓操作 ----
+function qpMenuClose(){ const m=$('qpMenu'); if(m){ m.hidden=true; m._d=null; } }
+function qpMenuShow(cx,cy,items,head){ const m=$('qpMenu'); qpPopClose(); m.innerHTML=head?`<div class="qh"></div>`:''; if(head) m.querySelector('.qh').innerHTML=head;
+  for(const it of items){ const b=document.createElement('button'); b.className='qi'+(it.cls?' '+it.cls:''); b.textContent=it.t; if(it.k) b.dataset.k=it.k; b.onclick=e=>{ e.stopPropagation(); if(it.keep){ it.fn(b); return; } qpMenuClose(); it.fn(b); }; m.appendChild(b); }
+  m.hidden=false; m._at=Date.now(); const mw=m.offsetWidth||170, mh=m.offsetHeight||100; let left=Math.min(innerWidth-mw-6,Math.max(6,cx+4)), top=Math.min(innerHeight-mh-6,Math.max(6,cy-mh-8<6?cy+12:cy-mh-8));
+  m.style.left=left+'px'; m.style.top=top+'px'; return m; }
+function qpPriceMenu(p,cx,cy,y){ const pr=pOfY(p,y); if(pr==null||!(pr>0)) return null; const px=+fmt(pr).replace(/,/g,''), cur=state.lastPrice;
+  const rel=cur?` <span style="color:var(--muted)">（${pr>=cur?'高于':'低于'}现价 ${Math.abs((pr-cur)/cur*100).toFixed(2)}%）</span>`:'';
+  return qpMenuShow(cx,cy,[{t:`在此价做多 @ ${fmt(px)}`,cls:'L',k:'pl',fn:()=>posQuick('long',px,p)},{t:`在此价做空 @ ${fmt(px)}`,cls:'S',k:'ps',fn:()=>posQuick('short',px,p)},
+    {t:`默认：${qpChipText()}`,k:'def',fn:()=>qpPopOpen(p.qbar?p.qbar.querySelector('.qD'):$('posBtn'))}],`<b>${fmt(px)}</b>${rel}`); }
+function qpPosMenu(p,d,cx,cy){ const r=posOf(d,state.lastPrice); if(!r) return null; const lg=d.type==='long', ps=d.pos;
+  const head=`<b class="${lg?'L':'S'}">${lg?'多':'空'} ${r.lev}x</b> @ ${fmt(r.entry)} · <span class="${r.cur?posCls(r.cur.pnl):''}">${r.cur?pmSg(r.cur.pnl)+' USDT ('+pmSg(r.cur.roe,1)+'%)':'--'}</span>`;
+  const it=[{t:`平仓（按现价 ${fmt(state.lastPrice)}）`,k:'close',fn:()=>posCloseD(d.id)}];
+  if(ps.tpOff) it.push({t:'加止盈（之后拖动调整）',k:'addtp',fn:()=>qpAddLvl(d.id,'tp')}); if(ps.slOff) it.push({t:'加止损（之后拖动调整）',k:'addsl',fn:()=>qpAddLvl(d.id,'sl')});
+  it.push({t:'编辑…',k:'edit',fn:()=>posEditD(dList().find(x=>x.id===d.id))});
+  it.push({t:'删除',k:'del',cls:'warn',keep:true,fn:b=>{ if(b.dataset.arm&&Date.now()-+b.dataset.arm<3000){ qpMenuClose(); posDelD(d.id); toast('已删除持仓（Ctrl+Z 可撤销）'); return; } b.dataset.arm=Date.now(); b.textContent='再点一次确认删除'; }});
+  const m=qpMenuShow(cx,cy,it,head); m._d=d.id; return m; }
+function qpAddLvl(id,k){ const d=dList().find(x=>x.id===id); if(!d||!d.pos) return; const E=d.pts[0].p, s=d.type==='long'?1:-1;
+  if(k==='tp'){ d.tp=E*(1+s*(QP.tp||1)/100); d.pos.tpOff=false; } else { d.sl=E*(1-s*(QP.sl||0.5)/100); d.pos.slOff=false; } dSave(); const p=DR.sel&&DR.sel.p||state.panels[0]; dSelect(p,id); posRender(true); }
+// 拖动持仓的价格线（只改价格，不改时间）；止盈/止损不能越过开仓价
+function qpDragLine(p,dg,y){ const d=dg.d, o=dg.orig, pr=pOfY(p,y); if(pr==null||!(pr>0)) return; const s=d.type==='long'?1:-1, k=dg.k, eps=1e-4;
+  if(k==='eL'){ const dp=pr-o.pts[0].p; d.pts=o.pts.map(q=>({t:q.t,p:pr})); if(d.pos.tpOff) d.tp=pr; else if(s*(o.tp-pr)<=pr*eps) d.tp=pr*(1+s*eps*2); else d.tp=o.tp; if(d.pos.slOff) d.sl=pr; else if(s*(pr-o.sl)<=pr*eps) d.sl=pr*(1-s*eps*2); else d.sl=o.sl; return dp; }
+  const E=d.pts[0].p; if(k==='tpL') d.tp=s>0?Math.max(pr,E*(1+eps)):Math.min(pr,E*(1-eps)); else if(k==='slL') d.sl=s>0?Math.min(pr,E*(1-eps)):Math.max(pr,E*(1+eps)); }
+// 命中：持仓的标签 / 止盈线 / 止损线 / 开仓线（不用先选中）
+function qpHit(p,x,y){ if(state.draw.hidden) return null; const L=dList(p);
+  for(let i=L.length-1;i>=0;i--){ const d=L[i]; if(!d||!d.pos||(d.type!=='long'&&d.type!=='short')) continue; const g=p.drGeo&&p.drGeo.get(d.id); if(!g) continue;
+    const inX=x>=g.box.L-3&&x<=g.box.R+3, lk=isLocked(d);
+    if(inX&&!lk){ if(!d.pos.tpOff&&Math.abs(y-g.yT)<=5) return {d,k:'tpL'}; if(!d.pos.slOff&&Math.abs(y-g.yS)<=5) return {d,k:'slL'}; }
+    if(g.pl&&x>=g.pl.x-2&&x<=g.pl.x+g.pl.w+2&&y>=g.pl.y-2&&y<=g.pl.y+g.pl.h+2) return {d,k:'lbl'};
+    if(inX&&!lk&&Math.abs(y-g.yE)<=4) return {d,k:'eL'}; }
+  return null; }
+// 图上交互：右键菜单 / Shift+点击 / 触屏长按
+function qpInitPanel(p){ qpBar(p); const wrap=p.wrap, pos=e=>{ const r=wrap.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; };
+  const inPlot=(x,y)=>{ const {W,H}=dims(p); return x>=0&&x<=W&&y>=0&&y<=H; };
+  const menuAt=(e,x,y)=>{ if(DR.tool!=='cursor'||!inPlot(x,y)) return false; const h=qpHit(p,x,y)||(()=>{ const t=hitTest(p,x,y); return t&&t.d&&t.d.pos?t:null; })();
+    if(h&&h.d.pos){ qpPosMenu(p,h.d,e.clientX,e.clientY); return true; } return !!qpPriceMenu(p,e.clientX,e.clientY,y); };
+  wrap.addEventListener('contextmenu',e=>{ if(e.target.closest&&e.target.closest('.mbar,.qpos,.dtxt')) return; const [x,y]=pos(e); if(!inPlot(x,y)) return; e.preventDefault(); const m=$('qpMenu'); if(!m.hidden&&Date.now()-(m._at||0)<700) return; menuAt(e,x,y); });
+  wrap.addEventListener('pointerdown',e=>{ if(DR.tool!=='cursor'||e.button>0||!e.shiftKey||e.pointerType!=='mouse') return; if(e.target.closest&&e.target.closest('.mbar,.qpos,.dtxt')) return; const [x,y]=pos(e); if(!inPlot(x,y)) return;
+    e.preventDefault(); e.stopPropagation(); menuAt(e,x,y); },true);
+  let lp=null; const lpEnd=()=>{ if(lp){ clearTimeout(lp.t); lp=null; } };
+  wrap.addEventListener('pointerdown',e=>{ lpEnd(); if(e.pointerType==='mouse'||DR.tool!=='cursor') return; if(e.target.closest&&e.target.closest('.mbar,.qpos,.dtxt')) return; const [x,y]=pos(e); if(!inPlot(x,y)) return;
+    lp={x,y,cx:e.clientX,cy:e.clientY,id:e.pointerId,t:setTimeout(()=>{ const L=lp; lp=null; if(!L||DR.drag&&DR.drag.moved) return; if(DR.drag){ DR.drag=null; } if(menuAt({clientX:L.cx,clientY:L.cy},L.x,L.y)){ try{ navigator.vibrate&&navigator.vibrate(15); }catch(er){} } },520)}; },true);
+  wrap.addEventListener('pointermove',e=>{ if(!lp||e.pointerId!==lp.id) return; const [x,y]=pos(e); if(Math.hypot(x-lp.x,y-lp.y)>8) lpEnd(); },true);
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>wrap.addEventListener(ev,e=>{ if(lp&&e.pointerId===lp.id) lpEnd(); },true)); }
+function initQuickPos(){
+  document.addEventListener('pointerdown',e=>{ const m=$('qpMenu'), pp=$('qpPop'); if(!m.hidden&&!m.contains(e.target)) qpMenuClose(); if(!pp.hidden&&!pp.contains(e.target)&&!(e.target.closest&&e.target.closest('.qD'))) qpPopClose(); },true);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ qpMenuClose(); qpPopClose(); return; }
+    const tg=e.target&&e.target.tagName; if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||(e.target&&e.target.isContentEditable)) return;
+    if(e.ctrlKey||e.metaKey||e.altKey||e.repeat) return; const k=(e.key||'').toLowerCase();
+    if(k==='b'||k==='s'){ e.preventDefault(); const p=DR.sel&&DR.sel.p||state.panels[0]; posQuick(k==='b'?'long':'short',null,p); } });
+  ['qpLev','qpM','qpTp','qpSl'].forEach(id=>{ $(id).addEventListener('input',qpPopRead); $(id).addEventListener('keydown',e=>{ if(e.key==='Enter') qpPopClose(); }); });
+  document.querySelectorAll('#qpPop [data-lev]').forEach(b=>b.onclick=()=>{ $('qpLev').value=b.dataset.lev; qpPopRead(); });
+  document.querySelectorAll('#qpPop [data-m]').forEach(b=>b.onclick=()=>{ $('qpM').value=b.dataset.m; qpPopRead(); });
+  $('qpOk').onclick=qpPopClose; $('qpAdv').onclick=()=>{ qpPopClose(); posOpen(true); };
+  addEventListener('resize',()=>state.panels.forEach(qpPlace)); setInterval(()=>state.panels.forEach(qpPlace),2000);
+  window.__qp={QP,posQuick,qpHit,qpPriceMenu,qpPosMenu,qpMenuClose,qpPopOpen,qpPopClose,qpChipText}; }
 function numCtl(id,min,max,get,set){
   const el=$(id); el.value=get();
   const chk=commit=>{ const n=vInt(el.value,min,max); el.classList.toggle('bad',!n); if(n){ if(n!==get()){ set(n); save(); } } else if(commit){ el.value=get(); el.classList.remove('bad'); } };
@@ -2931,7 +3057,7 @@ function initControls(){
   const onLm=commit=>{ const s=lm.value.trim(), n=Number(s), ok=s!==''&&isFinite(n)&&n>=0.1&&n<=1; lm.classList.toggle('bad',!ok); if(ok){ const v=Math.round(n*100)/100; if(v!==LO.mult){ LO.mult=v; lowAll(); } } else if(commit){ lm.value=LO.mult; lm.classList.remove('bad'); } };
   lm.addEventListener('input',()=>onLm(false)); lm.addEventListener('change',()=>onLm(true));
   initDrawControls();
-  initMenu(); buildColorUI(); initAlerts(); initAI(); initHeat(); initBt(); initPos();
+  initMenu(); buildColorUI(); initAlerts(); initAI(); initHeat(); initBt(); initPos(); initQuickPos();
   cdLoop(); setInterval(syncServerTime,10*60*1000); // 每10分钟重新校准
   const tick=()=>{ $('clock').textContent=new Date(nowSrv()).toLocaleString('zh-CN',{timeZone:'Asia/Singapore',hour12:false})+' (UTC+8)'; }; tick(); setInterval(tick,1000);
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&(!state.ws||state.ws.readyState>1)) resync(state.gen); });
