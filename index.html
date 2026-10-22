@@ -173,6 +173,16 @@ body{padding-left:42px}
 .chartWrap{background:#121821}.chartWrap .chart{z-index:1}
 .chartWrap canvas.heat{position:absolute;left:0;top:0;pointer-events:none;z-index:0}
 .chartWrap canvas.hprof{position:absolute;left:0;top:0;pointer-events:none;z-index:2}
+.chartWrap canvas.hmk{position:absolute;left:0;top:0;pointer-events:none;z-index:3}
+.chartWrap .wtip{position:absolute;z-index:9;pointer-events:none;font-size:11px;line-height:1.45;color:#dde3ea;background:rgba(14,19,27,.95);border:1px solid #33404f;border-radius:5px;padding:5px 8px;white-space:pre;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.wtip b{font-weight:600}
+.wcol{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.wcol label{display:inline-flex;align-items:center;gap:3px}
+.wcol input[type=color]{width:24px;height:18px;padding:0;border:1px solid var(--border);border-radius:4px;background:none;cursor:pointer}
+.wcol input[type=color]::-webkit-color-swatch-wrapper{padding:1px}.wcol input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
+.wck{display:flex;gap:10px;flex-wrap:wrap}
+.wsub{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted)}
+.wlog{max-height:150px;overflow:auto;font-size:11px;line-height:1.5}.wlog div{display:flex;gap:6px;white-space:nowrap}.wlog .e{color:var(--muted)}
+.wlog i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-top:4px;flex:none}
 .chartWrap .hst{position:absolute;right:70px;top:44px;z-index:4;pointer-events:none;font-size:10.5px;color:#c9b8ff;background:rgba(18,24,33,0.78);border-radius:4px;padding:2px 6px;white-space:nowrap}
 #heatInt{width:110px;accent-color:#b48cff}#heatMin,#heatWall{width:86px}
 </style>
@@ -260,6 +270,16 @@ body{padding-left:42px}
     </div>
   </div>
   <div class="mg">
+    <div class="mrow"><label class="chk big" title="大单墙消失时判断是被吃掉还是被撤单（只支持 OKX；开启后会订阅订单簿和逐笔成交，不用打开热力图）"><input type="checkbox" id="alWall">大单墙</label><span><button class="alT" data-tone="weat" title="试听">♪</button> <button class="gear" data-sec="secAlWall" title="设置">⚙</button></span></div>
+    <div class="msec" id="secAlWall">
+      <div class="ctl wck"><label class="chk"><input type="checkbox" id="alWEat">被吃掉</label><label class="chk"><input type="checkbox" id="alWPull">被撤单</label><label class="chk" title="被大量主动成交打但挂单还在（不断补单 / 冰山单）"><input type="checkbox" id="alWAbs">吸收</label><label class="chk" title="少了很多但成交不够多，无法确定"><input type="checkbox" id="alWPart">不确定</label></div>
+      <div class="ctl"><label class="chk"><input type="checkbox" id="alWNear">价格接近大单墙</label> 距离 ≤ <input id="alWNearPct" class="num" type="number" min="0.01" max="5" step="0.01" inputmode="decimal">%</div>
+      <div class="ctl" title="峰值小于这个金额的墙不提醒（0 = 不限，按热力图里的大单墙阈值）">最小墙 <input id="alWMin" class="num" type="number" min="0" step="any" inputmode="decimal">USDT</div>
+      <div class="rt"><span style="color:var(--muted)">提醒方式</span><label class="chk"><input type="checkbox" data-rt="wall.s">声音</label><label class="chk"><input type="checkbox" data-rt="wall.t">Telegram</label></div>
+      <div class="mleg">判断规则在 指标 ▾ → 挂单热力图 ⚙ 里调。只看 OKX 一家，判断是推测，仅供参考。</div>
+    </div>
+  </div>
+  <div class="mg">
     <div class="mrow"><label class="chk big"><input type="checkbox" id="tgOn">Telegram 推送</label><button class="gear" data-sec="secTg" title="设置">⚙</button></div>
     <div class="msec" id="secTg">
       <div class="mleg">手机收提醒：Telegram 里找 @BotFather → /newbot 建一个机器人，复制它给的 Token；再打开你的机器人发一句话，然后点「自动获取」。令牌只保存在本浏览器（不会导出、不会云同步）；只需要在一台设备上设置。</div>
@@ -333,6 +353,16 @@ body{padding-left:42px}
       <label class="chk" title="图表右边显示当前挂单（绿=买单，红=卖单），大单墙标金额"><input type="checkbox" id="heatProf">右侧当前挂单</label>
       <label class="chk" title="每 30 秒用 REST 拉一次 5000 档深度（BTC 约 ±1%），否则只有实时 400 档（约 ±0.2%）"><input type="checkbox" id="heatDeep">5000 档深度</label>
       <button class="rst" id="heatClr" title="删除本浏览器里这个交易对记录的挂单快照">清除本交易对的记录</button>
+      <div class="wsub">大单墙事件（墙消失时判断：被吃掉 / 被撤单）</div>
+      <label class="chk" title="在三个图上标出事件，鼠标移上去看详情"><input type="checkbox" id="wMk">在图上标出</label>
+      <div class="ctl wcol"><label title="被吃掉（实心圆）">● 吃掉<input type="color" id="wcEat"></label><label title="被撤单（空心圆）">○ 撤单<input type="color" id="wcPull"></label><label title="吸收（菱形）">◆ 吸收<input type="color" id="wcAbs"></label><label title="部分吃掉 / 不确定（半圆）">◐ 不确定<input type="color" id="wcPart"></label></div>
+      <div class="ctl" title="墙存在少于这个时间就消失 = 闪单，忽略">墙至少存在 <input id="wAge" class="num" type="number" min="1" max="600" step="1">秒</div>
+      <div class="ctl" title="挂单比峰值少了这么多才判断">减少 ≥ <input id="wDrop" class="num" type="number" min="30" max="100" step="5">%</div>
+      <div class="ctl" title="打到这个价位的主动成交 ≥ 减少量的这个比例 → 被吃掉（价格穿过也算）">成交 ≥ <input id="wEat" class="num" type="number" min="10" max="100" step="5">% 算吃掉</div>
+      <div class="ctl" title="成交 < 减少量的这个比例，并且价格没碰到 → 被撤单；介于两者之间 = 不确定">成交 &lt; <input id="wPull" class="num" type="number" min="0" max="90" step="5">% 算撤单</div>
+      <div class="ctl" title="成交 ≥ 峰值的这个比例，挂单还剩 ≥ 70% → 吸收（不断补单 / 冰山单）">吸收：成交 ≥ 峰值 <input id="wAbs" class="num" type="number" min="10" max="1000" step="10">%</div>
+      <div class="wsub">最近事件 <span id="wCnt"></span></div>
+      <div class="wlog" id="wallLog"></div>
       <div class="mleg">数据：OKX 订单簿（实时 400 档 + 每 30 秒 5000 档），每 5 秒记录一次，金额换算成 USDT，颜色越亮挂单越多。交易所不提供历史挂单，只能从打开页面开始记录；记录存在本浏览器（最近 24 小时，1 小时前的按分钟合并），页面关着的时间段是空白。挂单随时可能撤，大单墙不代表一定会成交。</div>
     </div>
   </div>
@@ -641,6 +671,64 @@ function hcLut(stops){ const L=new Uint8Array(256*3); for(let i=0;i<256;i++){ co
 // 分位数（v 为普通数组，会被排序）
 function hcPct(v,q){ if(!v.length) return 0; v.sort((x,y)=>x-y); return v[Math.min(v.length-1,Math.max(0,Math.floor(q*(v.length-1))))]; }
 </script>
+<script id="wallcore">
+// ===== 大单墙跟踪（纯函数，可单元测试）=====
+// 墙 = 某个价格格子（step 宽）在某一边（买/卖）的挂单 ≥ 阈值；只跟踪在实时 400 档范围内（离边缘留 15%）的格子
+// 墙明显变小（比峰值少 ≥ drop）后等 grace 毫秒（让成交消息到齐），按这段时间里打到这个格子的主动成交来判断：被吃掉 / 被撤单 / 部分吃掉（不确定）
+const HW_DEF={age:15000,drop:0.7,eat:0.6,pull:0.2,abs:0.8,hold:0.7,grace:1500,win:600000,max:80,edge:0.15};
+function hwNew(o){ return {walls:new Map(),ended:new Map(),seq:0,prev:null,o:Object.assign({},HW_DEF,o||{})}; }
+const hwKey=(side,b)=>side+'|'+b;
+// 是否在实时订单簿范围内（不在 = 价格离开了 400 档，消失不算撤单）
+function hwInRange(bk,side,b){ const s=bk.step, m=bk.o==null?HW_DEF.edge:bk.o;
+  if(side==='bid') return b*s>=bk.lo+m*(bk.bb-bk.lo)&&b*s<=bk.bb+1e-9;
+  return (b+1)*s<=bk.hi-m*(bk.hi-bk.ba)+1e-9&&(b+1)*s>=bk.ba-1e-9; }
+// 把订单簿（[[price,usdt],...]）合成格子：{bids:Map b→usdt, asks, bb, ba, lo, hi, step}
+function hwBucket(bids,asks,step){ const bm=new Map(),am=new Map(),top=new Map(); let bb=-Infinity,ba=Infinity,lo=Infinity,hi=-Infinity;
+  const tp=(k,p,u)=>{ const x=top.get(k); if(!x||u>x[1]) top.set(k,[p,u]); };   // 每个格子里挂单最多的那一档价格（显示用）
+  for(const [p,u] of bids){ const b=Math.floor(p/step+1e-9); bm.set(b,(bm.get(b)||0)+u); tp('bid|'+b,p,u); if(p>bb) bb=p; if(p<lo) lo=p; }
+  for(const [p,u] of asks){ const b=Math.floor(p/step+1e-9); am.set(b,(am.get(b)||0)+u); tp('ask|'+b,p,u); if(p<ba) ba=p; if(p>hi) hi=p; }
+  return {bids:bm,asks:am,top,bb,ba,lo,hi,step}; }
+// 自动阈值：所有格子里 max(98 分位, 4×中位数)
+function hwAutoThr(bk){ const v=[...bk.bids.values(),...bk.asks.values()].filter(x=>x>0).sort((a,b)=>a-b); if(!v.length) return Infinity;
+  const q=f=>v[Math.min(v.length-1,Math.floor(f*(v.length-1)))]; return Math.max(q(0.98),4*q(0.5)); }
+// 分类
+function hwClassify(lost,traded,through,reached,o){ o=o||HW_DEF; if(through) return 'eat'; if(lost<=0) return 'part';
+  if(traded>=o.eat*lost) return 'eat'; if(traded<o.pull*lost&&!reached) return 'pull'; return 'part'; }
+const hwHit=(W,from)=>{ let s=0; for(const h of W.hits) if(h.t>=from) s+=h.u; return s; };
+// 逐笔成交：side = 主动方（buy 吃卖单，sell 吃买单）
+function hwTrade(T,px,usd,side,t){ for(const W of T.walls.values()){ const s=W.step, lo=W.b*s, hi=(W.b+1)*s, e=s*1e-6;
+    if(W.side==='ask'&&side==='buy'){ if(px>=lo-e&&px<hi-e){ W.hits.push({t,u:usd}); W.reached=true; } else if(px>=hi-e){ W.hits.push({t,u:usd}); W.through=true; W.reached=true; } }
+    else if(W.side==='bid'&&side==='sell'){ if(px>=lo-e&&px<hi-e){ W.hits.push({t,u:usd}); W.reached=true; } else if(px<lo-e){ W.hits.push({t,u:usd}); W.through=true; W.reached=true; } }
+    if(W.hits.length>4000) W.hits.splice(0,W.hits.length-3000); } }
+function hwEv(W,kind,t,size,traded,lost){ return {id:t+'-'+W.side+'-'+W.b,t,side:W.side,b:W.b,step:W.step,px:W.lp!=null?W.lp:(W.b+(W.side==='ask'?0:1))*W.step,peak:W.peak,lost,traded,rem:size,kind,dur:t-W.first,wid:W.id}; }
+// 每隔一段时间调用一次：bk = hwBucket(...)，thr = 墙阈值（USDT）。返回这次产生的事件
+function hwTick(T,bk,t,thr){ const o=T.o, out=[], cur={bid:bk.bids,ask:bk.asks}, prev=T.prev; bk.o=o.edge;
+  const size=(side,b)=>cur[side].get(b)||0;
+  // 1) 已跟踪的墙
+  for(const [k,W] of [...T.walls]){ const sz=size(W.side,W.b), inR=hwInRange(bk,W.side,W.b);
+    W.hits=W.hits.filter(h=>t-h.t<=o.win);
+    if(W.side==='ask'?bk.ba>=W.b*W.step-1e-9:bk.bb<(W.b+1)*W.step-1e-9) W.reached=true;   // 墙成了买一/卖一
+    if(W.pend){ if(t<W.pend.at) continue;
+      if(sz>=(1-o.drop)*W.peak&&!W.through){ W.pend=null; W.cur=sz; continue; }   // 又补回来了 → 继续跟踪
+      T.walls.delete(k); if(!inR&&!W.through&&!hwHit(W,W.first)) continue;
+      const lost=Math.max(0,W.peak-sz), traded=Math.min(hwHit(W,W.first),W.peak*3); T.ended.set(k,{t,rem:sz}); out.push(hwEv(W,hwClassify(lost,traded,W.through,W.reached,o),t,sz,traded,lost)); continue; }
+    if(!inR){ T.walls.delete(k); continue; }   // 离开实时范围（价格走远了）→ 不判断
+    W.cur=sz; if(sz>W.peak){ W.peak=sz; W.peakT=t; } const tp=bk.top&&bk.top.get(k); if(tp&&sz>=(1-o.drop)*W.peak) W.lp=tp[0];
+    if(W.peak-sz>=o.drop*W.peak||W.through){
+      if(t-W.first<o.age){ T.walls.delete(k); continue; }   // 存在时间太短 → 闪单，忽略
+      if(!W.through&&prev){ let mv=null; const lost=W.peak-sz;   // 挪了一两格（撤了在旁边重挂）→ 跟着挪，不算事件
+        for(const d of [-2,-1,1,2]){ const nb=W.b+d, inc=size(W.side,nb)-((prev[W.side]&&prev[W.side].get(nb))||0); if(inc>=0.6*lost&&hwInRange(bk,W.side,nb)&&(!mv||inc>mv.inc)) mv={nb,inc}; }
+        if(mv){ const nk=hwKey(W.side,mv.nb), o2=T.walls.get(nk); if(o2&&o2.first<W.first) { T.walls.delete(k); continue; } T.walls.delete(nk); T.walls.delete(k); W.b=mv.nb; W.cur=size(W.side,mv.nb); const tq=bk.top&&bk.top.get(nk); if(tq) W.lp=tq[0]; W.peak=Math.max(W.cur,W.peak*0.999); W.moved=(W.moved||0)+1; T.walls.set(nk,W); continue; } }
+      W.pend={at:t+o.grace}; continue; }
+    // 吸收：被大量主动成交打，挂单却没怎么少（不断补单 / 冰山单）
+    if(t-W.first>=o.age&&sz>=o.hold*W.peak){ const h=hwHit(W,W.absFrom||W.first); if(h>=o.abs*W.peak&&h>0){ out.push(hwEv(W,'abs',t,sz,h,0)); W.absFrom=t; } } }
+  // 2) 新墙
+  if(isFinite(thr)&&thr>0) for(const side of ['bid','ask']) for(const [b,u] of cur[side]){ if(u<thr||T.walls.has(hwKey(side,b))||T.walls.size>=o.max||!hwInRange(bk,side,b)) continue;
+    const en=T.ended.get(hwKey(side,b)); if(en){ if(t-en.t<o.win&&u<en.rem+0.5*thr) continue; T.ended.delete(hwKey(side,b)); }   // 刚判断过的墙剩下的部分不重新算一面新墙
+    const tq=bk.top&&bk.top.get(hwKey(side,b)); T.walls.set(hwKey(side,b),{id:++T.seq,side,b,step:bk.step,lp:tq?tq[0]:null,first:t,peak:u,peakT:t,cur:u,hits:[],through:false,reached:false,pend:null}); }
+  if(T.ended.size>200) for(const [k,e] of T.ended) if(t-e.t>o.win) T.ended.delete(k);
+  T.prev={bid:bk.bids,ask:bk.asks}; return out; }
+</script>
 
 <script>
 (function(){
@@ -702,7 +790,10 @@ const state = {
   mvp: (()=>{ const m=saved.mvp||{}, tk=Number(m.tick); return { on:m.on!==false, rows:vInt(m.rows,5,200)||24, tick:(isFinite(tk)&&tk>=0&&tk<=1e6)?tk:0, va:vInt(m.va,50,95)||70, width:vInt(m.width,10,100)||40,
     vaOn:m.vaOn!==false, box:m.box!==false, tag:m.tag!==false, ext:!!m.ext, mode:['vol','bs','delta'].includes(m.mode)?m.mode:'vol', dCap:vInt(m.dCap,2,200)||20 }; })(),
   heat: (()=>{ const h=saved.heat||{}, num=(v,lo,hi,d)=>{ v=Number(v); return isFinite(v)&&v>=lo&&v<=hi?v:d; };
-    return {on:h.on===true, inten:num(h.inten,0,100,50), minUsd:num(h.minUsd,0,1e10,0), group:num(h.group,0,1e7,0), scheme:['cg','bookmap','split'].includes(h.scheme)?h.scheme:'cg', wallUsd:num(h.wallUsd,0,1e11,0), prof:h.prof!==false, deep:h.deep!==false}; })(),
+    return {on:h.on===true, inten:num(h.inten,0,100,50), minUsd:num(h.minUsd,0,1e10,0), group:num(h.group,0,1e7,0), scheme:['cg','bookmap','split'].includes(h.scheme)?h.scheme:'cg', wallUsd:num(h.wallUsd,0,1e11,0), prof:h.prof!==false, deep:h.deep!==false,
+      w:(()=>{ const w=h.w||{}, c=w.c||{}, col=(v,d)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:d;
+        return {mk:w.mk!==false, age:num(w.age,1,600,15), drop:num(w.drop,30,100,70), eat:num(w.eat,10,100,60), pull:num(w.pull,0,90,20), abs:num(w.abs,10,1000,80),
+          c:{eat:col(c.eat,'#ff9f1a'),pull:col(c.pull,'#9aa7b5'),abs:col(c.abs,'#3fa9ff'),part:col(c.part,'#e8d44d')}}; })()}; })(),
   draw: (()=>{ const d=saved.draw||{}; return {magnet:!!d.magnet, lockAll:!!d.lockAll, hidden:!!d.hidden}; })(),
   panels: [], ws:null, wsTimer:null, pingTimer:null, retry:0, gen:0, lastPrice:null,
 };
@@ -729,7 +820,7 @@ function buildPanels(){
     pane.innerHTML=`<div class="ph">
       <select class="tfSel" title="周期">${TFS.map(t=>`<option value="${t}" ${t===tf?'selected':''}>${TF_CN[t]}</option>`).join('')}</select>
       <span class="vol">--</span><span class="cd" title="当前K线收盘倒计时（已按交易所服务器时间校准）">⏱ --:--</span></div>
-      <div class="chartWrap"><canvas class="heat"></canvas><div class="chart"></div><canvas class="hprof"></canvas><div class="hst" style="display:none"></div><div class="st" style="display:none"><span class="mvpst"></span></div><canvas class="mvp"></canvas><canvas class="drw"></canvas><div class="axcd"></div><div class="vleg"></div><canvas class="band"></canvas><div class="ohlc"></div><div class="drwOv"></div><div class="hld" title="正在加载更早的K线…"></div></div>`;
+      <div class="chartWrap"><canvas class="heat"></canvas><div class="chart"></div><canvas class="hprof"></canvas><canvas class="hmk"></canvas><div class="wtip" style="display:none"></div><div class="hst" style="display:none"></div><div class="st" style="display:none"><span class="mvpst"></span></div><canvas class="mvp"></canvas><canvas class="drw"></canvas><div class="axcd"></div><div class="vleg"></div><canvas class="band"></canvas><div class="ohlc"></div><div class="drwOv"></div><div class="hld" title="正在加载更早的K线…"></div></div>`;
     grid.appendChild(pane);
     const wrap=pane.querySelector('.chartWrap'), chartEl=pane.querySelector('.chart');
     const chart=LWC.createChart(chartEl,{
@@ -748,7 +839,7 @@ function buildPanels(){
     chart.priceScale('vol').applyOptions({scaleMargins:{top:0.8,bottom:0},visible:false});
     const p={tf,idx:i,pane,wrap,chart,series,volSeries,maSeries,ma2Series,mvpCv:pane.querySelector('canvas.mvp'),drwOv:pane.querySelector('.drwOv'),drwCv:pane.querySelector('canvas.drw'),drGeo:new Map(),mvpStEl:pane.querySelector('.mvpst'),mvpHit:[],candles:[],
       volEl:pane.querySelector('.vol'),cdEl:pane.querySelector('.cd'),legEl:pane.querySelector('.vleg'),ohlcEl:pane.querySelector('.ohlc'),bandCv:pane.querySelector('canvas.band'),syncTs:null,hotSet:new Set(),axEl:pane.querySelector('.axcd'),
-      stEl:pane.querySelector('.st'),heatCv:pane.querySelector('canvas.heat'),hprofCv:pane.querySelector('canvas.hprof'),hstEl:pane.querySelector('.hst'),hldEl:pane.querySelector('.hld'),lowSet:new Set(),hoverPrice:null,histBusy:false,histEnd:false};
+      stEl:pane.querySelector('.st'),heatCv:pane.querySelector('canvas.heat'),hprofCv:pane.querySelector('canvas.hprof'),hmkCv:pane.querySelector('canvas.hmk'),wtipEl:pane.querySelector('.wtip'),hstEl:pane.querySelector('.hst'),hldEl:pane.querySelector('.hld'),lowSet:new Set(),hoverPrice:null,histBusy:false,histEnd:false};
     pane.querySelector('.tfSel').addEventListener('change',e=>{ state.tfs[i]=e.target.value; save(); restart(); });
     p.ro=new ResizeObserver(()=>scheduleVP()); p.ro.observe(wrap);
     // 十字光标联动：只处理“当前被用户悬停/触摸的面板”发出的事件，程序设置的十字光标不会再触发联动 → 无循环
@@ -1666,9 +1757,10 @@ const AL=(()=>{ let o={}; try{ o=JSON.parse(LS.getItem(AL_KEY)||'{}')||{}; }catc
   const num=(v,a,b,d)=>{ const n=Number(v); return isFinite(n)&&n>=a&&n<=b?n:d; }, tfs=(v,d)=>Array.isArray(v)?v.filter(t=>TFS.includes(t)):d;
   const c={ sound:o.sound!==false, vol:num(o.vol,0,100,70), notif:!!o.notif, cool:Math.round(num(o.cool,5,3600,60)), rearm:num(o.rearm,0.01,5,0.1),
     px:{on:!o.px||o.px.on!==false},
-    route:(()=>{ const r=o.route||{}, g=k=>({s:!r[k]||r[k].s!==false,t:!r[k]||r[k].t!==false}); return {px:g('px'),low:g('low'),hot:g('hot')}; })(),
+    route:(()=>{ const r=o.route||{}, g=k=>({s:!r[k]||r[k].s!==false,t:!r[k]||r[k].t!==false}); return {px:g('px'),low:g('low'),hot:g('hot'),wall:g('wall')}; })(),
     low:{on:!!(o.low&&o.low.on), x:num(o.low&&o.low.x,0.05,1,0.5), tfs:tfs(o.low&&o.low.tfs,['15m','1H'])},
-    hot:{on:!!(o.hot&&o.hot.on), x:num(o.hot&&o.hot.x,1,10,2), tfs:tfs(o.hot&&o.hot.tfs,['15m','1H'])} };
+    hot:{on:!!(o.hot&&o.hot.on), x:num(o.hot&&o.hot.x,1,10,2), tfs:tfs(o.hot&&o.hot.tfs,['15m','1H'])},
+    wall:(()=>{ const w=o.wall||{}; return {on:!!w.on, eat:w.eat!==false, pull:w.pull!==false, abs:!!w.abs, part:!!w.part, near:!!w.near, nearPct:num(w.nearPct,0.01,5,0.1), min:num(w.min,0,1e11,0)}; })() };
   let lg=[]; try{ lg=JSON.parse(LS.getItem(AL_LOG_KEY)||'[]'); if(!Array.isArray(lg)) lg=[]; }catch(e){ lg=[]; }
   return {cfg:c, log:lg.slice(0,AL_LOG_MAX), ps:new Map(), volDone:new Set(), fired:[]}; })();
 function alSave(){ try{ LS.setItem(AL_KEY,JSON.stringify(AL.cfg)); }catch(e){ saveFail(e); } }
@@ -1682,19 +1774,24 @@ const AL_TONES={   // [频率Hz, 时长s, 延迟s, 波形]
   dn:[[880,.13,0],[660,.22,.15]],                         // 向下穿越：高→低
   rect:[[784,.11,0],[988,.11,.13],[1175,.24,.26]],        // 进入矩形：三连音
   low:[[392,.22,0,'triangle'],[294,.34,.26,'triangle']],  // 缩量：低沉两声
-  hot:[[1046,.07,0,'square'],[1046,.07,.11,'square'],[1397,.16,.22,'square']] };   // 放量：急促三声
+  hot:[[1046,.07,0,'square'],[1046,.07,.11,'square'],[1397,.16,.22,'square']],
+  weat:[[196,.09,0,'sawtooth'],[196,.09,.12,'sawtooth'],[147,.3,.24,'triangle']],     // 大单墙被吃掉：两下“咚咚”+ 低音
+  wpull:[[523,.08,0,'sawtooth'],[392,.08,.1,'sawtooth'],[262,.22,.2,'triangle']],     // 被撤单：下滑三音
+  wabs:[[247,.18,0,'triangle'],[247,.18,.05,'sine'],[330,.28,.24,'triangle']],        // 吸收：厚重两声
+  wpart:[[294,.12,0,'sawtooth'],[262,.2,.15,'triangle']],
+  wnear:[[740,.06,0,'sawtooth'],[740,.06,.09,'sawtooth'],[740,.06,.18,'sawtooth']] };   // 接近大单墙：三下短促   // 放量：急促三声
 function alPlay(kind){ if(!AL.cfg.sound) return 'off'; const seq=AL_TONES[kind]||AL_TONES.up; if(auLocked()){ auUnlock(); if(auLocked()) return 'locked'; }
   const ac=AU.ctx, t0=ac.currentTime+0.02, vol=Math.pow(AL.cfg.vol/100,1.6)*0.6; if(!(vol>0)) return 'mute';
-  for(const [fq,du,dl,ty] of seq){ const o=ac.createOscillator(), g=ac.createGain(), t=t0+dl, pk=vol*(ty==='square'?0.35:ty==='triangle'?1:0.8);
+  for(const [fq,du,dl,ty] of seq){ const o=ac.createOscillator(), g=ac.createGain(), t=t0+dl, pk=vol*(ty==='square'?0.35:ty==='sawtooth'?0.3:ty==='triangle'?1:0.8);
     o.type=ty||'sine'; o.frequency.setValueAtTime(fq,t); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002,pk),t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+du);
     o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+du+0.03); }
   AU.played.push({kind,at:Date.now()}); if(AU.played.length>50) AU.played.shift(); return 'ok'; }
-function alAnyOn(){ const c=AL.cfg; return c.px.on&&alDrawn().length>0||c.low.on||c.hot.on; }
+function alAnyOn(){ const c=AL.cfg; return c.px.on&&alDrawn().length>0||c.low.on||c.hot.on||c.wall.on; }
 function alLockUi(){ const lk=AL.cfg.sound&&auLocked(), b=$('alBtn'); if(b){ b.classList.toggle('lock',lk&&alAnyOn()); b.classList.toggle('act',alAnyOn()); b.title=lk&&alAnyOn()?'条件提醒：声音还没开启，点一下页面任意位置':'条件提醒（声音）'; }
   const h=$('alLock'); if(h) h.classList.toggle('on',lk); }
 // ---- 触发 ----
 const alTime=t=>{ const d=new Date(t+TZ*1000), p=n=>String(n).padStart(2,'0'); return `${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`; };
-function alFire(kind,msg,tag,tg){ const now=Date.now(), rk=kind==='low'||kind==='hot'?kind:'px', rt=AL.cfg.route[rk], r=rt.s?alPlay(kind):'route';
+function alFire(kind,msg,tag,tg){ const now=Date.now(), rk=kind==='low'||kind==='hot'?kind:kind[0]==='w'?'wall':'px', rt=AL.cfg.route[rk], r=rt.s?alPlay(kind):'route';
   const tr=rt.t&&tg?tgPush(tg.text,tg.key):null; if(tr) tr.then(v=>{ const f=AL.fired.find(x=>x.at===now&&x.tag===tag); if(f) f.tg=v; });
   AL.log.unshift({t:now,k:kind,m:msg}); AL.log.length=Math.min(AL.log.length,AL_LOG_MAX); try{ LS.setItem(AL_LOG_KEY,JSON.stringify(AL.log)); }catch(e){}
   AL.fired.push({kind,msg,tag,at:now,sound:r,tg:tr?'pending':'off',tgText:tg&&tg.text}); if(AL.fired.length>100) AL.fired.shift();
@@ -1835,6 +1932,9 @@ function initAlerts(){ const C0=AL.cfg, btn=$('alBtn'), m=$('amenu'), mask=$('aM
   ck('alSound',()=>C0.sound,v=>{ C0.sound=v; if(v) auUnlock(); });
   ck('alPx',()=>C0.px.on,v=>{ C0.px.on=v; AL.ps.clear(); alPriceTick(state.lastPrice,false); });
   ck('alLow',()=>C0.low.on,v=>{ C0.low.on=v; }); ck('alHot',()=>C0.hot.on,v=>{ C0.hot.on=v; });
+  ck('alWall',()=>C0.wall.on,v=>{ C0.wall.on=v; if(typeof heatSync==='function') heatSync(); });
+  [['alWEat','eat'],['alWPull','pull'],['alWAbs','abs'],['alWPart','part'],['alWNear','near']].forEach(([id,k])=>ck(id,()=>C0.wall[k],v=>{ C0.wall[k]=v; }));
+  alNum('alWNearPct',0.01,5,()=>C0.wall.nearPct,n=>{ C0.wall.nearPct=n; }); alNum('alWMin',0,1e11,()=>C0.wall.min,n=>{ C0.wall.min=n; });
   const nt=$('alNotif'); nt.checked=C0.notif&&!!window.Notification&&Notification.permission==='granted';
   nt.onchange=async()=>{ if(!nt.checked){ C0.notif=false; alSave(); return; }
     if(!window.Notification){ nt.checked=false; toast('这个浏览器不支持系统通知','err'); return; }
@@ -2101,12 +2201,12 @@ function initAI(){ $('aiBtn').onclick=e=>{ e.stopPropagation(); aiOpen(); }; $('
 // TODO：价格接近大单墙 / 大单墙被撤或被吃掉时的声音、Telegram 提醒（可接 alFire）
 const HM_SNAP_MS=5000, HM_DEEP_MS=30000, HM_RANGE=0.03, HM_MAXN=2600, HM_MAXB=40e6, HM_URLS=['wss://ws.okx.com/ws/v5/public','wss://ws.okx.com:8443/ws/v5/public'];
 const HM={ws:null,gen:0,run:false,sym:null,book:hcBookNew(),deep:null,inst:null,step:null,snaps:[],start:null,ver:0,bver:0,sver:0,cache:new Map(),st:'off',msg:'',
-  resync:0,resyncAt:[],msgs:0,lastMsg:0,url:0,retry:0,db:null,snapT:0,deepT:0,compT:0,pingT:0,retryT:0,sig:new WeakMap(),psig:new WeakMap(),lv:null,off:null,luts:{},stats:{draws:0,ms:0,last:0,maxMs:0}};
+  resync:0,resyncAt:[],msgs:0,lastMsg:0,url:0,retry:0,db:null,snapT:0,deepT:0,compT:0,pingT:0,retryT:0,sig:new WeakMap(),psig:new WeakMap(),msig:new WeakMap(),lv:null,off:null,luts:{},stats:{draws:0,ms:0,last:0,maxMs:0}};
 const heatActive=()=>state.heat.on&&state.source==='okx';
 const hmUsd=(p,sz)=>HM.inst?trQuote(HM.inst,p,sz):p*sz;
 // ---- IndexedDB ----
 function hmDb(){ if(HM.db) return HM.db; HM.db=new Promise((res,rej)=>{ if(!window.indexedDB) return rej(new Error('浏览器不支持 IndexedDB'));
-    const r=indexedDB.open('vp_heat',1); r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains('snap')) r.result.createObjectStore('snap',{keyPath:['sym','ts']}); };
+    const r=indexedDB.open('vp_heat',2); r.onupgradeneeded=()=>{ const d=r.result; if(!d.objectStoreNames.contains('snap')) d.createObjectStore('snap',{keyPath:['sym','ts']}); if(!d.objectStoreNames.contains('wall')) d.createObjectStore('wall',{keyPath:['sym','t','id']}); };
     r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); HM.db.catch(()=>{ HM.db=null; }); return HM.db; }
 const hmRange=sym=>IDBKeyRange.bound([sym,-Infinity],[sym,Infinity]);
 async function hmIdbLoad(sym){ const db=await hmDb(); return new Promise((res,rej)=>{ const q=db.transaction('snap').objectStore('snap').getAll(hmRange(sym)); q.onsuccess=()=>res(q.result||[]); q.onerror=()=>rej(q.error); }); }
@@ -2114,8 +2214,11 @@ async function hmIdbWrite(sym,del,put){ if(!del.length&&!put.length) return; con
     del.forEach(t=>st.delete([sym,t])); put.forEach(s=>st.put({sym,ts:s.ts,d:s.d,step:s.step,i0:s.i0,b:s.b,a:s.a})); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error); }); }
 async function hmIdbClear(sym){ const db=await hmDb(); return new Promise((res,rej)=>{ const tx=db.transaction('snap','readwrite'); tx.objectStore('snap').delete(hmRange(sym)); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
 // ---- 启停 ----
-function heatSync(){ heatBg(); if(!heatActive()){ if(HM.run) heatStop(); HM.st=state.heat.on?'src':'off'; heatUi(); return; }
-  if(HM.run&&HM.sym===state.symbol){ HM.sver++; heatUi(); return; } heatStart(); }
+function heatSync(){ heatBg(); hwBind(); if(!hmNeeded()){ if(HM.run) heatStop(); HM.st=state.heat.on?'src':'off'; heatUi(); return; }
+  if(HM.run&&HM.sym===state.symbol){ HM.sver++; hmDeepSync(); heatUi(); return; } heatStart(); }
+// 5000 档深度只给热力图用（只开大单墙提醒时不拉）
+function hmDeepSync(){ const want=HM.run&&state.heat.on&&state.heat.deep; if(want&&!HM.deepT){ const g=HM.gen; heatDeep(g); HM.deepT=setInterval(()=>heatDeep(g),HM_DEEP_MS); }
+  else if(!want&&HM.deepT){ clearInterval(HM.deepT); HM.deepT=0; HM.deep=null; HM.lv=null; } }
 async function heatStart(){ heatStop(); const sym=state.symbol, g=HM.gen; HM.run=true; HM.sym=sym; HM.snaps=[]; HM.cache.clear(); HM.start=null; HM.step=null; HM.ver++; HM.st='conn'; heatUi();
   try{ HM.inst=await trInst(sym); }catch(e){ HM.inst=null; log('挂单热力图：读取合约信息失败（'+(e.message||e)+'），按现货换算'); }
   if(g!==HM.gen) return;
@@ -2123,10 +2226,10 @@ async function heatStart(){ heatStop(); const sym=state.symbol, g=HM.gen; HM.run
     HM.snaps=rows.filter(r=>r.step===step&&r.b&&r.a).map(r=>({ts:r.ts,d:r.d,step:r.step,i0:r.i0,b:r.b,a:r.a})); HM.step=step; heatCompact(); HM.ver++;
     if(HM.snaps.length) log(`挂单热力图：从本地恢复 ${HM.snaps.length} 个快照（${state.symbol}）`); }
   catch(e){ log('挂单热力图：读取本地记录失败（'+(e.message||e)+'）'); }
-  HM.start=HM.snaps.length?HM.snaps[0].ts:null; hmConnect(g);
-  HM.snapT=setInterval(heatSnap,HM_SNAP_MS); HM.compT=setInterval(heatCompact,60000);
-  if(state.heat.deep){ heatDeep(g); HM.deepT=setInterval(()=>heatDeep(g),HM_DEEP_MS); } heatUi(); }
-function heatStop(){ HM.gen++; HM.run=false; [HM.snapT,HM.compT,HM.deepT,HM.pingT].forEach(clearInterval); clearTimeout(HM.retryT);
+  HM.start=HM.snaps.length?HM.snaps[0].ts:null; await hwStart(g,sym); if(g!==HM.gen) return; hmConnect(g);
+  HM.snapT=setInterval(heatSnap,HM_SNAP_MS); HM.compT=setInterval(()=>{ heatCompact(); hwPrune(); },60000);
+  HM.deepT=0; hmDeepSync(); heatUi(); }
+function heatStop(){ HM.gen++; HM.run=false; [HM.snapT,HM.compT,HM.deepT,HM.pingT].forEach(clearInterval); HM.deepT=0; clearTimeout(HM.retryT); hwStop();
   if(HM.ws){ const w=HM.ws; HM.ws=null; w.onopen=w.onmessage=w.onclose=w.onerror=null; try{ if(w.readyState===1) hmSub(w,'unsubscribe'); w.close(); }catch(e){} }
   HM.book=hcBookNew(); HM.deep=null; HM.lv=null; HM.st='off'; HM.ver++; HM.bver++; }
 function hmConnect(g){ if(g!==HM.gen) return; const url=HM_URLS[HM.url%HM_URLS.length]; let w; try{ w=new WebSocket(url); }catch(e){ return hmRetry(g); }
@@ -2134,15 +2237,16 @@ function hmConnect(g){ if(g!==HM.gen) return; const url=HM_URLS[HM.url%HM_URLS.l
   w.onopen=()=>{ if(g!==HM.gen) return; HM.retry=0; hmSub(w,'subscribe'); clearInterval(HM.pingT); HM.pingT=setInterval(()=>{ try{ if(w.readyState===1) w.send('ping'); }catch(e){} },25000); };
   w.onmessage=e=>{ if(g!==HM.gen) return; HM.lastMsg=Date.now(); if(e.data==='pong') return; let j; try{ j=JSON.parse(e.data); }catch(x){ return; }
     if(j.event){ if(j.event==='error'){ HM.st='err'; HM.msg='OKX：'+(j.msg||j.code); heatUi(); log('挂单热力图：OKX 返回错误 '+(j.code||'')+' '+(j.msg||'')); } return; }
+    if(j.arg&&j.arg.channel==='trades'&&j.arg.instId===HM.sym&&Array.isArray(j.data)){ hwOnTrades(j.data); return; }
     if(!j.arg||j.arg.channel!=='books'||j.arg.instId!==HM.sym||!Array.isArray(j.data)) return;
     if(!HM.book.ok&&j.action!=='snapshot') return;   // 重新订阅后、新快照到来前的旧增量 → 丢弃
     for(const d of j.data){ HM.msgs++; const r=hcBookApply(HM.book,j.action,d); if(r!=='ok'){ hmResync(w,r.slice(7)); return; } }
-    HM.bver++; if(HM.st!=='ok'){ HM.st='ok'; heatUi(); } };
+    if(j.action==='snapshot') HWV.okSince=Date.now(); HM.bver++; if(HM.st!=='ok'){ HM.st='ok'; heatUi(); } };
   w.onclose=()=>{ if(g!==HM.gen) return; clearInterval(HM.pingT); HM.ws=null; HM.book=hcBookNew(); HM.url++; hmRetry(g); };
   w.onerror=()=>{}; }
 function hmRetry(g){ if(g!==HM.gen) return; HM.st='conn'; heatUi(); const ms=Math.min(30000,1000*Math.pow(2,HM.retry++)); HM.retryT=setTimeout(()=>hmConnect(g),ms); }
-function hmSub(w,op){ try{ w.send(JSON.stringify({op,args:[{channel:'books',instId:HM.sym}]})); }catch(e){} }
-function hmResync(w,why){ HM.resync++; HM.book=hcBookNew(); const now=Date.now(); HM.resyncAt=HM.resyncAt.filter(t=>now-t<60000); HM.resyncAt.push(now);
+function hmSub(w,op){ try{ w.send(JSON.stringify({op,args:[{channel:'books',instId:HM.sym},{channel:'trades',instId:HM.sym}]})); }catch(e){} }
+function hmResync(w,why){ HM.resync++; HM.book=hcBookNew(); HWV.okSince=0; const now=Date.now(); HM.resyncAt=HM.resyncAt.filter(t=>now-t<60000); HM.resyncAt.push(now);
   log('挂单热力图：订单簿校验失败（'+({seq:'序号不连续',checksum:'校验和不符',crossed:'买一≥卖一',empty:'空数据'}[why]||why)+'），重新订阅');
   if(HM.resyncAt.length>5){ HM.resyncAt=[]; try{ w.close(); }catch(e){} return; }   // 一分钟内太多次 → 断开重连
   hmSub(w,'unsubscribe'); hmSub(w,'subscribe'); }
@@ -2158,8 +2262,9 @@ function heatLevels(){ const B=HM.book; if(!B.ok) return null; if(HM.lv&&HM.lv.b
   const D=HM.deep; if(D&&Date.now()-D.at<120000){ for(const l of D.bids) if(l[0]<minB) bids.push(l); for(const l of D.asks) if(l[0]>maxA) asks.push(l); }
   const L=bids.length&&asks.length?{bids,asks,bb,ba,mid:(bb+ba)/2}:null; HM.lv={bver:HM.bver,L}; return L; }
 function hmTick(){ let t=Infinity; for(const k of HM.book.bids.keys()){ const i=k.indexOf('.'); t=Math.min(t,i<0?1:Math.pow(10,-(k.length-i-1))); } return isFinite(t)?t:0; }
-function heatSnap(){ if(!heatActive()||!HM.run) return;
+function heatSnap(){ if(!HM.run) return;
   if(HM.ws&&HM.lastMsg&&Date.now()-HM.lastMsg>60000){ HM.lastMsg=0; try{ HM.ws.close(); }catch(e){} return; }   // 一分钟没消息 → 重连
+  if(!heatActive()) return;
   const L=heatLevels(); if(!L||!isFinite(L.mid)) return; const ideal=hcStep(L.mid,0);
   if(HM.step==null||HM.step<ideal/4||HM.step>ideal*4){ if(HM.step!=null){ HM.snaps=[]; HM.start=null; hmIdbClear(HM.sym).catch(()=>{}); } HM.step=hcStep(L.mid,hmTick()); HM.cache.clear(); }
   const s=hcBin(L.bids,L.asks,HM.step,L.mid*(1-HM_RANGE),L.mid*(1+HM_RANGE)); if(!s) return;
@@ -2214,7 +2319,8 @@ function heatLoop(){ if(document.hidden) return; const on=heatActive(), now=Date
   state.panels.forEach(p=>{ let s='off'; if(on){ try{ const ts=p.chart.timeScale(), lr=ts.getVisibleLogicalRange(), ref=state.lastPrice||1;
         s=[lr&&lr.from.toFixed(2),lr&&lr.to.toFixed(2),p.series.priceToCoordinate(ref),p.series.priceToCoordinate(ref*1.01),p.wrap.clientWidth,p.wrap.clientHeight,p.candles.length,HM.ver,HM.sver].join('|'); }catch(e){ s='x'; } }
     if(HM.sig.get(p)!==s){ HM.sig.set(p,s); heatDraw(p); HM.psig.delete(p); }
-    const ps=s+'|'+HM.bver; if(HM.psig.get(p)!==ps&&(!p.profAt||now-p.profAt>250)){ HM.psig.set(p,ps); p.profAt=now; heatProf(p); } }); }
+    const ps=s+'|'+HM.bver; if(HM.psig.get(p)!==ps&&(!p.profAt||now-p.profAt>250)){ HM.psig.set(p,ps); p.profAt=now; heatProf(p); }
+    const ms=s+'|'+HWV.ver+'|'+state.symbol; if(HM.msig.get(p)!==ms){ HM.msig.set(p,ms); hwMarks(p); } }); }
 function hmFmtStart(t){ const d=new Date(t+TZ*1000), n=new Date(nowSrv()+TZ*1000), pad=x=>String(x).padStart(2,'0'), hm=pad(d.getUTCHours())+':'+pad(d.getUTCMinutes());
   return d.getUTCDate()===n.getUTCDate()&&d.getUTCMonth()===n.getUTCMonth()?hm:`${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${hm}`; }
 function heatUi(){ const H=state.heat; let msg='';
@@ -2231,8 +2337,85 @@ function initHeat(){ const H=state.heat, set=(k,v)=>{ H[k]=v; save(); HM.sver++;
   $('heatProf').checked=H.prof; $('heatProf').onchange=e=>set('prof',e.target.checked);
   $('heatDeep').checked=H.deep; $('heatDeep').onchange=e=>{ set('deep',e.target.checked); if(HM.run){ clearInterval(HM.deepT); HM.deep=null; HM.lv=null; if(H.deep){ const g=HM.gen; heatDeep(g); HM.deepT=setInterval(()=>heatDeep(g),HM_DEEP_MS); } } };
   const cb=$('heatClr'); let armT=0; cb.onclick=()=>{ if(!cb.classList.contains('warn')){ cb.classList.add('warn'); cb.textContent='再点一次确认清除'; clearTimeout(armT); armT=setTimeout(()=>{ cb.classList.remove('warn'); cb.textContent='清除本交易对的记录'; },3000); return; }
-    clearTimeout(armT); cb.classList.remove('warn'); cb.textContent='清除本交易对的记录'; HM.snaps=[]; HM.start=null; HM.cache.clear(); HM.ver++; hmIdbClear(state.symbol).then(()=>toast('已清除 '+state.symbol+' 的挂单记录','ok')).catch(()=>{}); heatUi(); };
-  setInterval(heatLoop,150); heatUi(); }
+    clearTimeout(armT); cb.classList.remove('warn'); cb.textContent='清除本交易对的记录'; HM.snaps=[]; HM.start=null; HM.cache.clear(); HM.ver++; HWV.ev=HWV.ev.filter(e=>e.sym!==state.symbol); HWV.ver++; hwRenderLog(); hwIdbClear(state.symbol).catch(()=>{}); hmIdbClear(state.symbol).then(()=>toast('已清除 '+state.symbol+' 的挂单记录','ok')).catch(()=>{}); heatUi(); };
+  initWalls(); setInterval(heatLoop,150); heatUi(); }
+// ================= 大单墙事件：被吃掉 / 被撤单 / 吸收 =================
+const HW_IDB_MAX=86400e3, HW_CN={eat:'被吃掉',pull:'被撤单',part:'部分吃掉/不确定',abs:'吸收'}, HW_SH={eat:'吃掉',pull:'撤单',part:'不确定',abs:'吸收'};
+const HWV={T:null,ev:[],ver:0,tickT:0,okSince:0,step:null,near:new Map(),cool:new Map(),stats:{eat:0,pull:0,part:0,abs:0,near:0,ticks:0,trades:0,walls:0,thr:0}};
+const hmNeeded=()=>state.source==='okx'&&(state.heat.on||AL.cfg.wall.on);
+const hwQ=v=>{ const a=Math.abs(v); if(!(a>=1)) return '0'; return a>=1e6&&a<1e9?(v/1e6).toFixed(a>=1e8?0:1)+'M':fmtQ(v); };
+const hwPx=(px,step)=>{ const st=step||HWV.step||1, d=st>=1?0:Math.min(8,Math.ceil(-Math.log10(st)-1e-9)); return Number(px).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); };
+const hwDur=ms=>{ const s=Math.round(ms/1000); return s<60?s+' 秒':s<3600?Math.floor(s/60)+' 分 '+(s%60)+' 秒':Math.floor(s/3600)+' 小时 '+Math.floor(s%3600/60)+' 分'; };
+function hwOpts(){ const w=state.heat.w; return {age:w.age*1000,drop:w.drop/100,eat:w.eat/100,pull:w.pull/100,abs:w.abs/100}; }
+// IndexedDB（和快照同一个库，v2 加 wall 表）
+async function hwIdbLoad(sym){ const db=await hmDb(); return new Promise((res,rej)=>{ const q=db.transaction('wall').objectStore('wall').getAll(hmRange(sym)); q.onsuccess=()=>res(q.result||[]); q.onerror=()=>rej(q.error); }); }
+async function hwIdbPut(evs,del){ const db=await hmDb(); return new Promise((res,rej)=>{ const tx=db.transaction('wall','readwrite'), st=tx.objectStore('wall');
+    (del||[]).forEach(e=>st.delete([e.sym,e.t,e.id])); evs.forEach(e=>st.put(e)); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); tx.onabort=()=>rej(tx.error); }); }
+async function hwIdbClear(sym){ const db=await hmDb(); return new Promise((res,rej)=>{ const tx=db.transaction('wall','readwrite'); tx.objectStore('wall').delete(hmRange(sym)); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+function hwPrune(){ const lim=nowSrv()-HW_IDB_MAX, old=HWV.ev.filter(e=>e.t<lim); if(!old.length) return; HWV.ev=HWV.ev.filter(e=>e.t>=lim); HWV.ver++; hwIdbPut([],old).catch(()=>{}); }
+async function hwStart(g,sym){ HWV.T=hwNew(hwOpts()); HWV.ev=[]; HWV.step=null; HWV.near.clear(); HWV.okSince=0; HWV.ver++;
+  try{ const rows=await hwIdbLoad(sym); if(g!==HM.gen) return; const lim=nowSrv()-HW_IDB_MAX, old=rows.filter(e=>!(e.t>=lim)); HWV.ev=rows.filter(e=>e.t>=lim).sort((a,b)=>a.t-b.t); HWV.ver++; if(old.length) hwIdbPut([],old).catch(()=>{}); hwRenderLog(); }catch(e){}
+  clearInterval(HWV.tickT); HWV.tickT=setInterval(hwTickMain,500); }
+function hwStop(){ clearInterval(HWV.tickT); HWV.tickT=0; HWV.T=null; }
+function hwOnTrades(data){ const T=HWV.T; if(!T) return; for(const d of data){ const px=+d.px, sz=+d.sz; if(!(px>0)||!(sz>0)) continue; HWV.stats.trades++; hwTrade(T,px,hmUsd(px,sz),d.side,+d.ts||nowSrv()); } }
+function hwTickMain(){ const T=HWV.T, B=HM.book; if(!HM.run||!T||!B.ok||!HWV.okSince||Date.now()-HWV.okSince<2000) return;
+  const bids=[],asks=[]; for(const [k,v] of B.bids){ const p=+k; bids.push([p,hmUsd(p,+v)]); } for(const [k,v] of B.asks){ const p=+k; asks.push([p,hmUsd(p,+v)]); }
+  if(!bids.length||!asks.length) return; Object.assign(T.o,hwOpts());
+  const bk0=hwBucket(bids,asks,1), mid=(bk0.bb+bk0.ba)/2; if(!HWV.step||HWV.step<hcStep(mid,0)/4||HWV.step>hcStep(mid,0)*4){ HWV.step=HM.step||hcStep(mid,hmTick()); T.walls.clear(); T.prev=null; }
+  const bk=hwBucket(bids,asks,HWV.step), thr=state.heat.wallUsd>0?state.heat.wallUsd:hwAutoThr(bk), t=nowSrv();
+  HWV.stats.ticks++; HWV.stats.thr=thr; const evs=hwTick(T,bk,t,thr); HWV.stats.walls=T.walls.size;
+  for(const e of evs) hwOnEvent(e); hwNear(bk,mid,t); }
+function hwOnEvent(e){ e.sym=HM.sym; e.last=state.lastPrice||null; HWV.ev.push(e); HWV.stats[e.kind]=(HWV.stats[e.kind]||0)+1; HWV.ver++; hwIdbPut([e]).catch(()=>{});
+  log(`大单墙：${e.side==='ask'?'卖墙':'买墙'} ${hwPx(e.px,e.step)} ${HW_CN[e.kind]}（峰值 ${hwQ(e.peak)}，成交 ${hwQ(e.traded)}，存在 ${hwDur(e.dur)}）`);
+  if(HWV.ev.length>3000){ const old=HWV.ev.splice(0,HWV.ev.length-3000); hwIdbPut([],old).catch(()=>{}); }
+  hwRenderLog(); hwAlert(e); }
+function hwCool(key){ const now=Date.now(), c=HWV.cool.get(key); if(c&&now-c<AL.cfg.cool*1000) return true; HWV.cool.set(key,now); if(HWV.cool.size>300) HWV.cool.delete(HWV.cool.keys().next().value); return false; }
+function hwAlert(e){ const c=AL.cfg.wall; if(!c.on||!c[e.kind]||e.peak<c.min) return null; const key=`${e.sym||state.symbol}|wall|${e.side}|${e.b}|${e.kind}`; if(hwCool(key)) return null;
+  const sd=e.side==='ask'?'卖墙':'买墙', px=hwPx(e.px,e.step), now=`现价 ${fmt(state.lastPrice)} · ${tgTime()} (UTC+8)`;
+  const msg=e.kind==='abs'?`大单墙 ${sd} ${px} 吸收：已成交 ${hwQ(e.traded)} USDT，挂单仍有 ${hwQ(e.rem)}`:`大单墙 ${sd} ${px} ${HW_CN[e.kind]}：峰值 ${hwQ(e.peak)} USDT，成交 ${hwQ(e.traded)}`;
+  const text=e.kind==='abs'?`🧱 ${state.symbol} ${sd} ${px} 吸收 已成交 ${hwQ(e.traded)} USDT，挂单仍有 ${hwQ(e.rem)}\n${now}`:`🧱 ${state.symbol} ${sd} ${px} ${HW_CN[e.kind]} 峰值 ${hwQ(e.peak)} USDT，成交 ${hwQ(e.traded)}\n${now}`;
+  return alFire('w'+e.kind,msg,'wall'+e.side+e.b+e.kind,{text,key}); }
+// 价格接近大单墙（已确认的墙，每面墙触发一次；离开 2 倍距离后重新生效）
+function hwNear(bk,mid,t){ const c=AL.cfg.wall, T=HWV.T; if(!c.on||!c.near||!T) return; const lim=c.nearPct/100;
+  for(const W of T.walls.values()){ if(W.pend||t-W.first<T.o.age||W.peak<c.min) continue; const px=W.lp!=null?W.lp:W.b*W.step, d=Math.abs(px-mid)/mid, st=HWV.near.get(W.id);
+    if(d>2*lim){ if(st) HWV.near.delete(W.id); continue; } if(d>lim||st) continue; HWV.near.set(W.id,1); HWV.stats.near++;
+    const key=`${HM.sym}|wallnear|${W.side}|${W.b}`; if(hwCool(key)) continue; const sd=W.side==='ask'?'卖墙':'买墙', p=hwPx(px,W.step);
+    alFire('wnear',`价格接近大单墙：${sd} ${p}（${hwQ(W.cur)} USDT，距离 ${(d*100).toFixed(2)}%）`,'wallnear'+W.side+W.b,
+      {text:`🧱 ${state.symbol} 价格接近${sd} ${p}（${hwQ(W.cur)} USDT，距离 ${(d*100).toFixed(2)}%）\n现价 ${fmt(state.lastPrice)} · ${tgTime()} (UTC+8)`,key}); }
+  if(HWV.near.size>500) HWV.near.clear(); }
+// ---- 图上的标记 + 鼠标提示 ----
+function hwX(p,t){ const a=p.candles; if(!a.length) return null; const s=t/1000, dur=TF_SEC[p.tf]; let i=findBar(p,s); if(i<0) return null;
+  if(s>=a[i].ts+dur&&i<a.length-1) return null; const f=Math.max(0,Math.min(1,(s-a[i].ts)/dur)), ts=p.chart.timeScale(), x0=ts.logicalToCoordinate(i); if(x0==null) return null; return x0+(f-0.5)*(ts.options().barSpacing||6); }   // logicalToCoordinate 不接受小数
+function hwIcon(ctx,kind,x,y,c,side){ const r=4.5; ctx.lineWidth=1.5;
+  if(kind==='eat'){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=c; ctx.fill(); ctx.strokeStyle='rgba(10,14,20,.9)'; ctx.lineWidth=1; ctx.stroke(); }
+  else if(kind==='pull'){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle='rgba(10,14,20,.6)'; ctx.fill(); ctx.strokeStyle='rgba(8,11,16,.85)'; ctx.lineWidth=3.5; ctx.stroke(); ctx.strokeStyle=c; ctx.lineWidth=1.6; ctx.stroke(); }
+  else if(kind==='abs'){ ctx.beginPath(); ctx.moveTo(x,y-r-1); ctx.lineTo(x+r+1,y); ctx.lineTo(x,y+r+1); ctx.lineTo(x-r-1,y); ctx.closePath(); ctx.fillStyle=c; ctx.fill(); ctx.strokeStyle='rgba(10,14,20,.9)'; ctx.lineWidth=1; ctx.stroke(); }
+  else { ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.strokeStyle=c; ctx.stroke(); ctx.beginPath(); ctx.arc(x,y,r,Math.PI/2,Math.PI*1.5); ctx.closePath(); ctx.fillStyle=c; ctx.fill(); }
+  // 小三角：卖墙在上、买墙在下
+  ctx.beginPath(); if(side==='ask'){ ctx.moveTo(x-2,y-r-2); ctx.lineTo(x+2,y-r-2); ctx.lineTo(x,y-r-4.5); } else { ctx.moveTo(x-2,y+r+2); ctx.lineTo(x+2,y+r+2); ctx.lineTo(x,y+r+4.5); } ctx.closePath(); ctx.fillStyle=c; ctx.fill(); }
+function hwMarks(p){ const cv=p.hmkCv; if(!cv) return; const on=heatActive()&&state.heat.w.mk, {w,h,W,paneH}=dims(p), ctx=fitCv(cv,w,h); p.wmk=[]; if(!on||!HWV.ev.length) return;
+  const H=Math.max(10,paneH), S=p.series, C=state.heat.w.c; ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,H); ctx.clip();
+  const ord={pull:0,part:1,abs:2,eat:3}, L=HWV.ev.filter(e=>e.sym===state.symbol).sort((a,b)=>(ord[a.kind]-ord[b.kind])||(a.t-b.t));   // 吃掉画在最上面
+  for(const e of L){ const x=hwX(p,e.t); if(x==null||x<-6||x>W+6) continue; const y=S.priceToCoordinate(e.px); if(y==null||y<-6||y>H+6) continue;
+    hwIcon(ctx,e.kind,x,y,C[e.kind]||'#fff',e.side); p.wmk.push({x,y,e}); }
+  ctx.restore(); }
+function hwTipText(e){ const sd=e.side==='ask'?'卖墙':'买墙', pct=e.kind!=='abs'&&e.lost>0?`（占减少量 ${Math.round(e.traded/e.lost*100)}%）`:'';
+  return `${sd} · ${HW_CN[e.kind]}\n价格 ${hwPx(e.px,e.step)}\n峰值 ${hwQ(e.peak)} USDT\n${e.kind==='abs'?'已成交 '+hwQ(e.traded)+' USDT，挂单还剩 '+hwQ(e.rem):'成交 '+hwQ(e.traded)+' USDT'+pct+(e.kind!=='abs'?'\n减少 '+hwQ(e.lost)+' USDT':'')}\n存在 ${hwDur(e.dur)}\n${alTime(e.t)} (UTC+8)`; }
+function hwHover(p,ev){ const tip=p.wtipEl; if(!tip) return; if(!p.wmk||!p.wmk.length){ tip.style.display='none'; return; } const r=p.wrap.getBoundingClientRect(), mx=ev.clientX-r.left, my=ev.clientY-r.top;
+  let best=null, bd=64; for(const m of p.wmk){ const d=(m.x-mx)**2+(m.y-my)**2; if(d<bd){ bd=d; best=m; } }
+  if(!best){ tip.style.display='none'; p.wtipAt=null; return; } tip.textContent=hwTipText(best.e); tip.style.display='';
+  const tw=tip.offsetWidth, th=tip.offsetHeight; let x=best.x+10, y=best.y-th-8; if(x+tw>r.width-4) x=best.x-tw-10; if(y<2) y=best.y+10; tip.style.left=x+'px'; tip.style.top=y+'px'; p.wtipAt=best.e.id; }
+function hwBind(){ state.panels.forEach(p=>{ if(p._hwB||!p.wrap) return; p._hwB=1; p.wrap.addEventListener('mousemove',e=>hwHover(p,e)); p.wrap.addEventListener('mouseleave',()=>{ if(p.wtipEl) p.wtipEl.style.display='none'; }); }); }
+function hwRenderLog(){ const box=$('wallLog'); if(!box) return; const L=HWV.ev.filter(e=>e.sym===state.symbol).slice(-30).reverse(), C=state.heat.w.c; $('wCnt').textContent=L.length?`(${HWV.ev.filter(e=>e.sym===state.symbol).length})`:'';
+  box.innerHTML=L.length?'':'<div><span class="e">暂无（墙消失时会记在这里，保留 24 小时）</span></div>';
+  L.forEach(e=>{ const r=document.createElement('div'), sd=e.side==='ask'?'卖墙':'买墙'; r.innerHTML='<i></i><span class="e"></span><span class="k"></span>'; r.querySelector('i').style.background=C[e.kind]; r.querySelector('i').style.border=e.kind==='pull'?'1px solid '+C[e.kind]:''; if(e.kind==='pull') r.querySelector('i').style.background='transparent';
+    r.querySelector('.e').textContent=alTime(e.t).slice(6); r.querySelector('.k').textContent=`${sd} ${hwPx(e.px,e.step)} ${HW_SH[e.kind]} · 峰值 ${hwQ(e.peak)} · 成交 ${hwQ(e.traded)}`; r.title=hwTipText(e); box.appendChild(r); }); }
+function initWalls(){ const Wc=state.heat.w, set=()=>{ save(); HWV.ver++; hwRenderLog(); };
+  $('wMk').checked=Wc.mk; $('wMk').onchange=e=>{ Wc.mk=e.target.checked; set(); };
+  [['wcEat','eat'],['wcPull','pull'],['wcAbs','abs'],['wcPart','part']].forEach(([id,k])=>{ const el=$(id); el.value=Wc.c[k]; el.addEventListener('input',()=>{ Wc.c[k]=el.value; set(); }); });
+  const num=(id,k,min,max)=>{ const el=$(id); el.value=Wc[k]; el.addEventListener('change',()=>{ const v=Number(el.value); if(!isFinite(v)||v<min||v>max){ el.value=Wc[k]; return; } Wc[k]=v; set(); }); };
+  num('wAge','age',1,600); num('wDrop','drop',30,100); num('wEat','eat',10,100); num('wPull','pull',0,90); num('wAbs','abs',10,1000);
+  hwRenderLog(); }
 function numCtl(id,min,max,get,set){
   const el=$(id); el.value=get();
   const chk=commit=>{ const n=vInt(el.value,min,max); el.classList.toggle('bad',!n); if(n){ if(n!==get()){ set(n); save(); } } else if(commit){ el.value=get(); el.classList.remove('bad'); } };
@@ -2324,7 +2507,7 @@ function initControls(){
 }
 if(!LWC){ document.body.innerHTML='<p style="padding:20px">图表库加载失败，请检查网络（需要访问 unpkg.com 或 jsdelivr.net）。</p>'; return; }
 initControls(); restart();
-window.__heat={HM,heatSync,heatStart,heatStop,heatSnap,heatCompact,heatDraw,heatProf,heatLevels,heatCol,heatGroup,heatView,hmIdbLoad,hmIdbClear,hcBookApply,hcChecksum,hcCompact,hcBin,hcMerge,hcBytes,hcStep}; window.__ai={AI,AI_PROV,aiContext,snapItem,snapText,snapPush,snapSend,aiAsk,aiMd,aiMark,aiCall,aiErrMsg,aiOpen,aiGo,aiTok,SNAP_FILE}; window.__ud={UH,uhUndo,uhRedo,uhMap}; window.__dv={TRD,trEnsure,mvpDeltaCalc,computeDeltaVP,trFetchBack,trInst}; window.__al={TG,tgPush,tgCall,tgClaim,AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
+window.__heat={HWV,hwTick,hwTrade,hwBucket,hwNew,hwClassify,hwAlert,hwOnEvent,hwMarks,hwX,hwIdbLoad,hwTipText,hwRenderLog,hwTickMain,HM,heatSync,heatStart,heatStop,heatSnap,heatCompact,heatDraw,heatProf,heatLevels,heatCol,heatGroup,heatView,hmIdbLoad,hmIdbClear,hcBookApply,hcChecksum,hcCompact,hcBin,hcMerge,hcBytes,hcStep}; window.__ai={AI,AI_PROV,aiContext,snapItem,snapText,snapPush,snapSend,aiAsk,aiMd,aiMark,aiCall,aiErrMsg,aiOpen,aiGo,aiTok,SNAP_FILE}; window.__ud={UH,uhUndo,uhRedo,uhMap}; window.__dv={TRD,trEnsure,mvpDeltaCalc,computeDeltaVP,trFetchBack,trInst}; window.__al={TG,tgPush,tgCall,tgClaim,AL,AU,alPriceTick,alVolCheck,alFire,alPlay,alAddLevel,alToggleD,alLevel,unlock:auUnlock,locked:auLocked}; window.__lay={get:()=>layout,toggle:toggleLayout}; window.__vp=state; window.__vpOnCandle=onCandle; window.__hist={HIST_CAP,INIT_BARS,histCheck,loadOlder,okxStamps}; window.__cs={CS,csSync,csKick,syncMerge,syncStamp,syncSnap,syncCanon,syncParse,syncDoc}; window.__io={doExport,importText,applyImport,toast,parseImport,mergeImport,buildExport}; window.__draw={DR,dList,dSave,redrawAll,drawMigrate,mvpList,mvpFine,mvpSpanL,mvpAdd,dDel,dSelect,setTool,mvpCalc,mvpX,xOfT,yOfP,LOfT,tOfL,snapPt,selD}; // 调试/测试用
 })();
 </script>
 </body>
