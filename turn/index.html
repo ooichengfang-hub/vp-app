@@ -54,6 +54,8 @@ footer{display:flex;gap:10px;align-items:center;padding:3px 12px;border-top:1px 
 .modal[hidden]{display:none}.modal.sm{width:min(460px,calc(100vw - 20px))}
 .mh{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px}
 .mclose{background:none;border:none;color:var(--muted);font-size:16px}
+.ent{border:1px solid #2a3846;border-radius:6px;padding:5px 7px;margin:4px 0 6px;background:#0f151d}.eh{font-weight:600;margin-bottom:2px}.eh.bull{color:#00e676}.eh.bear{color:#ff5252}.eh.g{color:var(--muted);font-weight:400;font-size:11.5px;margin:0 0 4px}
+.ek{font-size:11.5px;line-height:1.45;color:#c3ccd6}.empty{margin:6px 0;padding:6px 8px;border:1px dashed #4a3c18;border-radius:6px;color:var(--yellow);font-weight:600}.ph.big{font-size:14px;color:#e6edf3}
 .warn{background:#2a2312;border:1px solid #4a3c18;color:#e9d9a8;border-radius:6px;padding:6px 8px;margin:6px 0;font-size:12px;line-height:1.5}
 table.st{width:100%;border-collapse:collapse;margin:6px 0;font-size:12px;font-variant-numeric:tabular-nums}
 table.st th,table.st td{border-bottom:1px solid var(--border);padding:3px 5px;text-align:right}table.st th:first-child,table.st td:first-child{text-align:left}
@@ -98,6 +100,7 @@ table.st th{color:var(--muted);font-weight:500}table.st tr.base td{color:#aab6c3
  <p>① <b>位置</b>：前一日高低、前一日 VAH/POC/VAL、前波段高低、未回补 POC、未回补 FVG、整数关口。<br>② <b>成交量</b>：放出高潮量后缩量，或创新低/新高时量比前一次小。<br>③ <b>Delta</b>：新低时卖压比前低小（背离），或主动卖单很多价格却收上去（吸收）。<br>④ <b>结构</b>：扫过前低/前高的止损再收回（长影线），或小一级周期出现结构反转（CHoCH）。<br>⑤ <b>合约数据</b>：持仓量骤降（清算）、资金费率极端、合约比现货额外便宜/贵。<br>⑥ <b>时间</b>：重大消息后几小时内或开盘时段。</p>
  <p>分数 ≥ 门槛（默认 3）就在图上画小点。「—」表示这根K线没有那项数据，不算分。</p>
  <p><b>数据来源</b>（全部 OKX）：K线与成交额；<b>Delta</b> = 实时逐笔成交里主动买 − 主动卖（USDT，精确，不估算），开页那根用历史逐笔补齐；<b>持仓量</b>每 2 分钟记录一次。OKX 不允许网页读取这两项的历史，所以它们只从你第一次打开页面起在本浏览器累积，之前的K线记为「—」。资金费率（近 30 天）和现货K线（算价差，近 30 天 1 小时）有完整历史。</p>
+ <p><b>箭头 = 60% 入场标记</b>（和小点不同）：把每个候选都当成一笔交易：收盘入场，止损在转折极值外一点，目标默认 1.5R。按方向和分数段分组，只用这笔<b>之前已经结束</b>的同组交易算命中率；样本 ≥ 30 且概率 ≥ 60% 才画绿色↑（做多，K线下方）或红色↓（做空，K线上方）。小样本会往整体平均收缩。历史表现见「统计」里的「60% 入场标记的实际表现」。如果没有任何一组达到 60%，就不画箭头，也不会偷偷降低门槛。<b>这是历史频率，不是保证。</b></p>
  <p>只用K线收盘时已有的数据打分，不偷看未来。仅供学习，不构成投资建议。</p></div></div>
 <script>
 // ===================== 转折点评分引擎（纯函数，不碰 DOM；单次正向扫描 → 第 i 根只用 ≤ i 的数据） =====================
@@ -115,7 +118,8 @@ const DEF={ cand:{n:20,tol:0.15}, thr:3, cd:5,
   tim:{ev:1,evWin:4,ses:1,sesWin:60,
     events:'2026-10-29 02:00 FOMC 利率决议（02:30 记者会）\n2026-10-29 20:30 美国 GDP / PCE\n2026-10-30 20:30 美国 ECI 就业成本',
     sessions:'08:00 亚洲开盘\n15:00 欧洲开盘\n21:30 美股开盘（11月1日起冬令时改 22:30）'},
-  hz:[4,12,48] };
+  hz:[4,12,48],
+  ent:{on:1,rr:1.5,atrN:14,atrK:0.2,minRisk:0.1,hold:48,fee:0.05,minN:30,pmin:60,strict:0,shrink:10,combo:0} };
 const clone=o=>JSON.parse(JSON.stringify(o));
 function merge(d,o){ const r=clone(d); if(!o||typeof o!=='object') return r;
   for(const k of Object.keys(r)){ if(!(k in o)) continue; const a=r[k], b=o[k];
@@ -311,9 +315,63 @@ function stats(B,out,nClosed,hz){ const S={hz,dirs:{}}; const C=B.map(b=>b.c);
     const grp=[]; for(const k of GK){ grp.push({k,name:GN[k],hit:mk('有',cands.filter(c=>c.hits.includes(k))),miss:mk('无',cands.filter(c=>!c.hits.includes(k)))}); }
     S.dirs[dir]={rows,base,grp}; }
   return S; }
+
+// ---- 60% 入场标记：每个候选定义成一笔具体交易，概率只用「更早、已结束」的同组交易（walk-forward） ----
+// 分组只用历史上每根都算得到的条件：位置、成交量、扫止损收回、时间（Delta / 持仓量 / CHoCH / 资金费率 / 价差 历史不够，不参与）
+const FEAT=[['loc','位置'],['vol','成交量'],['sw','扫止损收回'],['tim','时间']];
+function featOf(r,cfg){ const out=[]; let s=0;
+  for(const g of r.groups){ if(!g.on) continue;
+    if(g.k==='loc'||g.k==='vol'||g.k==='tim'){ if(g.hit){ out.push(g.k); s+=g.w; } }
+    else if(g.k==='str'){ const x=g.subs.find(q=>q.n==='扫止损后收回'); if(x&&x.hit){ out.push('sw'); s+=g.w; } } }
+  return {keys:out,score:Math.round(s*100)/100}; }
+function wilson(w,n,z){ if(!n) return {lo:0,hi:0}; z=z||1.96; const p=w/n, d=1+z*z/n, c=p+z*z/(2*n), m=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n)); return {lo:Math.max(0,(c-m)/d),hi:Math.min(1,(c+m)/d)}; }
+function bandOf(s){ const k=Math.min(3,Math.floor(s+1e-9)); return k; }
+const BAND_N=['0–0.5 分','1–1.5 分','2–2.5 分','≥3 分'];
+function bucketName(dir,f,cfg){ return (dir>0?'做多':'做空')+' · '+(cfg.ent.combo?(f.keys.length?f.keys.map(k=>FEAT.find(x=>x[0]===k)[1]).join('+'):'无条件'):BAND_N[bandOf(f.score)]); }
+function resolveTrade(B,i,nClosed,dir,E,S,T,hold){ // 返回 {st:'win'|'loss'|'time'|'open', x:出场价, e:出场K线}
+  const bull=dir>0, last=Math.min(i+hold,nClosed-1);
+  for(let j=i+1;j<=last;j++){ const b=B[j];
+    if(bull){ if(b.o<=S) return {st:'loss',x:b.o,e:j}; if(b.o>=T) return {st:'win',x:b.o,e:j}; if(b.l<=S) return {st:'loss',x:S,e:j}; if(b.h>=T) return {st:'win',x:T,e:j}; }
+    else { if(b.o>=S) return {st:'loss',x:b.o,e:j}; if(b.o<=T) return {st:'win',x:b.o,e:j}; if(b.h>=S) return {st:'loss',x:S,e:j}; if(b.l<=T) return {st:'win',x:T,e:j}; }
+    if(j===i+hold) return {st:'time',x:b.c,e:j}; }
+  return {st:'open',x:null,e:null}; }
+function entries(B,out,nClosed,cfgIn){ const cfg=merge(DEF,cfgIn), E0=cfg.ent, n=B.length;
+  const TR=B.map((b,k)=>k?Math.max(b.h-b.l,Math.abs(b.h-B[k-1].c),Math.abs(b.l-B[k-1].c)):b.h-b.l); const atrN=Math.max(1,E0.atrN|0);
+  const pre=[0]; for(const x of TR) pre.push(pre[pre.length-1]+x); const atr=i=>{ const a=Math.max(0,i-atrN+1); return (pre[i+1]-pre[a])/(i-a+1); };
+  const fee=E0.fee/100, setups=[], openUntil={1:-1,'-1':-1};
+  for(let i=0;i<nClosed&&i<n;i++){ const rr=out.res[i]; if(!rr) continue;
+    for(const dir of [1,-1]){ const r=rr[dir]; if(!r||!r.cand||r.live) continue; if(i<=openUntil[dir]) continue;
+      const Ep=B[i].c, a=atr(i); let S=dir>0?r.P-E0.atrK*a:r.P+E0.atrK*a; const minR=Ep*E0.minRisk/100;
+      if(dir>0?Ep-S<minR:S-Ep<minR) S=dir>0?Ep-minR:Ep+minR; const R=Math.abs(Ep-S); const T=Ep+dir*E0.rr*R, T1=Ep+dir*R;
+      const res=resolveTrade(B,i,nClosed,dir,Ep,S,T,E0.hold|0), res1=resolveTrade(B,i,nClosed,dir,Ep,S,T1,E0.hold|0);
+      const nr=x=>x==null?null:(dir*(x-Ep)-fee*(Ep+x))/R;
+      const f=featOf(r,cfg), key=dir+'|'+(E0.combo?f.keys.join('+'):bandOf(f.score));
+      setups.push({i,dir,E:Ep,S,T,T1,R,risk:R/Ep*100,feeR:fee*2*Ep/R,st:res.st,x:res.x,e:res.e,netR:nr(res.x),st1:res1.st,netR1:nr(res1.x),e1:res1.e,feat:f,key,name:bucketName(dir,f,cfg),score:r.score});
+      openUntil[dir]=res.e==null?Infinity:res.e; } }
+  // walk-forward：处理第 i 根时，只把出场K线 ≤ i 的交易计入统计
+  const byExit=setups.filter(s=>s.e!=null).sort((a,b)=>a.e-b.e||a.i-b.i); let q=0; const bk=new Map(), base={1:{n:0,w:0,r:0},'-1':{n:0,w:0,r:0}};
+  const acc=(m,k)=>{ let o=m.get(k); if(!o){ o={n:0,w:0,r:0,w1:0,r1:0,n1:0}; m.set(k,o); } return o; };
+  const addRes=s=>{ const o=acc(bk,s.key); o.n++; if(s.st==='win') o.w++; o.r+=s.netR; const b=base[s.dir]; b.n++; if(s.st==='win') b.w++; b.r+=s.netR; };
+  const prob=(o,b)=>{ const n=o?o.n:0, w=o?o.w:0, p0=(b.w+1)/(b.n+2), K=Math.max(0,E0.shrink); const ps=(w+K*p0)/(n+K||1), lb=wilson(w,n).lo;
+    return {n,w,raw:n?w/n:null,p:ps,p0,lb,avgR:n?o.r/n:null}; };
+  const qual=pr=>pr.n>=E0.minN&&(E0.strict?pr.lb*100>=E0.pmin-1e-9:pr.p*100>=E0.pmin-1e-9);
+  const marks=[];
+  for(const s of setups){ while(q<byExit.length&&byExit[q].e<=s.i){ addRes(byExit[q]); q++; }
+    const pr=prob(bk.get(s.key),base[s.dir]); s.pr=pr; s.q=E0.on?qual(pr):false; if(s.q) marks.push(s); }
+  while(q<byExit.length){ addRes(byExit[q]); q++; }
+  // 现在每一组的状态（=下一笔这组信号会拿到的概率）
+  const buckets=[...bk.entries()].map(([k,o])=>{ const dir=+k.split('|')[0], pr=prob(o,base[dir]); const ex=setups.find(s=>s.key===k); return Object.assign({key:k,dir,name:ex.name,q:qual(pr)},pr); }).sort((a,b)=>b.p-a.p);
+  const sum=list=>{ const r=list.filter(s=>s.st!=='open'); const w=r.filter(s=>s.st==='win').length; return {n:list.length,res:r.length,w,hit:r.length?w/r.length:null,avgR:r.length?r.reduce((a,s)=>a+s.netR,0)/r.length:null,lb:wilson(w,r.length).lo}; };
+  const firstMark=marks.length?marks[0].i:null;
+  const oos={marks:sum(marks),all:sum(setups),allSince:firstMark==null?null:sum(setups.filter(s=>s.i>=firstMark)),
+    byDir:{1:sum(marks.filter(s=>s.dir>0)),'-1':sum(marks.filter(s=>s.dir<0))}};
+  const active=marks.filter(s=>s.st==='open').slice(-1)[0]||null;
+  return {setups,marks,buckets,oos,active,base,cfg:E0,qualNow:buckets.filter(b=>b.q)}; }
+// 未收盘那根：若收盘时仍是候选，它属于哪一组、现在那组的概率（只是预告，不画标记）
+function previewBucket(r,ent,cfg){ if(!r||!r.cand) return null; const c=merge(DEF,cfg); const f=featOf(r,c), key=r.dir+'|'+(c.ent.combo?f.keys.join('+'):bandOf(f.score)); const b=ent.buckets.find(x=>x.key===key); return {key,name:bucketName(r.dir,f,c),b}; }
 function agg(a){ if(!a.length) return {n:0,avg:null,win:null,med:null}; const s=a.reduce((x,y)=>x+y,0), w=a.filter(x=>x>0).length, b=a.slice().sort((x,y)=>x-y);
   return {n:a.length,avg:s/a.length,win:w/a.length*100,med:b.length%2?b[b.length>>1]:(b[b.length/2-1]+b[b.length/2])/2}; }
-return {DEF,GN,GK,merge,run,stats,agg,profile,rollMed,pctRank,parseEvents,parseSessions,roundStep,dayKey,dayStart,hm,fM,fp};
+return {DEF,GN,GK,merge,run,stats,agg,entries,wilson,resolveTrade,featOf,previewBucket,FEAT,BAND_N,profile,rollMed,pctRank,parseEvents,parseSessions,roundStep,dayKey,dayStart,hm,fM,fp};
 })();
 
 
@@ -325,7 +383,8 @@ const SEC={'1m':60,'5m':300,'15m':900,'1H':3600,'4H':14400};
 const TFS=['5m','15m','1H','4H'], TF_CN={'5m':'5分钟','15m':'15分钟','1H':'1小时','4H':'4小时'};
 const LTF={'5m':'1m','15m':'5m','1H':'15m','4H':'1H'};
 const INIT={'5m':1500,'15m':1500,'1H':1200,'4H':800};
-const LTF_CAP=8000, HIST_CAP=6000, BREF_DAYS=150;
+const DEEP={'5m':8000,'15m':8000,'1H':5000,'4H':4000}; // 为了入场统计有足够样本，后台继续往前载入
+const LTF_CAP=8000, HIST_CAP=12000, BREF_DAYS=150, SPOT_BARS=3000;
 const CFG_KEY='turn_cfg', ST_KEY='turn_state', AL_KEY='turn_alert', AL_SENT='turn_al_sent', AL_LOG='turn_al_log', TG_KEY='vp_tg';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const jget=(k,d)=>{ try{ const v=JSON.parse(LS.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
@@ -351,7 +410,7 @@ const enc=encodeURIComponent;
 let CFG=TE.merge(TE.DEF,jget(CFG_KEY,null));
 const ST=Object.assign({sym:'BTC-USDT-SWAP',tf:'15m'},jget(ST_KEY,{}));
 if(!TFS.includes(ST.tf)) ST.tf='15m';
-const AL=Object.assign({on:false,min:4,tfs:[],sound:true,vol:70,tg:false},jget(AL_KEY,{}));
+const AL=Object.assign({on:false,ent:false,min:4,tfs:[],sound:true,vol:70,tg:false},jget(AL_KEY,{}));
 if(!Array.isArray(AL.tfs)) AL.tfs=[];
 function saveCfg(){ jset(CFG_KEY,CFG); } function saveSt(){ jset(ST_KEY,{sym:ST.sym,tf:ST.tf}); } function saveAl(){ jset(AL_KEY,AL); }
 
@@ -404,10 +463,12 @@ async function loadDS(ds){ const gen=GEN, tf=ds.tf, sym=SH.sym; ds.busy=true; se
   try{ const lat=await fetchLatest(sym,tf,300); const o=await fetchBefore(sym,tf,lat[0].ts,INIT[tf]-lat.length); if(gen!==GEN) return;
     ds.bars=mergeBars(lat,o.bars); ds.end=o.end; ds.ready=true; ds.alertFrom=nowS()+1; ds.dirty=true; if(ds===cur()) showBars(true); }
   catch(e){ log(`${TF_CN[tf]} K线读取失败：`+e.message); ds.busy=false; setStatus(); return; }
-  ds.busy=false; setStatus(); await loadAux(ds,ds.bars[0].ts,Math.ceil(nowS()/ds.sec+2)*ds.sec); }
+  ds.busy=false; setStatus(); await loadAux(ds,ds.bars[0].ts,Math.ceil(nowS()/ds.sec+2)*ds.sec); deepLoad(ds,gen); }
+async function deepLoad(ds,gen){ ds.deep=true; while(gen===GEN&&!ds.end&&ds.bars.length<DEEP[ds.tf]&&DSS.get(ds.tf)===ds){ if(ds.busy){ await new Promise(r=>setTimeout(r,300)); continue; } const n0=ds.bars.length; await loadOlder(ds,Math.min(1000,DEEP[ds.tf]-ds.bars.length)); if(ds.bars.length===n0) break; } ds.deep=false; setStatus(); }
 async function loadAux(ds,t0,t1){ const gen=GEN, sym=SH.sym, tf=ds.tf; const jobs=[];
   if(SH.deriv){
-    jobs.push((async()=>{ try{ const s=await fetchRange(SH.spot,tf,t0,t1); if(gen!==GEN) return; for(const b of s) ds.spot.set(b.ts,b.c); ds.st.spot='ok'; ds.dirty=true; }catch(e){ ds.st.spot='err'; } setStatus(); })());
+    const ts0=Math.max(t0,(ds.bars.length?ds.bars[ds.bars.length-1].ts:t1)-SPOT_BARS*ds.sec);
+    if(ts0<t1) jobs.push((async()=>{ try{ const s=await fetchRange(SH.spot,tf,ts0,t1); if(gen!==GEN) return; for(const b of s) ds.spot.set(b.ts,b.c); ds.st.spot='ok'; ds.dirty=true; }catch(e){ ds.st.spot='err'; } setStatus(); })());
     jobs.push(ensureBref(t0,gen)); }
   jobs.push((async()=>{ const lt=LTF[tf], ls=SEC[lt]; const have=ds.ltf.bars.length; if(have>=LTF_CAP) return;
     const lo=Math.max(t0,(ds.ltf.bars.length?Math.min(ds.ltf.bars[0].ts,t1):t1)-(LTF_CAP-have)*ls); const hi=ds.ltf.bars.length?ds.ltf.bars[0].ts:t1;
@@ -458,10 +519,12 @@ function oiArr(){ if(!OIA) OIA=HS?HS.oi.map(x=>({t:x[0],v:x[1]})):[]; return OIA
 function engineInput(ds){ const n=ds.bars.length, last=ds.bars[n-1]; const live=!!last&&(last.ts+ds.sec)*1000>Date.now();
   return {sec:ds.sec,bars:ds.bars,live,delta:deltaMapFor(ds),ltf:ds.ltf,oi:oiArr(),oiSec:300,oiNow:SH.oiNow,fund:SH.fund,fundNow:SH.fundNow,spot:ds.spot,spotNow:SH.spotNow,bref:SH.bref,deriv:SH.deriv,now:nowS()}; }
 function recompute(ds,force){ if(!ds.ready||!ds.bars.length) return; if(!ds.dirty&&!force) return; ds.dirty=false;
-  const t0=performance.now(); const D=engineInput(ds); ds.D=D; ds.out=TE.run(D,CFG); ds.ms=performance.now()-t0; ds.nClosed=D.live?ds.bars.length-1:ds.bars.length;
+  const t0=performance.now(); const D=engineInput(ds); ds.D=D; ds.out=TE.run(D,CFG); ds.nClosed=D.live?ds.bars.length-1:ds.bars.length;
+  ds.ent=TE.entries(ds.bars,ds.out,ds.nClosed,CFG); ds.entIdx=new Map(); for(const s of ds.ent.setups){ const l=ds.entIdx.get(s.i)||[]; l.push(s); ds.entIdx.set(s.i,l); }
+  ds.ms=performance.now()-t0; ds.lastRun=Date.now();
   if(ds===cur()){ drawMarkers(); renderPanel(); if(!$('statM').hidden) renderStats(); }
   checkAlerts(ds); }
-setInterval(()=>{ const c=cur(); if(c&&c.dirty) recompute(c); for(const ds of DSS.values()) if(ds!==c&&ds.dirty&&ds.closeDirty){ ds.closeDirty=false; recompute(ds,true); } },1500);
+setInterval(()=>{ const c=cur(); if(c&&c.dirty&&Date.now()-(c.lastRun||0)>=Math.max(1500,6*(c.ms||0))) recompute(c); for(const ds of DSS.values()) if(ds!==c&&ds.dirty&&ds.closeDirty){ ds.closeDirty=false; recompute(ds,true); } },1500);
 
 // ---------- WebSocket ----------
 let wsB=null, wsP=null, wsRetry=0, wsTimer=0, pingT=0, lastP=0;
@@ -517,7 +580,13 @@ function showBars(fit){ const ds=cur(); if(!ds||!chart) return; cs.setData(ds.ba
 function liveBar(b){ cs.update({time:ct(b.ts),open:b.o,high:b.h,low:b.l,close:b.c}); vs.update({time:ct(b.ts),value:b.v,color:b.c>=b.o?'rgba(38,166,154,.38)':'rgba(239,83,80,.38)'}); }
 function markerOf(s,ds){ const max=Math.max(1,s.max), k=Math.min(1,Math.max(0,(s.score-CFG.thr)/Math.max(0.5,6-CFG.thr))); const a=(0.45+0.5*k).toFixed(2);
   return {time:ct(ds.bars[s.i].ts),position:s.dir>0?'belowBar':'aboveBar',shape:'circle',color:s.dir>0?`rgba(38,214,154,${a})`:`rgba(255,82,82,${a})`,size:+(0.5+0.8*k).toFixed(2),text:''}; }
-function drawMarkers(){ const ds=cur(); if(!ds||!cs) return; const out=ds.out; if(!out){ cs.setMarkers([]); return; } ds.markers=out.sig.map(s=>markerOf(s,ds)); cs.setMarkers(ds.markers); }
+function entMarkerOf(s,ds){ return {time:ct(ds.bars[s.i].ts),position:s.dir>0?'belowBar':'aboveBar',shape:s.dir>0?'arrowUp':'arrowDown',color:s.dir>0?'#00e676':'#ff1744',size:1.1,text:'',ent:1}; }
+let PL=[];
+function drawMarkers(){ const ds=cur(); if(!ds||!cs) return; const out=ds.out; for(const l of PL) try{ cs.removePriceLine(l); }catch(e){} PL=[];
+  if(!out){ cs.setMarkers([]); return; } ds.markers=out.sig.map(s=>markerOf(s,ds)); ds.entMarkers=ds.ent?ds.ent.marks.map(s=>entMarkerOf(s,ds)):[];
+  cs.setMarkers(ds.markers.concat(ds.entMarkers).sort((x,y)=>x.time-y.time||(x.ent?1:0)-(y.ent?1:0)));
+  const A=ds.ent&&ds.ent.active; if(A){ const L=(price,color,title,st)=>PL.push(cs.createPriceLine({price,color,lineWidth:1,lineStyle:st,axisLabelVisible:true,title}));
+    L(A.E,'#c9d1d9','入场',0); L(A.S,'#ff5252','止损',2); L(A.T,'#00e676',`目标 ${A.cfgRR||CFG.ent.rr}R`,2); } }
 function setPrice(v){ const e=$('price'); if(!e) return; const p=+e.dataset.v; e.className='price'+(p&&v>p?' up':p&&v<p?' dn':''); e.dataset.v=v; e.textContent=fmt(v); document.title=`${fmt(v)} · 转折点雷达`; }
 
 // ---------- 悬停 ----------
@@ -528,10 +597,27 @@ function onHover(p){ const tip=$('tip'), ds=cur(); if(!p||!p.time||!p.point||!ds
   const ts=p.time-TZ, i=ds.bars.findIndex(b=>b.ts===ts); const rr=i>=0&&ds.out.res[i]; if(!rr){ tip.style.display='none'; return; }
   let r=null; for(const d of [1,-1]){ const x=rr[d]; if(x&&x.cand&&(!r||x.sig&&!r.sig||x.score>r.score&&!r.sig)) r=x; }
   if(!r){ tip.style.display='none'; return; }
-  tip.innerHTML=`<div class="th ${r.dir>0?'bull':'bear'}">${r.dir>0?'底部转折':'顶部转折'} · ${r.score} / ${r.max} ${r.sig?'<span class="tag">信号</span>':r.dup?'<span class="tag g">（紧跟前一个信号，不重复计）</span>':r.live?'<span class="tag g">未收盘</span>':'<span class="tag g">低于门槛</span>'}</div><div class="tt">${tStr(r.ts)} · 转折价 ${fmt(r.P)}</div>${groupHtml(r)}`;
+  const es=(ds.entIdx&&ds.entIdx.get(i)||[]).find(s=>s.dir===r.dir)||(ds.entIdx&&ds.entIdx.get(i)||[])[0];
+  tip.innerHTML=(es?entHtml(es,true):'')+`<div class="th ${r.dir>0?'bull':'bear'}">${r.dir>0?'底部转折':'顶部转折'} · ${r.score} / ${r.max} ${r.sig?'<span class="tag">信号</span>':r.dup?'<span class="tag g">（紧跟前一个信号，不重复计）</span>':r.live?'<span class="tag g">未收盘</span>':'<span class="tag g">低于门槛</span>'}</div><div class="tt">${tStr(r.ts)} · 转折价 ${fmt(r.P)}</div>${groupHtml(r)}`;
   tip.style.display='block'; const W=$('chartWrap').clientWidth, H=$('chartWrap').clientHeight, tw=tip.offsetWidth, th=tip.offsetHeight;
   let x=p.point.x+16, y=p.point.y+12; if(x+tw>W-4) x=Math.max(4,p.point.x-tw-16); if(y+th>H-4) y=Math.max(4,H-th-4); tip.style.left=x+'px'; tip.style.top=y+'px'; }
 
+const pc=x=>x==null?'—':(x*100).toFixed(1)+'%', fR=x=>x==null?'—':(x>=0?'+':'−')+Math.abs(x).toFixed(2)+'R';
+function entHtml(s,tip){ const p=s.pr, E=CFG.ent, ok=s.q; const st={win:'✓ 先到目标',loss:'✗ 先到止损',time:`⌛ ${E.hold} 根内都没到，按收盘离场`,open:'进行中'}[s.st];
+  const head=ok?`<div class="eh ${s.dir>0?'bull':'bear'}">${s.dir>0?'▲ 做多入场':'▼ 做空入场'} · 历史概率 <b>${pc(p.p)}</b></div>`:`<div class="eh g">入场测算（${s.dir>0?'做多':'做空'}）· 概率 ${pc(p.p)} · 未达 ${E.pmin}%${p.n<E.minN?`（样本 ${p.n} < ${E.minN}）`:''}</div>`;
+  if(tip&&!ok) return head;
+  return `<div class="ent">${head}<div class="ek">组：${esc(s.name)} · 之前已结束 <b>${p.n}</b> 笔，命中 ${p.w}（原始 ${pc(p.raw)}，95% 下限 ${pc(p.lb)}${E.shrink>0?`，向整体 ${pc(p.p0)} 收缩后 ${pc(p.p)}`:''}）</div>
+   <div class="ek">入场 ${fmt(s.E)} · 止损 ${fmt(s.S)}（风险 ${s.risk.toFixed(2)}%）· 目标 ${fmt(s.T)}（${E.rr}R）· 1R ${fmt(s.T1)}</div>
+   <div class="ek">盈亏比 1:${E.rr} · 手续费约 ${s.feeR.toFixed(2)}R · 这组过去平均 ${fR(p.avgR)}/笔（扣费）</div>
+   <div class="ek">结果：<b class="${s.st==='win'?'up':s.st==='loss'?'dn':''}">${st}</b>${s.netR!=null?` ${fR(s.netR)}`:''}${s.st1&&s.st1!=='open'?` · 1R 目标：${s.st1==='win'?'到':'没到'}`:''}</div>
+   ${tip?'<div class="ek muted">概率 = 这组之前已结束交易的历史命中率（只用当时已知的结果），不是保证。</div>':''}</div>`; }
+function entPanel(ds){ const en=ds.ent, E=CFG.ent; if(!en) return ''; if(!E.on) return '<div class="ph">60% 入场标记</div><div class="muted">已在设置里关闭</div>';
+  const A=en.active, q=en.qualNow, best=en.buckets.filter(b=>b.n>=E.minN)[0]||en.buckets[0];
+  let h=`<div class="ph">60% 入场标记（${E.rr}R 目标，${E.strict?'95% 下限':'概率'} ≥ ${E.pmin}%，样本 ≥ ${E.minN}）</div>`;
+  if(A) h+=entHtml(A,false); else h+=`<div class="muted">现在没有进行中的入场标记。</div>`;
+  h+=q.length?`<div class="ek">达标的组：${q.map(b=>`${esc(b.name)} ${pc(b.p)}（n=${b.n}）`).join('；')}</div>`:`<div class="empty">目前没有任何信号类型达到 ${E.pmin}%</div>${best?`<div class="ek muted">最好的一组：${esc(best.name)} · ${pc(best.p)}（n=${best.n}，95% 下限 ${pc(best.lb)}，平均 ${fR(best.avgR)}）</div>`:''}`;
+  const rr=ds.out.res[ds.bars.length-1]; for(const d of [1,-1]){ const pv=rr&&TE.previewBucket(rr[d],en,CFG); if(pv) h+=`<div class="ek muted">未收盘这根若收盘仍是${d>0?'底部':'顶部'}候选 → ${esc(pv.name)}：${pv.b?`${pc(pv.b.p)}（n=${pv.b.n}）${pv.b.q?' 会标入场':' 不会标'}`:'这组还没有历史'}</div>`; }
+  return h; }
 // ---------- 面板 ----------
 function renderPanel(){ const ds=cur(), box=$('panelBody'); if(!ds||!ds.out){ box.innerHTML='<div class="muted">载入中…</div>'; return; }
   const n=ds.bars.length, rr=ds.out.res[n-1]; if(!rr){ box.innerHTML='<div class="muted">K线不足</div>'; return; }
@@ -543,16 +629,27 @@ function renderPanel(){ const ds=cur(), box=$('panelBody'); if(!ds||!ds.out){ bo
   const sl=sig.map(s=>{ const N=CFG.hz[1]||12, j=s.i+N; const ret=j<ds.nClosed?s.dir*(C[j].c/C[s.i].c-1)*100:null;
     return `<div class="sg"><i class="${s.dir>0?'gd':'rd'}"></i>${tStr(C[s.i].ts)} ${s.dir>0?'底':'顶'} <b>${s.score}</b>/${s.max}<span class="${ret==null?'muted':ret>0?'up':'dn'}">${ret==null?`+${N}根未到`:`+${N}根 ${ret>=0?'+':''}${ret.toFixed(2)}%`}</span></div>`; }).join('')||'<div class="muted">载入的历史里还没有达到门槛的信号</div>';
   box.innerHTML=`<div class="pt">${TF_CN[ds.tf]} · 未收盘K线 · ${tStr(nowS())}（UTC+8）</div><div class="cols">${col(1)}${col(-1)}</div>${det(1)}${det(-1)}
-    <div class="ph">最近信号（门槛 ≥ ${CFG.thr}）</div>${sl}`; }
+    ${entPanel(ds)}<div class="ph">最近信号（门槛 ≥ ${CFG.thr}）</div>${sl}`; }
 
 // ---------- 状态 ----------
 function setConn(k,t){ const e=$('conn'); if(e){ e.className='conn '+k; e.title=t; } }
 function setStatus(){ const ds=cur(), e=$('dstat'); if(!e||!ds||!SH) return; const m={ok:'✓',err:'✗',none:'无',short:'不足',spot:'现货无'};
   const oi=oiArr(); let dn=0; const D=ds.D&&ds.D.delta; if(D) for(const b of ds.bars) if(D.has(b.ts)) dn++;
   const dl=!ACC?'未连线':`${dn} 根`+(ACC.strad[ds.tf].bf==='na'?'（开页那根补不齐）':ACC.strad[ds.tf].bf===null?'（补齐中）':''); const lt=ds.ltf.bars.length?`最早 ${tStr(ds.ltf.bars[0].ts)}`:'';
-  e.innerHTML=`K线 ${ds.bars.length} 根${ds.busy?'（加载中）':''}${ds.bars.length?' · 自 '+tStr(ds.bars[0].ts):''} · Delta ${dl} · 持仓量 ${SH.deriv?(oi.length?`本地记录自 ${tStr(oi[0].t)}`:'从现在开始记录'):'—'} · 资金费率 ${m[SH.st.fund]||(SH.deriv?'…':'—')} · 价差 ${m[SH.st.bref]||(SH.deriv?'…':'—')} · 小周期 ${LTF[ds.tf]} ${m[ds.st.ltf]||'…'} ${lt}`; }
+  e.innerHTML=`K线 ${ds.bars.length} 根${ds.deep?`（往前载入中，目标 ${DEEP[ds.tf]}）`:ds.busy?'（加载中）':''}${ds.bars.length?' · 自 '+tStr(ds.bars[0].ts):''} · Delta ${dl} · 持仓量 ${SH.deriv?(oi.length?`本地记录自 ${tStr(oi[0].t)}`:'从现在开始记录'):'—'} · 资金费率 ${m[SH.st.fund]||(SH.deriv?'…':'—')} · 价差 ${m[SH.st.bref]||(SH.deriv?'…':'—')} · 小周期 ${LTF[ds.tf]} ${m[ds.st.ltf]||'…'} ${lt}`; }
 
 // ---------- 历史统计 ----------
+function entStats(ds){ const en=ds.ent, E=CFG.ent; if(!en) return ''; const o=en.oos, m=o.marks; const fAvg=en.setups.length?en.setups.reduce((s,x)=>s+x.feeR,0)/en.setups.length:0;
+  const row=(lab,x,cls)=>`<tr class="${cls||''}"><td>${lab}</td><td>${x.n}</td><td>${x.res}${x.res<30&&x.res?'<sup>少</sup>':''}</td><td>${x.w}</td><td>${pc(x.hit)}</td><td>${x.res?pc(x.lb):'—'}</td><td class="${x.avgR>0?'up':'dn'}">${fR(x.avgR)}</td></tr>`;
+  let h=`<div class="ph big">60% 入场标记的实际表现</div>
+   <div class="warn">每个候选（不只达门槛的）都当成一笔交易：信号K线<b>收盘价入场</b>，止损放在转折极值外 ${E.atrK}×ATR(${E.atrN})（至少 ${E.minRisk}%），目标 ${E.rr}R；${E.hold} 根内先到目标算成功，先到止损或同一根两个都碰到算失败，到期没到按收盘离场也算不成功；跳空按开盘价成交；手续费每边 ${E.fee}%。同方向上一笔没结束前的新候选不算（避免重复计数）。
+   每笔的「概率」只用<b>这笔之前已经结束</b>的同组交易算（组 = 方向 × ${E.combo?'命中的条件组合':'可回测分数段'}），没用到之后的结果；样本少于 ${E.minN} 不标${E.shrink>0?`，并向同方向整体命中率收缩（相当于加 ${E.shrink} 笔整体平均）`:''}。
+   分组只用历史上每根都算得到的条件：位置、成交量、扫止损收回、时间；Delta、持仓量、CHoCH、资金费率、价差历史不够，不参与。<b>这是历史频率，不是保证。</b></div>`;
+  if(!m.n){ const best=en.buckets.filter(b=>b.n>=E.minN)[0]; h+=`<div class="empty">目前没有任何信号类型达到 ${E.pmin}%</div><div class="muted">载入的 ${ds.nClosed} 根里，walk-forward 从来没有一组达标，所以图上没有入场箭头。没有为了出箭头而降低门槛。${best?`最好的一组（样本 ≥ ${E.minN}）：<b>${esc(best.name)}</b> · ${best.n} 笔 · 命中 ${pc(best.raw)} · 95% 下限 ${pc(best.lb)} · 平均 ${fR(best.avgR)}/笔。`:''} ${E.rr}R 目标要打平，命中率大约要 > ${(100*(1+fAvg)/(1+E.rr)).toFixed(0)}%（这里平均手续费约 ${fAvg.toFixed(2)}R/笔）。</div>`; }
+  h+=`<table class="st"><tr><th>样本外（walk-forward）</th><th>笔数</th><th>已结束</th><th>命中</th><th>命中率</th><th>95% 下限</th><th>平均（扣费）</th></tr>${row('<b>标了入场的</b>',m)}${row('· 做多',o.byDir[1])}${row('· 做空',o.byDir[-1])}${o.allSince?row('同期全部候选（对照）',o.allSince,'base'):''}${row('全部候选（整个历史）',o.all,'base')}</table>`;
+  h+=`<div class="ph">各组现在的历史命中率（${E.rr}R 目标；下一笔这组信号会拿到这个概率）</div><table class="st"><tr><th>组</th><th>已结束</th><th>命中率</th><th>95% 下限</th><th>收缩后</th><th>平均（扣费）</th><th>达标</th></tr>`;
+  for(const b of en.buckets) h+=`<tr class="${b.n<E.minN?'small':''}"><td>${esc(b.name)}</td><td>${b.n}${b.n<E.minN?'<sup>少</sup>':''}</td><td>${pc(b.raw)}</td><td>${pc(b.lb)}</td><td>${pc(b.p)}</td><td class="${b.avgR>0?'up':'dn'}">${fR(b.avgR)}</td><td>${b.q?'<b class="up">✓</b>':'—'}</td></tr>`;
+  return h+'</table>'; }
 function renderStats(){ const ds=cur(), box=$('statBody'); if(!ds||!ds.out){ box.innerHTML='载入中…'; return; }
   const S=TE.stats(ds.bars,ds.out,ds.nClosed,CFG.hz), B=ds.bars;
   const cell=(a,base)=>{ if(!a.n) return '<td class="muted" colspan="3">—</td>'; const sm=a.n<30?' small':''; return `<td class="${sm}">${a.n}${a.n<30?'<sup>少</sup>':''}</td><td class="${sm}">${a.win.toFixed(0)}%</td><td class="${sm} ${a.avg>0?'up':'dn'}">${a.avg>=0?'+':''}${a.avg.toFixed(2)}%${a.ex!=null?`<br><small class="${a.ex>0?'up':'dn'}">比随机 ${a.ex>=0?'+':''}${a.ex.toFixed(2)}</small>`:''}</td>`; };
@@ -564,7 +661,7 @@ function renderStats(){ const ds=cur(), box=$('statBody'); if(!ds||!ds.out){ box
     return h+'</table>'; };
   box.innerHTML=`<div class="muted">${SH.sym} · ${TF_CN[ds.tf]} · 已收盘 ${ds.nClosed} 根（${tStr(B[0].ts,1)} → ${tStr(B[ds.nClosed-1].ts,1)}，UTC+8）· 信号 ${ds.out.sig.length} 个 · 门槛 ≥ ${CFG.thr} · 同方向间隔 ${CFG.cd} 根</div>
    <div class="warn">仅供学习，不是已证明的优势。之前的回测（接清算、放量K线回到开盘价等）都没有找到稳定优势。这里的收益按信号K线收盘价进、+N 根收盘价出，没有扣手续费（来回约 0.1%）和滑点。样本少于 30 的标「少」，别当真。分数只用该K线收盘时已经有的数据（没有偷看未来）。</div>
-   ${tbl(1)}${tbl(-1)}
+   ${entStats(ds)}${tbl(1)}${tbl(-1)}
    <div class="row"><button id="moreHist" ${ds.end||ds.bars.length>=HIST_CAP?'disabled':''}>加载更多历史（+1000 根）</button><span class="muted">${ds.end?'已到交易所最早数据':ds.bars.length>=HIST_CAP?`已达上限 ${HIST_CAP} 根`:''} Delta 和持仓量只能从你打开这个页面起在本浏览器累积（OKX 这两项历史接口不允许网页读取），更早的K线这两项记为「—」，不算分也不扣分；所以下面「Delta」那一行样本会很少。CHoCH 取决于载入了多少小周期K线。</span></div>`;
   const mb=$('moreHist'); if(mb) mb.onclick=()=>{ mb.disabled=true; mb.textContent='加载中…'; loadOlder(ds,1000); }; }
 
@@ -577,7 +674,8 @@ const SET=[
  ['④ 价格结构','str',[['str.sweep','扫止损后收回',null],['str.wick','影线至少占K线（0–1）',0,1,0.05],['str.choch','小周期 CHoCH',null],['str.chochK','CHoCH 波段确认（根）',1,10,1]]],
  ['⑤ 合约数据','der',[['der.oi','持仓量骤降',null],['der.oiPct','持仓量下降 ≥（%）',0.1,30,0.1],['der.oiBars','在几根内',1,100,1],['der.fund','资金费率极端',null],['der.fundPct','资金费率百分位（底 ≤ / 顶 ≥ 100−）',1,50,1],['der.basis','合约−现货价差',null],['der.basisPct','价差百分位（底 ≤ / 顶 ≥ 100−）',1,50,1]]],
  ['⑥ 时间 / 消息','tim',[['tim.ev','重大消息后',null],['tim.evWin','消息后几小时内',0.25,48,0.25],['tim.events','消息列表（UTC+8，每行：日期 时间 名称）','text'],['tim.ses','开盘时段',null],['tim.sesWin','开盘后几分钟内',5,600,5],['tim.sessions','开盘时间（UTC+8，每行：时间 名称）','text']]],
- ['历史统计',null,[['hz','统计 +N 根（逗号分隔）','hz']]] ];
+ ['历史统计',null,[['hz','统计 +N 根（逗号分隔）','hz']]],
+ ['60% 入场标记',null,[['ent.on','显示入场标记',null],['ent.pmin','概率至少（%）',50,95,1],['ent.strict','严格：95% 下限也要 ≥ 上面的值',null],['ent.minN','每组至少几笔已结束的样本',10,500,1],['ent.rr','目标（R 倍数）',0.5,5,0.25],['ent.atrK','止损放在极值外几倍 ATR',0,3,0.05],['ent.atrN','ATR 根数',2,100,1],['ent.minRisk','最小止损距离（%）',0,5,0.05],['ent.hold','最多持有几根',2,500,1],['ent.fee','手续费每边（%）',0,0.5,0.005],['ent.shrink','小样本收缩强度（0 = 不收缩）',0,200,1],['ent.combo','按命中的条件组合分组（默认按分数段）',null]]] ];
 const gp=(o,p)=>p.split('.').reduce((a,k)=>a&&a[k],o); const spath=(o,p,v)=>{ const ks=p.split('.'); let a=o; for(let i=0;i<ks.length-1;i++) a=a[ks[i]]; a[ks[ks.length-1]]=v; };
 function renderSettings(){ const box=$('setBody'); let h='';
   for(const [title,gk,items] of SET){ h+=`<div class="sg2"><div class="sh">${title}${gk?` <label class="sw"><input type="checkbox" data-g="${gk}" ${CFG.g[gk].on?'checked':''}> 启用</label> <label class="wt">权重 <input type="number" class="num" data-w="${gk}" min="0" max="3" step="0.5" value="${CFG.g[gk].w}"></label>`:''}</div>`;
@@ -614,7 +712,7 @@ async function tgSend(text){ const c=tgCfg(); if(!c.token||!c.chat) return {ok:f
   try{ const r=await fetch(`${TG.base}/bot${c.token}/sendMessage`,{method:'POST',body:new URLSearchParams({chat_id:c.chat,text,disable_web_page_preview:'true'}),cache:'no-store'}); const j=await r.json().catch(()=>null);
     const res=j&&j.ok?{ok:true}:{ok:false,err:'Telegram 错误：'+((j&&j.description)||('HTTP '+r.status))}; TG.sent.push({text,ok:res.ok,at:Date.now()}); return res; }catch(e){ return {ok:false,err:'连不上 api.telegram.org'}; } }
 function claim(key){ const m=jget(AL_SENT,{})||{}; const now=Date.now(); for(const k of Object.keys(m)) if(now-m[k]>3*86400e3) delete m[k]; if(m[key]) return false; m[key]=now; jset(AL_SENT,m); return true; }
-function checkAlerts(ds){ if(!AL.on||!AL.tfs.includes(ds.tf)||!ds.out) return;
+function checkAlerts(ds){ if(!AL.tfs.includes(ds.tf)||!ds.out) return; if(AL.ent) checkEntAlerts(ds); if(!AL.on) return;
   for(const s of ds.out.sig.slice(-4).sort((x,y)=>x.i-y.i||y.score-x.score)){ const b=ds.bars[s.i]; if(b.ts+ds.sec<ds.alertFrom-1||s.score<AL.min) continue; if(nowS()-(b.ts+ds.sec)>ds.sec*2) continue;
     const key=`${SH.sym}|${ds.tf}|${b.ts}`; if(!claim(key)) continue;
     const r=ds.out.res[s.i][s.dir]; const ps=play(s.dir);
@@ -623,8 +721,16 @@ function checkAlerts(ds){ if(!AL.on||!AL.tfs.includes(ds.tf)||!ds.out) return;
     const lg=jget(AL_LOG,[]); lg.unshift({at:Date.now(),tf:ds.tf,dir:s.dir,score:s.score,max:s.max,ts:b.ts,sound:ps}); jset(AL_LOG,lg.slice(0,30));
     if(AL.tg) tgSend(text).then(r=>{ if(!r.ok) log('Telegram 推送失败：'+r.err); });
     log(`提醒：${TF_CN[ds.tf]} ${s.dir>0?'底部':'顶部'}转折 ${s.score}/${s.max}`); if(!$('alM').hidden) renderAlerts(); } }
+function checkEntAlerts(ds){ if(!ds.ent||!CFG.ent.on) return;
+  for(const s of ds.ent.marks.slice(-3)){ const b=ds.bars[s.i]; if(b.ts+ds.sec<ds.alertFrom-1||nowS()-(b.ts+ds.sec)>ds.sec*2) continue;
+    if(!claim(`${SH.sym}|${ds.tf}|${b.ts}|E`)) continue; const ps=play(s.dir), p=s.pr;
+    const text=`转折点雷达 · ${SH.sym} ${TF_CN[ds.tf]}\n${s.dir>0?'▲ 做多入场':'▼ 做空入场'}（历史概率 ${pc(p.p)}，${p.n} 笔，95% 下限 ${pc(p.lb)}）\nK线 ${tStr(b.ts)} 收盘（UTC+8）\n入场 ${fmt(s.E)}\n止损 ${fmt(s.S)}（${s.risk.toFixed(2)}%）\n目标 ${fmt(s.T)}（${CFG.ent.rr}R） · 1R ${fmt(s.T1)}\n组：${s.name} · 过去平均 ${fR(p.avgR)}/笔（扣费）\n历史频率，不是保证`;
+    const lg=jget(AL_LOG,[]); lg.unshift({at:Date.now(),tf:ds.tf,dir:s.dir,ent:1,p:p.p,ts:b.ts,sound:ps}); jset(AL_LOG,lg.slice(0,30));
+    if(AL.tg) tgSend(text).then(r=>{ if(!r.ok) log('Telegram 推送失败：'+r.err); });
+    log(`提醒：${TF_CN[ds.tf]} ${s.dir>0?'做多':'做空'}入场 ${pc(p.p)}`); if(!$('alM').hidden) renderAlerts(); } }
 function renderAlerts(){ const c=tgCfg(), box=$('alBody'), lg=jget(AL_LOG,[]);
   box.innerHTML=`<label class="it"><input type="checkbox" id="alOn" ${AL.on?'checked':''}> <b>开启转折提醒</b>（每根K线最多一次，收盘时判断）</label>
+   <label class="it"><input type="checkbox" id="alEnt" ${AL.ent?'checked':''}> <b>开启 60% 入场标记提醒</b>（出现新入场箭头时）</label>
    <label class="it">分数 ≥ <input type="number" class="num" id="alMin" min="0.5" max="6" step="0.5" value="${AL.min}"></label>
    <div class="it">周期：${TFS.map(t=>`<label><input type="checkbox" data-tf="${t}" ${AL.tfs.includes(t)?'checked':''}> ${t}</label>`).join(' ')}</div>
    <div class="muted">勾的周期会在后台一起读取和计算（多勾会多用一点流量）。页面要开着才会提醒。</div>
@@ -635,16 +741,17 @@ function renderAlerts(){ const c=tgCfg(), box=$('alBody'), lg=jget(AL_LOG,[]);
    <label class="it col">Chat ID<input type="text" id="tgChat" value="${esc(c.chat)}"></label>
    <div class="muted">令牌只存在这个浏览器里，和 vp-app 共用同一份设置（在 vp-app 填过就不用再填），不会上传。</div>
    <button id="tgTest">发送测试</button> <span id="tgMsg" class="muted"></span>
-   <div class="sh">最近提醒</div>${lg.length?lg.slice(0,10).map(x=>`<div class="sg"><i class="${x.dir>0?'gd':'rd'}"></i>${tStr(x.at/1000)} ${x.tf} ${x.dir>0?'底部':'顶部'} ${x.score}/${x.max}</div>`).join(''):'<div class="muted">还没有</div>'}`;
+   <div class="sh">最近提醒</div>${lg.length?lg.slice(0,10).map(x=>`<div class="sg"><i class="${x.dir>0?'gd':'rd'}"></i>${tStr(x.at/1000)} ${x.tf} ${x.ent?`${x.dir>0?'做多':'做空'}入场 ${pc(x.p)}`:`${x.dir>0?'底部':'顶部'} ${x.score}/${x.max}`}</div>`).join(''):'<div class="muted">还没有</div>'}`;
   $('alOn').onchange=e=>{ AL.on=e.target.checked; if(AL.on&&!AL.tfs.length) AL.tfs=[ST.tf]; saveAl(); applyAlertTfs(); renderAlerts(); };
+  $('alEnt').onchange=e=>{ AL.ent=e.target.checked; if(AL.ent&&!AL.tfs.length) AL.tfs=[ST.tf]; saveAl(); applyAlertTfs(); renderAlerts(); };
   $('alMin').onchange=e=>{ const v=+e.target.value; if(v>=0.5&&v<=6) AL.min=v; e.target.value=AL.min; saveAl(); };
   box.querySelectorAll('[data-tf]').forEach(el=>el.onchange=()=>{ const t=el.dataset.tf; AL.tfs=AL.tfs.filter(x=>x!==t); if(el.checked) AL.tfs.push(t); saveAl(); applyAlertTfs(); });
   $('alSnd').onchange=e=>{ AL.sound=e.target.checked; saveAl(); }; $('alVol').onchange=e=>{ AL.vol=+e.target.value; saveAl(); }; $('alTest').onclick=()=>{ auUnlock(); setTimeout(()=>play(1),60); };
   $('alTg').onchange=e=>{ AL.tg=e.target.checked; saveAl(); };
   $('tgTok').onchange=e=>tgSaveCfg(e.target.value.trim(),tgCfg().chat); $('tgChat').onchange=e=>tgSaveCfg(tgCfg().token,e.target.value.trim());
   $('tgTest').onclick=async()=>{ $('tgMsg').textContent='发送中…'; const r=await tgSend(`转折点雷达：测试消息 ✓（${tStr(nowS())} UTC+8）`); $('tgMsg').textContent=r.ok?'✓ 已发送，请看手机':'✗ '+r.err; };
-  $('alBtn').classList.toggle('act',AL.on); }
-function applyAlertTfs(){ if(AL.on) for(const t of AL.tfs) ensureDS(t); $('alBtn').classList.toggle('act',AL.on); }
+  $('alBtn').classList.toggle('act',AL.on||AL.ent); }
+function applyAlertTfs(){ if(AL.on||AL.ent) for(const t of AL.tfs) ensureDS(t); $('alBtn').classList.toggle('act',AL.on||AL.ent); }
 
 // ---------- 弹窗 / 启动 ----------
 function modal(id,on){ $(id).hidden=!on; $('mask').classList.toggle('on',!$('statM').hidden||!$('setM').hidden||!$('alM').hidden||!$('helpM').hidden); }
@@ -654,7 +761,7 @@ function start(){ GEN++; closeWs(); DSS.clear(); SH=newSH(ST.sym); HS=hsLoad(SH.
 function setTf(tf){ if(tf===ST.tf) return; ST.tf=tf; saveSt(); document.querySelectorAll('#tfs button').forEach(b=>b.classList.toggle('on',b.dataset.tf===tf));
   const ds=ensureDS(tf); if(ds.ready){ showBars(true); recompute(ds,true); } else { cs.setData([]); vs.setData([]); cs.setMarkers([]); $('panelBody').innerHTML='<div class="muted">载入中…</div>'; } setStatus();
   // 不在提醒周期里的后台数据集可以丢掉
-  for(const [t,d] of DSS) if(t!==tf&&!(AL.on&&AL.tfs.includes(t))) DSS.delete(t); connectWs(); }
+  for(const [t,d] of DSS) if(t!==tf&&!((AL.on||AL.ent)&&AL.tfs.includes(t))) DSS.delete(t); connectWs(); }
 function init(){ initChart();
   $('tfs').innerHTML=TFS.map(t=>`<button data-tf="${t}">${t}</button>`).join(''); $('tfs').onclick=e=>{ const t=e.target.dataset&&e.target.dataset.tf; if(t) setTf(t); };
   $('sym').onchange=()=>{ const s=normSym($('sym').value); ST.sym=s; saveSt(); start(); };
@@ -664,7 +771,7 @@ function init(){ initChart();
   addEventListener('keydown',e=>{ if(e.key==='Escape') $('mask').click(); });
   setInterval(()=>{ if(SH) setStatus(); },5000);
   start(); }
-window.__turn={get chart(){return chart;},get cs(){return cs;},get ACC(){return ACC;},get HS(){return HS;},get DSS(){return DSS;},get SH(){return SH;},get CFG(){return CFG;},set CFG(v){CFG=v;},AL,TG,AU,TE,cur,recompute,engineInput,checkAlerts,renderStats,setTf,start,claim,tgCfg};
+window.__turn={get chart(){return chart;},get cs(){return cs;},get ACC(){return ACC;},get HS(){return HS;},get DSS(){return DSS;},get SH(){return SH;},get CFG(){return CFG;},set CFG(v){CFG=v;},get PL(){return PL;},DEEP,AL,TG,AU,TE,cur,recompute,engineInput,checkAlerts,renderStats,setTf,start,claim,tgCfg};
 if(window.LightweightCharts) init(); else addEventListener('load',init);
 
 </script>
