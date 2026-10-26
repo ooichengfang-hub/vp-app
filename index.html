@@ -75,6 +75,7 @@ main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px max
 .btn-r{width:100%;margin-top:18px;padding:12px;border-radius:12px;background:var(--card);color:var(--dn);font-size:15px}
 /* 回放 */
 .icon.on{background:var(--accent);color:#fff}
+.icon.ms{font-size:11px;font-weight:700;letter-spacing:-.2px}
 .rp{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;width:max-content;max-width:calc(100vw - 20px);background:var(--pill);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);border:.5px solid var(--line);border-radius:22px;box-shadow:0 10px 36px rgba(0,0,0,.16),0 1px 3px rgba(0,0,0,.08);padding:8px 12px;font-size:13px;font-variant-numeric:tabular-nums}
 .rp[hidden]{display:none}
 .rp .rp-sel{display:none;align-items:center;gap:8px;flex-wrap:wrap}
@@ -127,6 +128,7 @@ body.rp-on main{padding-bottom:128px}
   <div class="sp"></div>
   <span id="st"></span>
   <span class="conn" id="conn" title="实时连接"></span>
+  <button class="icon ms" id="msBtn" aria-label="市场结构 HH/HL" title="市场结构 HH / HL / LH / LL（开/关）">HL</button>
   <button class="icon" id="rpBtn" aria-label="回放" title="K线回放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg></button>
   <button class="icon" id="setBtn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 </header>
@@ -185,6 +187,13 @@ body.rp-on main{padding-bottom:128px}
       <div class="rowi"><label>门槛 ±%</label><span class="step"><button data-d="-5" data-f="vtThr">−</button><input id="c_vtThr" data-k="vtThr" type="number" min="5" max="60" inputmode="numeric"><button data-d="5" data-f="vtThr">+</button></span></div>
     </div>
     <div class="foot">每小时分成 12 段 5 分钟（用 1 分钟数据算，和右窗口周期无关）。后半小时比前半小时多 ≥ 门槛 → ↑ 增量，少 ≥ 门槛 → ↓ 缩量，否则 → 持平。成交量区会画出该小时内的量能回归线（绿升 / 红降 / 灰平，进行中为虚线）；和上小时的对比在光标图例里。进行中的小时只比较已走完的 5 分钟段（近段 vs 早段），并显示和上小时同一时段的节奏。</div>
+    <div class="grp-t">市场结构 HH / HL / LH / LL</div>
+    <div class="grp">
+      <div class="rowi"><label for="c_ms">显示结构标记</label><span class="sw"><input type="checkbox" id="c_ms" data-k="ms"><i></i></span></div>
+      <div class="rowi"><label>摆动点左右K线数</label><span class="step"><button data-d="-1" data-f="msN">−</button><input id="c_msN" data-k="msN" type="number" min="2" max="10" inputmode="numeric"><button data-d="1" data-f="msN">+</button></span></div>
+      <div class="rowi"><label for="c_msLine">虚线连接摆动点</label><span class="sw"><input type="checkbox" id="c_msLine" data-k="msLine"><i></i></span></div>
+    </div>
+    <div class="foot">左右各 N 根K线都比它低（高）才算摆动高点（低点），右边 N 根收盘后才确认，确认后不会改。高点比上一个高点高 = HH，低 = LH；低点比上一个低点高 = HL，低 = LL。顶栏「HL」按钮可快速开关。</div>
     <div class="grp-t">K线收盘倒计时</div>
     <div class="grp">
       <div class="rowi"><label for="c_cd">在最新价下方显示</label><span class="sw"><input type="checkbox" id="c_cd" data-k="cd"><i></i></span></div>
@@ -245,7 +254,17 @@ const VPC=(function(){
   // 练习交易：保证金 margin USDT × 杠杆 lev；side 1 多 / -1 空
   function pnl(side,entry,price,margin,lev){ const q=margin*lev/entry, u=side*(price-entry)*q; return {usdt:u,pct:u/margin*100}; }
   function stats(trades){ const n=trades.length, w=trades.filter(x=>x.usdt>0).length, tot=trades.reduce((a,x)=>a+x.usdt,0); return {n,win:n?w/n*100:null,tot}; }
-  return {profile,sma,lowerIdx,trend,visN,agg,pnl,stats};
+  // 市场结构：分形摆动点。i 为摆动高点 ⇔ 左边 L 根的高都 < h[i]，右边 R 根的高都 ≤ h[i]（低点对称）
+  // 只用前 closed 根（已收盘）K线；右边需要 R 根已收盘才确认 → 不重绘、不偷看
+  // 高点对比上一个摆动高点：HH / LH；低点对比上一个摆动低点：HL / LL；第一个没有可比的 → lab=null
+  function swings(bars,L,R,closed){ L=L||3; R=R==null?L:R; const n=Math.min(bars.length,closed==null?bars.length:closed), out=[]; let ph=null, pl=null;
+    for(let i=L;i+R<n;i++){ const b=bars[i]; let hi=true, lo=true;
+      for(let k=i-L;k<i&&(hi||lo);k++){ if(!(bars[k].h<b.h)) hi=false; if(!(bars[k].l>b.l)) lo=false; }
+      for(let k=i+1;k<=i+R&&(hi||lo);k++){ if(bars[k].h>b.h) hi=false; if(bars[k].l<b.l) lo=false; }
+      if(hi){ out.push({i,ts:b.ts,t:'H',p:b.h,lab:ph==null?null:b.h>ph?'HH':'LH',conf:bars[i+R].ts}); ph=b.h; }
+      if(lo){ out.push({i,ts:b.ts,t:'L',p:b.l,lab:pl==null?null:b.l<pl?'LL':'HL',conf:bars[i+R].ts}); pl=b.l; } }
+    return out; }
+  return {profile,sma,lowerIdx,trend,visN,agg,pnl,stats,swings};
 })();
 if(typeof module!=='undefined') module.exports=VPC;
 
@@ -257,8 +276,8 @@ const SYM='BTC-USDT-SWAP', API='https://www.okx.com/api/v5/', TZ=8*3600, ct=t=>t
 const SEC={'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1H':3600}, LTFS=['1m','3m','5m','15m','30m'];
 const TFN={'1m':'1 分钟','3m':'3 分钟','5m':'5 分钟','15m':'15 分钟','30m':'30 分钟'}, TFS={'1m':'1分','3m':'3分','5m':'5分','15m':'15分','30m':'30分'};
 const SPACING={'1m':4,'3m':6,'5m':9,'15m':14,'30m':22};
-const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15};
-const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60]};
+const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true};
+const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10]};
 const FONT='-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang SC",system-ui,sans-serif';
 const p2=n=>String(n).padStart(2,'0');
 const tStr=t=>{ const d=new Date((t+TZ)*1000); return `${p2(d.getUTCMonth()+1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`; };
@@ -269,7 +288,7 @@ const hourOf=t=>Math.floor(t/3600)*3600;
 
 // ---------- 设置 ----------
 function loadCfg(){ let c={}; try{ c=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){} c=Object.assign({},DEF,c); if(!LTFS.includes(c.tf)) c.tf=DEF.tf;
-  for(const k in LIMS){ c[k]=Math.round(Math.min(LIMS[k][1],Math.max(LIMS[k][0],+c[k]||DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark']) c[k]=!!c[k]; return c; }
+  for(const k in LIMS){ c[k]=Math.round(Math.min(LIMS[k][1],Math.max(LIMS[k][0],+c[k]||DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine']) c[k]=!!c[k]; return c; }
 let CFG=loadCfg(), CFGV=1; const saveCfg=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(CFG)); }catch(e){} };
 
 // ---------- OKX REST（限流 8 次/秒） ----------
@@ -309,10 +328,11 @@ function trend(H){ const bs=DS(); if(!bs.length||bs[0].ts>H) return null; const 
   const t=VPC.trend(bs.slice(VPC.lowerIdx(bs,H-3600),VPC.lowerIdx(bs,H+3600)),H,now,CFG.vtThr); TC.set(H,{t,cv:CFGV,f:bs[0].ts,dv:DV(),m:Math.floor(now/60),done:!live}); return t; }
 const sgn=v=>v==null||!isFinite(v)?'—':(v>=0?'+':'')+Math.round(v)+'%';
 const vtCol=d=>d===1?T.up:d===-1?T.dn:T.text, vtArr=d=>d===1?'↑':d===-1?'↓':'→', vtName=d=>d===1?'增量':d===-1?'缩量':'持平';
+let PILLS=[];
 function pill(x,t,x0,bw,y){ if(!t||t.dir==null) return 0; const col=vtCol(t.dir); x.font='600 10px '+FONT;
   const full=`${t.live?'进行中 ':''}${vtArr(t.dir)} ${vtName(t.dir)} ${sgn(t.half)}`, mid=`${vtArr(t.dir)} ${vtName(t.dir)} ${sgn(t.half)}`, sh=`${vtArr(t.dir)}${sgn(t.half)}`;
   let txt=null; for(const c of [full,mid,sh,vtArr(t.dir)]) if(x.measureText(c).width+10<=bw-4){ txt=c; break; } if(!txt) return 0;
-  const tw=x.measureText(txt).width+10, px=x0+3, h=15; x.fillStyle=hexA2(col,T.dark?.22:.13); rr(x,px,y,tw,h,7.5); x.fill();
+  const tw=x.measureText(txt).width+10, px=x0+3, h=15; PILLS.push({x:px,y,w:tw,h}); x.fillStyle=hexA2(col,T.dark?.22:.13); rr(x,px,y,tw,h,7.5); x.fill();
   if(t.live){ x.strokeStyle=hexA2(col,.6); x.lineWidth=1; x.setLineDash([2,2]); rr(x,px+.5,y+.5,tw-1,h-1,7); x.stroke(); x.setLineDash([]); }
   x.fillStyle=col; x.textBaseline='middle'; x.fillText(txt,px+5,y+h/2+.5); return tw; }
 function spark(x,t,x0,bw,y){ const W=Math.min(bw*0.8-6,96); if(W<30) return; const mx=Math.max(...t.b,1), bwid=W/12, col=vtCol(t.dir);
@@ -388,7 +408,7 @@ function draw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.char
   const ref=bs.length?bs[bs.length-1].c:1, sp=ts.options().barSpacing;
   const sig=[W0,H0,vr?vr.from.toFixed(2)+','+vr.to.toFixed(2):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),sp,w.ver,DV(),CFGV,T.dark,Math.floor(NOW()/60),w.sync?w.sync.i+':'+w.sync.ts:'-'].join('|');
   if(sig===w.sig) return; w.sig=sig;
-  const u=fit(w.cvU,W0,H0), o=fit(w.cvO,W0,H0); w.drawn=0; w.vtN=0; w.vtL=0; if(!vr||!bs.length) return;
+  const u=fit(w.cvU,W0,H0), o=fit(w.cvO,W0,H0); w.drawn=0; w.vtN=0; w.vtL=0; w.msN=0; PILLS=[]; if(!vr||!bs.length) return;
   const pw=ts.width(), ph=H0-ts.height(); for(const x of [u,o]){ x.save(); x.beginPath(); x.rect(0,0,pw,ph); x.clip(); }
   const a=Math.max(0,Math.floor(vr.from)), z=Math.min(bs.length-1,Math.ceil(vr.to)), Y=v=>w.cs.priceToCoordinate(v), vpc=T.vp;
   if(w.key==='h'){ // 1 小时：每根K线自己的分布
@@ -415,7 +435,21 @@ function draw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.char
   if(w.sync&&CFG.sync){ const i=w.sync.i, xc=ts.logicalToCoordinate(i); if(xc!=null&&bs[i]){ let x0,x1,xa;
       if(w.key==='h'){ x0=xc-sp/2; x1=xc+sp/2; xa=xc; } else { x0=xc-sp/2-((bs[i].ts-w.sync.H)/SEC[w.tf])*sp; x1=x0+3600/SEC[w.tf]*sp; xa=x0; }
       u.fillStyle=T.accA(T.dark?.12:.08); u.fillRect(x0,0,x1-x0,ph); arrow(o,xa,ph-3,hh(w.sync.H)); w.syncX=xa; } }
+  if(CFG.ms) msDraw(w,o,a,z,Y,pw,ph);
   for(const x of [u,o]) x.restore(); }
+// 市场结构 HH / HL / LH / LL：只用已收盘K线（实时：最新一根在走不算；回放：按回放时钟）
+function msGet(w){ const bs=w.bars, S=SEC[w.tf]; if(!bs.length) return []; const closed=bs.length-(bs[bs.length-1].ts+S>NOW()?1:0), key=w.ver+'|'+closed+'|'+CFG.msN+'|'+bs[0].ts;
+  if(w.msK!==key){ w.msK=key; w.ms=VPC.swings(bs,CFG.msN,CFG.msN,closed); } return w.ms; }
+function msDraw(w,o,a,z,Y,pw,ph){ const sw=msGet(w), ts=w.chart.timeScale(); w.msN=0; if(!sw.length) return;
+  let j0=0; while(j0<sw.length&&sw[j0].i<a-CFG.msN*4) j0++; if(j0>0) j0--; const pts=[];
+  for(let j=j0;j<sw.length&&sw[j].i<=z+1;j++){ const s=sw[j], x=ts.logicalToCoordinate(s.i), y=Y(s.p); if(x==null||y==null) continue; pts.push({s,x,y}); }
+  if(CFG.msLine&&pts.length>1){ o.save(); o.strokeStyle=T.dark?'rgba(235,235,245,.32)':'rgba(60,60,67,.30)'; o.lineWidth=1; o.setLineDash([3,3]); o.beginPath(); pts.forEach((q,k)=>k?o.lineTo(q.x,q.y):o.moveTo(q.x,q.y)); o.stroke(); o.restore(); }
+  o.font='600 10px '+FONT; o.textAlign='center'; o.lineJoin='round';
+  for(const {s,x,y} of pts){ if(x<-20||x>pw+20) continue; const up=s.t==='H', col=s.lab==null?T.text:(s.lab==='HH'||s.lab==='HL')?T.up:T.dn, ty=up?y-7:y+15;
+    let yy=ty; for(let k=0;k<3;k++){ const q=PILLS.find(r=>x+9>r.x&&x-9<r.x+r.w&&yy>r.y&&yy-10<r.y+r.h); if(!q) break; yy=up?q.y-2:q.y+q.h+10; } const tY=yy;
+    o.fillStyle=col; o.beginPath(); o.arc(x,up?y-2.5:y+2.5,1.6,0,7); o.fill(); if(s.lab==null) continue;
+    o.lineWidth=3; o.strokeStyle=T.dark?'rgba(0,0,0,.75)':'rgba(255,255,255,.85)'; o.strokeText(s.lab,x,tY); o.fillStyle=col; o.fillText(s.lab,x,tY); w.msN++; }
+  o.textAlign='left'; }
 function legend(w){ w.lgDirty=false; const bs=w.bars; if(!bs.length){ w.lg.textContent=''; return; }
   const i=w.hov!=null&&w.hov>=0&&w.hov<bs.length?w.hov:bs.length-1, b=bs[i], m=maAt(w,i), H=hourOf(b.ts), p=CFG.vp?prof(H):null, cls=b.c>=b.o?'up':'dn';
   w.lg.innerHTML=`<div><span class="t">${tStr(b.ts)}</span>开 <b>${fmtP(b.o)}</b> 高 <b>${fmtP(b.h)}</b> 低 <b>${fmtP(b.l)}</b> 收 <b class="${cls}">${fmtP(b.c)}</b></div>`+
@@ -454,15 +488,16 @@ function setTf(tf){ if(!LTFS.includes(tf)||tf===CFG.tf) return; const old=CFG.tf
   WL.bars=[]; render(WL); WL.chart.timeScale().applyOptions({barSpacing:SPACING[tf]}); if(RP.on){ WL.gen++; if(!RP.loading) rpRender(WL,true); rpUi(); return Promise.resolve(true); } return loadWin(WL).catch(e=>status('载入失败：'+e.message)); }
 function segUi(){ $('w2t').textContent=TFN[CFG.tf]; for(const b of $('tfSeg').children) b.classList.toggle('on',b.dataset.tf===CFG.tf); }
 function cfgUi(){ for(const el of document.querySelectorAll('[data-k]')){ const k=el.dataset.k; if(el.type==='checkbox') el.checked=!!CFG[k]; else el.value=CFG[k]; } }
-function applyCfg(k){ saveCfg(); if(k==='vtThr'){ CFGV++; TC.clear(); } if(k==='vt') for(const w of WS) w.chart.applyOptions(chartOpts(w.key)); if(k==='rows'||k==='va'||k==='vp'||k==='vaLines'){ CFGV++; PC.clear(); if(k==='vp'&&CFG.vp) ensure(); } if(k==='sync'&&!CFG.sync){ clearSync(WH); clearSync(WL); } if(k==='ma'||k==='maN') for(const w of WS) setMa(w); for(const w of WS){ w.sig=''; w.lgDirty=true; } }
+function applyCfg(k){ saveCfg(); if(k==='vtThr'){ CFGV++; TC.clear(); } if(k==='vt') for(const w of WS) w.chart.applyOptions(chartOpts(w.key)); if(k==='rows'||k==='va'||k==='vp'||k==='vaLines'){ CFGV++; PC.clear(); if(k==='vp'&&CFG.vp) ensure(); } if(k==='ms') msUi(); if(k==='sync'&&!CFG.sync){ clearSync(WH); clearSync(WL); } if(k==='ma'||k==='maN') for(const w of WS) setMa(w); for(const w of WS){ w.sig=''; w.lgDirty=true; } }
+function msUi(){ const b=$('msBtn'); if(b){ b.classList.toggle('on',CFG.ms); b.setAttribute('aria-pressed',CFG.ms); } }
 function setNum(k,v){ const [lo,hi]=LIMS[k]; v=Math.round(Math.min(hi,Math.max(lo,+v))); if(!isFinite(v)) v=CFG[k]; if(v!==CFG[k]){ CFG[k]=v; applyCfg(k); } cfgUi(); }
 function initUi(){ $('tfSeg').innerHTML=LTFS.map(t=>`<button data-tf="${t}">${TFS[t]}</button>`).join(''); $('tfSeg').onclick=e=>{ const b=e.target.closest('button'); if(b) setTf(b.dataset.tf); }; segUi(); cfgUi();
   const open=v=>$('scrim').classList.toggle('open',v); $('setBtn').onclick=()=>open(true); $('setDone').onclick=()=>open(false); $('scrim').onclick=e=>{ if(e.target.id==='scrim') open(false); };
   addEventListener('keydown',e=>{ if(e.key==='Escape'){ open(false); if(RP.sel) rpSelect(false); } if(!RP.on||/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||''))) return; if(e.key===' '){ e.preventDefault(); rpToggle(); } else if(e.key==='ArrowRight'){ e.preventDefault(); rpPause(); rpStep(); } });
-  rpInitUi();
+  rpInitUi(); $('msBtn').onclick=()=>{ CFG.ms=!CFG.ms; cfgUi(); applyCfg('ms'); }; msUi();
   for(const el of document.querySelectorAll('[data-k]')) el.addEventListener('change',()=>{ const k=el.dataset.k; if(el.type==='checkbox'){ CFG[k]=el.checked; applyCfg(k); } else setNum(k,el.value); });
   for(const b of document.querySelectorAll('[data-f]')) b.onclick=()=>setNum(b.dataset.f,CFG[b.dataset.f]+(+b.dataset.d));
-  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); };
+  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); };
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme); }
 function applyTheme(){ T=readTheme(); for(const w of WS){ w.chart.applyOptions(chartOpts(w.key)); w.cs.applyOptions({upColor:T.up,downColor:T.dn,wickUpColor:T.up,wickDownColor:T.dn}); w.ma.applyOptions({color:T.accent}); w.vs.setData(w.bars.map(vBar)); w.sig=''; } }
 
