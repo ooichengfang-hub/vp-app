@@ -76,6 +76,8 @@ main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px max
 /* 回放 */
 .icon.on{background:var(--accent);color:#fff}
 .icon.ms{font-size:11px;font-weight:700;letter-spacing:-.2px}
+.icon.smc{font-size:9.5px;letter-spacing:-.4px}
+.smc-st{opacity:.92}
 .rp{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;width:max-content;max-width:calc(100vw - 20px);background:var(--pill);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);border:.5px solid var(--line);border-radius:22px;box-shadow:0 10px 36px rgba(0,0,0,.16),0 1px 3px rgba(0,0,0,.08);padding:8px 12px;font-size:13px;font-variant-numeric:tabular-nums}
 .rp[hidden]{display:none}
 .rp .rp-sel{display:none;align-items:center;gap:8px;flex-wrap:wrap}
@@ -111,8 +113,10 @@ body.rp-on main{padding-bottom:128px}
   main{grid-template-columns:1fr;height:auto;gap:12px;padding:12px max(12px,env(safe-area-inset-right)) 20px max(12px,env(safe-area-inset-left))}
   .card{height:max(320px,calc((100svh - 100px)/2));min-height:320px}
   .bar{gap:10px;padding:8px max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left))}
-  #last{font-size:19px}.brand b{font-size:15px}.px{margin-left:0}
+  #last{font-size:19px}.brand b{font-size:15px}.px{margin-left:6px}
   #st{display:none}
+  .bar .icon{width:32px;height:32px}.bar{gap:8px}
+  .brand{white-space:nowrap;flex:none}.brand span{display:none}.px{flex-direction:column;align-items:flex-start;gap:0;line-height:1.1}#chg{font-size:11px}
   .lg{font-size:10px;left:10px;line-height:1.45}
   .ch{padding:12px 12px 4px;min-height:44px}.ch .note{display:none}
   .seg button{padding:4px 8px}
@@ -129,6 +133,7 @@ body.rp-on main{padding-bottom:128px}
   <span id="st"></span>
   <span class="conn" id="conn" title="实时连接"></span>
   <button class="icon ms" id="msBtn" aria-label="市场结构 HH/HL" title="市场结构 HH / HL / LH / LL（开/关）">HL</button>
+  <button class="icon ms smc" id="smcBtn" aria-label="BOS / CHoCH / FVG" title="BOS → CHoCH → FVG 入场（开/关）">SMC</button>
   <button class="icon" id="rpBtn" aria-label="回放" title="K线回放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg></button>
   <button class="icon" id="setBtn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 </header>
@@ -194,6 +199,20 @@ body.rp-on main{padding-bottom:128px}
       <div class="rowi"><label for="c_msLine">虚线连接摆动点</label><span class="sw"><input type="checkbox" id="c_msLine" data-k="msLine"><i></i></span></div>
     </div>
     <div class="foot">左右各 N 根K线都比它低（高）才算摆动高点（低点），右边 N 根收盘后才确认，确认后不会改。高点比上一个高点高 = HH，低 = LH；低点比上一个低点高 = HL，低 = LL。顶栏「HL」按钮可快速开关。</div>
+    <div class="grp-t">BOS → CHoCH → FVG 入场</div>
+    <div class="grp">
+      <div class="rowi"><label for="c_smc">显示 SMC（总开关）</label><span class="sw"><input type="checkbox" id="c_smc" data-k="smc"><i></i></span></div>
+      <div class="rowi"><label for="c_smcBos">BOS / CHoCH 线</label><span class="sw"><input type="checkbox" id="c_smcBos" data-k="smcBos"><i></i></span></div>
+      <div class="rowi"><label for="c_smcFvg">FVG 缺口框</label><span class="sw"><input type="checkbox" id="c_smcFvg" data-k="smcFvg"><i></i></span></div>
+      <div class="rowi"><label for="c_smcSet">入场计划 + 统计</label><span class="sw"><input type="checkbox" id="c_smcSet" data-k="smcSet"><i></i></span></div>
+      <div class="rowi"><label for="c_smcMid">用 FVG 50% 中点入场（关 = 近端边）</label><span class="sw"><input type="checkbox" id="c_smcMid" data-k="smcMid"><i></i></span></div>
+      <div class="rowi"><label>FVG 最小缺口 %</label><span class="step"><button data-d="-0.01" data-f="fvgMin">−</button><input id="c_fvgMin" data-k="fvgMin" type="number" min="0.01" max="1" step="0.01" inputmode="decimal"><button data-d="0.01" data-f="fvgMin">+</button></span></div>
+      <div class="rowi"><label>止损缓冲 %</label><span class="step"><button data-d="-0.01" data-f="slBuf">−</button><input id="c_slBuf" data-k="slBuf" type="number" min="0" max="0.5" step="0.01" inputmode="decimal"><button data-d="0.01" data-f="slBuf">+</button></span></div>
+      <div class="rowi"><label>TP1（R）</label><span class="step"><button data-d="-0.1" data-f="tp1">−</button><input id="c_tp1" data-k="tp1" type="number" min="0.5" max="5" step="0.1" inputmode="decimal"><button data-d="0.1" data-f="tp1">+</button></span></div>
+      <div class="rowi"><label>TP2（R）</label><span class="step"><button data-d="-0.1" data-f="tp2">−</button><input id="c_tp2" data-k="tp2" type="number" min="0.5" max="10" step="0.1" inputmode="decimal"><button data-d="0.1" data-f="tp2">+</button></span></div>
+      <div class="rowi"><label>最多等待成交（根）</label><span class="step"><button data-d="-1" data-f="smcExp">−</button><input id="c_smcExp" data-k="smcExp" type="number" min="3" max="200" step="1" inputmode="decimal"><button data-d="1" data-f="smcExp">+</button></span></div>
+    </div>
+    <div class="foot">只看收盘：顺势收盘越过最近摆动点 = BOS（影线不算）；逆势第一次收盘越过 = CHoCH，趋势翻转。CHoCH 之前那段趋势里至少有过一次 BOS，才在 CHoCH 这段位移里找最近一个还没被回补的 FVG：第一次回踩挂单入场，止损放在位移起点外加缓冲，TP1 平一半、TP2 平剩下（止损不移）。成交前收盘破止损、出现反向结构突破、或超过等待根数 → 失效。同一根K线同时碰到止损和止盈按止损算，成交那根只算止损。摆动点左右K线数和上面的 HH/HL 共用。图例里的统计只用当前已载入的K线、不含手续费，样本很小，只能参考，不是胜率保证。</div>
     <div class="grp-t">K线收盘倒计时</div>
     <div class="grp">
       <div class="rowi"><label for="c_cd">在最新价下方显示</label><span class="sw"><input type="checkbox" id="c_cd" data-k="cd"><i></i></span></div>
@@ -264,7 +283,52 @@ const VPC=(function(){
       if(hi){ out.push({i,ts:b.ts,t:'H',p:b.h,lab:ph==null?null:b.h>ph?'HH':'LH',conf:bars[i+R].ts}); ph=b.h; }
       if(lo){ out.push({i,ts:b.ts,t:'L',p:b.l,lab:pl==null?null:b.l<pl?'LL':'HL',conf:bars[i+R].ts}); pl=b.l; } }
     return out; }
-  return {profile,sma,lowerIdx,trend,visN,agg,pnl,stats,swings};
+  // ---------- SMC：BOS / CHoCH / FVG / 入场 ----------
+  // 全部按K线顺序一根一根推进（第 k 根只看 ≤ k 的K线），所以不重绘、回放不偷看。
+  // o: {N 摆动点左右根数, fvgMin 最小缺口 %, mid 用 FVG 中点入场, slBuf 止损缓冲 %, tp1, tp2 (R), exp 等待成交最多几根}
+  function smc(bars,o,closed){ o=Object.assign({N:3,fvgMin:0.05,mid:false,slBuf:0.05,tp1:1.5,tp2:2,exp:24},o||{});
+    const n=Math.min(bars.length,closed==null?bars.length:closed), N=o.N, sw=swings(bars,N,N,n), byConf=new Map();
+    for(const p of sw){ const k=p.i+N; if(!byConf.has(k)) byConf.set(k,[]); byConf.get(k).push(p); }
+    const breaks=[], fvgs=[], setups=[], openF=[]; let H=null, L=null, trend=0, bosN=0;
+    for(let k=0;k<n;k++){ const b=bars[k];
+      // 1) 这一根确认的摆动点（i = k−N）
+      for(const p of byConf.get(k)||[]){ if(p.t==='H') H={i:p.i,p:p.p,lab:p.lab}; else L={i:p.i,p:p.p,lab:p.lab}; }
+      // 2) 收盘突破（影线不算）
+      let brk=null;
+      if(H&&b.c>H.p){ brk={k,dir:1,type:trend===-1?'CHoCH':'BOS',i:H.i,p:H.p,ts:b.ts,prevBos:bosN}; H=null; }
+      else if(L&&b.c<L.p){ brk={k,dir:-1,type:trend===1?'CHoCH':'BOS',i:L.i,p:L.p,ts:b.ts,prevBos:bosN}; L=null; }
+      // 3) FVG：三根K线缺口，k 是第三根
+      if(k>=2){ const a=bars[k-2], c=bars[k-1].c||b.o;
+        if(a.h<b.l&&(b.l-a.h)/c*100>=o.fvgMin) { const f={a:k-2,k,dir:1,lo:a.h,hi:b.l,mit:null,fill:null}; fvgs.push(f); openF.push(f); }
+        else if(a.l>b.h&&(a.l-b.h)/c*100>=o.fvgMin){ const f={a:k-2,k,dir:-1,lo:b.h,hi:a.l,mit:null,fill:null}; fvgs.push(f); openF.push(f); } }
+      for(let j=openF.length-1;j>=0;j--){ const f=openF[j]; if(f.k===k) continue;
+        if(f.dir>0){ if(f.mit==null&&b.l<=f.hi) f.mit=k; if(b.l<=f.lo){ f.fill=k; openF.splice(j,1); } }
+        else { if(f.mit==null&&b.h>=f.lo) f.mit=k; if(b.h>=f.hi){ f.fill=k; openF.splice(j,1); } } }
+      // 4) 推进已有的入场计划
+      for(const S of setups){ if(S.k>=k||S.done) continue; const d=S.dir;
+        if(S.st==='wait'){
+          if(d>0?b.l<=S.entry:b.h>=S.entry){ S.st='live'; S.fillK=k; if(d>0?b.l<=S.sl:b.h>=S.sl){ S.st='loss'; S.r=-1; S.exitK=k; S.done=true; } continue; }
+          if(d>0?b.c<S.sl:b.c>S.sl){ S.st='inv'; S.why='收盘破止损'; S.exitK=k; S.done=true; continue; }
+          if(brk&&brk.dir===-d){ S.st='inv'; S.why='反向结构突破'; S.exitK=k; S.done=true; continue; }
+          if(k-S.k>=o.exp){ S.st='exp'; S.why=`${o.exp} 根未成交`; S.exitK=k; S.done=true; } continue; }
+        const hitSL=d>0?b.l<=S.sl:b.h>=S.sl, h1=d>0?b.h>=S.tp1:b.l<=S.tp1, h2=d>0?b.h>=S.tp2:b.l<=S.tp2;
+        if(hitSL){ S.r=S.st==='tp1'?0.5*o.tp1-0.5:-1; S.st=S.st==='tp1'?'part':'loss'; S.exitK=k; S.done=true; }
+        else if(h2){ S.r=S.st==='tp1'?0.5*o.tp1+0.5*o.tp2:0.5*o.tp1+0.5*o.tp2; S.st='win'; S.exitK=k; S.done=true; }
+        else if(h1&&S.st==='live'){ S.st='tp1'; S.tp1K=k; } }
+      // 5) 记录突破；CHoCH（之前那段趋势里至少有过一次 BOS）→ 找这段位移里的 FVG 建立入场计划
+      if(brk){ breaks.push(brk);
+        if(brk.type==='CHoCH'&&brk.prevBos>=1){ const d=brk.dir; let s=brk.i;
+          for(let j=brk.i;j<=k;j++) if(d>0?bars[j].l<bars[s].l:bars[j].h>bars[s].h) s=j;
+          let F=null; for(let j=fvgs.length-1;j>=0;j--){ const f=fvgs[j]; if(f.k>k||f.a<s) { if(f.a<s) break; continue; } if(f.dir===d&&f.mit==null){ F=f; break; } }
+          if(F){ const ext=d>0?bars[s].l:bars[s].h, sl=d>0?ext*(1-o.slBuf/100):ext*(1+o.slBuf/100), entry=o.mid?(F.lo+F.hi)/2:(d>0?F.hi:F.lo), R=Math.abs(entry-sl);
+            if(R>0) setups.push({k,ts:b.ts,dir:d,choch:breaks.length-1,fvg:fvgs.indexOf(F),legI:s,entry,sl,R,tp1:entry+d*o.tp1*R,tp2:entry+d*o.tp2*R,st:'wait',r:null,fillK:null,exitK:null,done:false}); } }
+        if(brk.type==='CHoCH'){ trend=brk.dir; bosN=0; } else { if(trend===0) trend=brk.dir; bosN++; } } }
+    return {breaks,fvgs,setups,trend,n}; }
+  // 已结束交易的统计（按出场顺序）：胜率、平均 R、总 R、最大回撤 R；feeR = 每笔手续费折算的 R（可选）
+  function smcStats(setups,fee){ const t=setups.filter(x=>x.r!=null).sort((a,b)=>a.exitK-b.exitK); let cum=0,peak=0,dd=0,w=0,cf=0,pf=0,ddf=0;
+    for(const x of t){ cum+=x.r; if(x.r>0) w++; peak=Math.max(peak,cum); dd=Math.max(dd,peak-cum); if(fee){ cf+=x.r-fee*x.entry/x.R; pf=Math.max(pf,cf); ddf=Math.max(ddf,pf-cf); } }
+    const n=t.length; return {n,win:n?w/n*100:null,avg:n?cum/n:null,tot:cum,dd,totF:fee?cf:null,ddF:fee?ddf:null,wait:setups.filter(x=>x.st==='wait').length,live:setups.filter(x=>x.st==='live'||x.st==='tp1').length,inv:setups.filter(x=>x.st==='inv'||x.st==='exp').length}; }
+  return {profile,sma,lowerIdx,trend,visN,agg,pnl,stats,swings,smc,smcStats};
 })();
 if(typeof module!=='undefined') module.exports=VPC;
 
@@ -276,8 +340,9 @@ const SYM='BTC-USDT-SWAP', API='https://www.okx.com/api/v5/', TZ=8*3600, ct=t=>t
 const SEC={'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1H':3600}, LTFS=['1m','3m','5m','15m','30m'];
 const TFN={'1m':'1 分钟','3m':'3 分钟','5m':'5 分钟','15m':'15 分钟','30m':'30 分钟'}, TFS={'1m':'1分','3m':'3分','5m':'5分','15m':'15分','30m':'30分'};
 const SPACING={'1m':4,'3m':6,'5m':9,'15m':14,'30m':22};
-const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true};
-const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10]};
+const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24};
+const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10],fvgMin:[0.01,1],slBuf:[0,0.5],tp1:[0.5,5],tp2:[0.5,10],smcExp:[3,200]};
+const DEC={fvgMin:2,slBuf:2,tp1:1,tp2:1}, rnd=(k,v)=>{ const f=10**(DEC[k]||0); return Math.round(v*f)/f; };
 const FONT='-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang SC",system-ui,sans-serif';
 const p2=n=>String(n).padStart(2,'0');
 const tStr=t=>{ const d=new Date((t+TZ)*1000); return `${p2(d.getUTCMonth()+1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`; };
@@ -288,7 +353,7 @@ const hourOf=t=>Math.floor(t/3600)*3600;
 
 // ---------- 设置 ----------
 function loadCfg(){ let c={}; try{ c=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){} c=Object.assign({},DEF,c); if(!LTFS.includes(c.tf)) c.tf=DEF.tf;
-  for(const k in LIMS){ c[k]=Math.round(Math.min(LIMS[k][1],Math.max(LIMS[k][0],+c[k]||DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine']) c[k]=!!c[k]; return c; }
+  for(const k in LIMS){ const v=+c[k]; c[k]=rnd(k,Math.min(LIMS[k][1],Math.max(LIMS[k][0],isFinite(v)&&c[k]!==null&&c[k]!==''?v:DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine','smc','smcBos','smcFvg','smcSet','smcMid']) c[k]=!!c[k]; return c; }
 let CFG=loadCfg(), CFGV=1; const saveCfg=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(CFG)); }catch(e){} };
 
 // ---------- OKX REST（限流 8 次/秒） ----------
@@ -408,7 +473,7 @@ function draw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.char
   const ref=bs.length?bs[bs.length-1].c:1, sp=ts.options().barSpacing;
   const sig=[W0,H0,vr?vr.from.toFixed(2)+','+vr.to.toFixed(2):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),sp,w.ver,DV(),CFGV,T.dark,Math.floor(NOW()/60),w.sync?w.sync.i+':'+w.sync.ts:'-'].join('|');
   if(sig===w.sig) return; w.sig=sig;
-  const u=fit(w.cvU,W0,H0), o=fit(w.cvO,W0,H0); w.drawn=0; w.vtN=0; w.vtL=0; w.msN=0; PILLS=[]; if(!vr||!bs.length) return;
+  const u=fit(w.cvU,W0,H0), o=fit(w.cvO,W0,H0); w.drawn=0; w.vtN=0; w.vtL=0; w.msN=0; w.smN={b:0,f:0,s:0}; PILLS=[]; if(!vr||!bs.length) return;
   const pw=ts.width(), ph=H0-ts.height(); for(const x of [u,o]){ x.save(); x.beginPath(); x.rect(0,0,pw,ph); x.clip(); }
   const a=Math.max(0,Math.floor(vr.from)), z=Math.min(bs.length-1,Math.ceil(vr.to)), Y=v=>w.cs.priceToCoordinate(v), vpc=T.vp;
   if(w.key==='h'){ // 1 小时：每根K线自己的分布
@@ -435,8 +500,41 @@ function draw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.char
   if(w.sync&&CFG.sync){ const i=w.sync.i, xc=ts.logicalToCoordinate(i); if(xc!=null&&bs[i]){ let x0,x1,xa;
       if(w.key==='h'){ x0=xc-sp/2; x1=xc+sp/2; xa=xc; } else { x0=xc-sp/2-((bs[i].ts-w.sync.H)/SEC[w.tf])*sp; x1=x0+3600/SEC[w.tf]*sp; xa=x0; }
       u.fillStyle=T.accA(T.dark?.12:.08); u.fillRect(x0,0,x1-x0,ph); arrow(o,xa,ph-3,hh(w.sync.H)); w.syncX=xa; } }
+  if(CFG.smc) smcDraw(w,u,o,a,z,Y,pw,ph);
   if(CFG.ms) msDraw(w,o,a,z,Y,pw,ph);
   for(const x of [u,o]) x.restore(); }
+// SMC：BOS → CHoCH → FVG 入场（只用已收盘K线，回放按回放时钟；和 HH/HL 用同一组摆动点）
+const smcOpt=()=>({N:CFG.msN,fvgMin:CFG.fvgMin,mid:CFG.smcMid,slBuf:CFG.slBuf,tp1:CFG.tp1,tp2:CFG.tp2,exp:CFG.smcExp});
+function smcGet(w){ const bs=w.bars, S=SEC[w.tf]; if(!bs.length) return null; const closed=bs.length-(bs[bs.length-1].ts+S>NOW()?1:0), o=smcOpt(), lb=bs[closed-1]||{};
+  const key=[closed,bs.length,bs[0].ts,lb.ts,lb.c,lb.h,lb.l,JSON.stringify(o)].join('|'); if(w.smK!==key){ w.smK=key; w.smc=VPC.smc(bs,o,closed); w.smS=VPC.smcStats(w.smc.setups); } return w.smc; }
+const fR=r=>(r>0?'+':r<0?'−':'')+Math.abs(r).toFixed(2).replace(/\.?0+$/,'')+'R';
+function smcLeg(w){ if(!CFG.smc||!CFG.smcSet||!smcGet(w)) return ''; const s=w.smS, cl=s.tot>0?'up':s.tot<0?'dn':'';
+  return `<div class="smc-st">SMC 入场 · ${w.smc.n} 根内已结束 <b>${s.n}</b> 笔${s.n?` · 胜率 <b>${s.win.toFixed(0)}%</b> · 平均 <b class="${cl}">${fR(s.avg)}</b> · 总 <b class="${cl}">${fR(s.tot)}</b> · 最大回撤 <b>${fR(-s.dd)}</b>`:''}${s.wait?` · 等待 ${s.wait}`:''}${s.live?` · 持仓 ${s.live}`:''}</div>`; }
+const SMC_ST={wait:'等待回踩',live:'持仓中',tp1:'TP1 已到',win:'TP2',part:'TP1 后止损',loss:'止损',inv:'失效',exp:'过期'};
+function smcDraw(w,u,o,a,z,Y,pw,ph){ const EN=T.dark?'#ff9f0a':'#ff9500', R=smcGet(w); w.smN={b:0,f:0,s:0}; if(!R) return; const ts=w.chart.timeScale(), X=i=>ts.logicalToCoordinate(i), last=R.n-1;
+  const sp=Math.max(1,(X(1)??1)-(X(0)??0)), halo=T.dark?'rgba(0,0,0,.75)':'rgba(255,255,255,.88)';
+  const txt=(t,x,y,col,al)=>{ o.textAlign=al||'center'; o.lineWidth=3; o.strokeStyle=halo; o.strokeText(t,x,y); o.fillStyle=col; o.fillText(t,x,y); };
+  if(CFG.smcFvg){ for(const f of R.fvgs){ const e=f.fill!=null?f.fill:null; if((e!=null&&e<a-1)||f.a>z+1) continue; const x1=X(f.a), x2=e!=null?X(e):pw, y1=Y(f.hi), y2=Y(f.lo); if(x1==null||y1==null||y2==null||x2==null) continue;
+      const col=f.dir>0?T.up:T.dn, al=e!=null?(T.dark?.07:.05):f.mit!=null?(T.dark?.13:.10):(T.dark?.26:.18); u.fillStyle=hexA2(col,al); u.fillRect(x1-sp/2,Math.min(y1,y2),Math.max(1,x2-x1+sp/2),Math.max(1,Math.abs(y2-y1)));
+      if(e==null&&f.mit==null){ u.strokeStyle=hexA2(col,.45); u.lineWidth=1; u.strokeRect(Math.round(x1-sp/2)+.5,Math.round(Math.min(y1,y2))+.5,Math.max(1,Math.round(x2-x1+sp/2)),Math.max(1,Math.round(Math.abs(y2-y1)))); } w.smN.f++; } }
+  o.font='600 9.5px '+FONT; o.lineJoin='round';
+  if(CFG.smcBos){ for(const b of R.breaks){ if(b.k<a-1||b.i>z+1) continue; const x1=X(b.i), x2=X(b.k), y=Y(b.p); if(x1==null||x2==null||y==null) continue; const col=b.dir>0?T.up:T.dn, ch=b.type==='CHoCH';
+      o.save(); o.strokeStyle=col; o.globalAlpha=ch?.95:.75; o.lineWidth=ch?1.5:1; o.setLineDash(ch?[5,3]:[3,3]); o.beginPath(); o.moveTo(x1,Math.round(y)+.5); o.lineTo(x2,Math.round(y)+.5); o.stroke(); o.restore();
+      txt(b.type,(x1+x2)/2,b.dir>0?y-4:y+11,col); w.smN.b++; } }
+  if(CFG.smcSet){ for(const S of R.setups){ const end=S.exitK!=null?S.exitK:S.st==='wait'?Math.min(S.k+CFG.smcExp,last+CFG.smcExp):last+2; if(end<a-1||S.k>z+1) continue;
+      const x1=X(S.k), x2=X(end), ye=Y(S.entry), ys=Y(S.sl), y1=Y(S.tp1), y2=Y(S.tp2); if(x1==null||x2==null||ye==null||ys==null||y2==null) continue;
+      const nofill=S.fillK==null, dim=S.st==='inv'||S.st==='exp', L=x2-x1; o.save(); if(dim) o.globalAlpha=.45;
+      if(!nofill||S.st==='wait'){ o.fillStyle=hexA2(T.dn,T.dark?.14:.09); o.fillRect(x1,Math.min(ye,ys),L,Math.abs(ys-ye)); o.fillStyle=hexA2(T.up,T.dark?.13:.08); o.fillRect(x1,Math.min(ye,y2),L,Math.abs(y2-ye)); }
+      const hl=(y,col,dash,wd)=>{ o.strokeStyle=col; o.lineWidth=wd||1; o.setLineDash(dash||[]); o.beginPath(); o.moveTo(x1,Math.round(y)+.5); o.lineTo(x2,Math.round(y)+.5); o.stroke(); };
+      hl(ye,EN,nofill&&S.st!=='wait'?[4,3]:[],1.5); if(!dim){ hl(ys,T.dn,[4,3]); hl(y1,T.up,[2,3]); hl(y2,T.up,[4,3]); }
+      o.setLineDash([]); const d=S.dir, mk=X(S.k); o.fillStyle=d>0?T.up:T.dn; o.beginPath(); const my=d>0?Y(Math.min(...w.bars.slice(S.k,S.k+1).map(b=>b.l)))+10:Y(Math.max(...w.bars.slice(S.k,S.k+1).map(b=>b.h)))-10;
+      if(d>0){ o.moveTo(mk,my-5); o.lineTo(mk-4.5,my+3); o.lineTo(mk+4.5,my+3); } else { o.moveTo(mk,my+5); o.lineTo(mk-4.5,my-3); o.lineTo(mk+4.5,my-3); } o.fill();
+      if(S.fillK!=null){ const fx=X(S.fillK); if(fx!=null){ o.fillStyle=EN; o.beginPath(); o.arc(fx,ye,3,0,7); o.fill(); o.strokeStyle=halo; o.lineWidth=1.5; o.stroke(); } }
+      if(L>46&&!dim){ txt((d>0?'多 ':'空 ')+fmtP(S.entry),x1+3,d>0?ye-4:ye+11,EN,'left'); txt('SL',x1+3,d>0?ys+11:ys-4,T.dn,'left'); txt('TP1',x1+3,d>0?y1-4:y1+11,T.up,'left'); txt('TP2',x1+3,d>0?y2-4:y2+11,T.up,'left'); }
+      else if(dim) txt((d>0?'多 ':'空 ')+SMC_ST[S.st],x1+3,d>0?ye-4:ye+11,T.text,'left');
+      if(S.exitK!=null&&!dim){ const ex=X(S.exitK); if(ex!=null) txt(fR(S.r),ex+3,(S.r>0?Math.min(ye,y2)-4:Math.max(ye,ys)+11),S.r>0?T.up:T.dn,'left'); }
+      o.restore(); w.smN.s++; } }
+  o.textAlign='left'; }
 // 市场结构 HH / HL / LH / LL：只用已收盘K线（实时：最新一根在走不算；回放：按回放时钟）
 function msGet(w){ const bs=w.bars, S=SEC[w.tf]; if(!bs.length) return []; const closed=bs.length-(bs[bs.length-1].ts+S>NOW()?1:0), key=w.ver+'|'+closed+'|'+CFG.msN+'|'+bs[0].ts;
   if(w.msK!==key){ w.msK=key; w.ms=VPC.swings(bs,CFG.msN,CFG.msN,closed); } return w.ms; }
@@ -454,7 +552,7 @@ function legend(w){ w.lgDirty=false; const bs=w.bars; if(!bs.length){ w.lg.textC
   const i=w.hov!=null&&w.hov>=0&&w.hov<bs.length?w.hov:bs.length-1, b=bs[i], m=maAt(w,i), H=hourOf(b.ts), p=CFG.vp?prof(H):null, cls=b.c>=b.o?'up':'dn';
   w.lg.innerHTML=`<div><span class="t">${tStr(b.ts)}</span>开 <b>${fmtP(b.o)}</b> 高 <b>${fmtP(b.h)}</b> 低 <b>${fmtP(b.l)}</b> 收 <b class="${cls}">${fmtP(b.c)}</b></div>`+
     `<div>量 <b>${fmtV(b.v)}</b>${m!=null?` · MA${CFG.maN} <b class="acc">${fmtV(m)}</b>`:''}</div>`+
-    (CFG.vt?vtLeg(trend(H)):'')+(p?`<div>${hh(H)}–${hh(H+3600)} · POC <b class="acc">${fmtP(p.pocP)}</b> · VAH <b>${fmtP(p.vah)}</b> · VAL <b>${fmtP(p.val)}</b></div>`:''); }
+    (CFG.vt?vtLeg(trend(H)):'')+smcLeg(w)+(p?`<div>${hh(H)}–${hh(H+3600)} · POC <b class="acc">${fmtP(p.pocP)}</b> · VAH <b>${fmtP(p.vah)}</b> · VAL <b>${fmtP(p.val)}</b></div>`:''); }
 function vtLeg(t){ if(!t||t.dir==null) return t&&t.live?`<div>量能 · 进行中（${t.n}/12 段完成，至少需要 2 段）</div>`:''; const c=t.dir===1?'up':t.dir===-1?'dn':'';
   const sl=t.slope==null?'':` · 斜率 <b>${t.slope>=0?'+':''}${t.slope.toFixed(1)}%/5分</b>`;
   return t.live?`<div>量能 <b class="${c}">${vtArr(t.dir)} ${vtName(t.dir)}</b> 进行中（${t.n}/12 段）· 近段 vs 早段 <b class="${c}">${sgn(t.half)}</b>${sl} · 同时段 vs 上小时 <b>${sgn(t.pace)}</b></div>`
@@ -488,16 +586,17 @@ function setTf(tf){ if(!LTFS.includes(tf)||tf===CFG.tf) return; const old=CFG.tf
   WL.bars=[]; render(WL); WL.chart.timeScale().applyOptions({barSpacing:SPACING[tf]}); if(RP.on){ WL.gen++; if(!RP.loading) rpRender(WL,true); rpUi(); return Promise.resolve(true); } return loadWin(WL).catch(e=>status('载入失败：'+e.message)); }
 function segUi(){ $('w2t').textContent=TFN[CFG.tf]; for(const b of $('tfSeg').children) b.classList.toggle('on',b.dataset.tf===CFG.tf); }
 function cfgUi(){ for(const el of document.querySelectorAll('[data-k]')){ const k=el.dataset.k; if(el.type==='checkbox') el.checked=!!CFG[k]; else el.value=CFG[k]; } }
-function applyCfg(k){ saveCfg(); if(k==='vtThr'){ CFGV++; TC.clear(); } if(k==='vt') for(const w of WS) w.chart.applyOptions(chartOpts(w.key)); if(k==='rows'||k==='va'||k==='vp'||k==='vaLines'){ CFGV++; PC.clear(); if(k==='vp'&&CFG.vp) ensure(); } if(k==='ms') msUi(); if(k==='sync'&&!CFG.sync){ clearSync(WH); clearSync(WL); } if(k==='ma'||k==='maN') for(const w of WS) setMa(w); for(const w of WS){ w.sig=''; w.lgDirty=true; } }
+function applyCfg(k){ saveCfg(); if(k==='vtThr'){ CFGV++; TC.clear(); } if(k==='vt') for(const w of WS) w.chart.applyOptions(chartOpts(w.key)); if(k==='rows'||k==='va'||k==='vp'||k==='vaLines'){ CFGV++; PC.clear(); if(k==='vp'&&CFG.vp) ensure(); } if(k==='ms') msUi(); if(k==='smc') smcUi(); if(k==='sync'&&!CFG.sync){ clearSync(WH); clearSync(WL); } if(k==='ma'||k==='maN') for(const w of WS) setMa(w); for(const w of WS){ w.sig=''; w.lgDirty=true; } }
+function smcUi(){ const b=$('smcBtn'); if(b){ b.classList.toggle('on',CFG.smc); b.setAttribute('aria-pressed',CFG.smc); } }
 function msUi(){ const b=$('msBtn'); if(b){ b.classList.toggle('on',CFG.ms); b.setAttribute('aria-pressed',CFG.ms); } }
-function setNum(k,v){ const [lo,hi]=LIMS[k]; v=Math.round(Math.min(hi,Math.max(lo,+v))); if(!isFinite(v)) v=CFG[k]; if(v!==CFG[k]){ CFG[k]=v; applyCfg(k); } cfgUi(); }
+function setNum(k,v){ const [lo,hi]=LIMS[k]; v=rnd(k,Math.min(hi,Math.max(lo,+v))); if(!isFinite(v)) v=CFG[k]; if(v!==CFG[k]){ CFG[k]=v; applyCfg(k); } cfgUi(); }
 function initUi(){ $('tfSeg').innerHTML=LTFS.map(t=>`<button data-tf="${t}">${TFS[t]}</button>`).join(''); $('tfSeg').onclick=e=>{ const b=e.target.closest('button'); if(b) setTf(b.dataset.tf); }; segUi(); cfgUi();
   const open=v=>$('scrim').classList.toggle('open',v); $('setBtn').onclick=()=>open(true); $('setDone').onclick=()=>open(false); $('scrim').onclick=e=>{ if(e.target.id==='scrim') open(false); };
   addEventListener('keydown',e=>{ if(e.key==='Escape'){ open(false); if(RP.sel) rpSelect(false); } if(!RP.on||/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||''))) return; if(e.key===' '){ e.preventDefault(); rpToggle(); } else if(e.key==='ArrowRight'){ e.preventDefault(); rpPause(); rpStep(); } });
-  rpInitUi(); $('msBtn').onclick=()=>{ CFG.ms=!CFG.ms; cfgUi(); applyCfg('ms'); }; msUi();
+  rpInitUi(); $('msBtn').onclick=()=>{ CFG.ms=!CFG.ms; cfgUi(); applyCfg('ms'); }; msUi(); $('smcBtn').onclick=()=>{ CFG.smc=!CFG.smc; cfgUi(); applyCfg('smc'); }; smcUi();
   for(const el of document.querySelectorAll('[data-k]')) el.addEventListener('change',()=>{ const k=el.dataset.k; if(el.type==='checkbox'){ CFG[k]=el.checked; applyCfg(k); } else setNum(k,el.value); });
   for(const b of document.querySelectorAll('[data-f]')) b.onclick=()=>setNum(b.dataset.f,CFG[b.dataset.f]+(+b.dataset.d));
-  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); };
+  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); smcUi(); };
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme); }
 function applyTheme(){ T=readTheme(); for(const w of WS){ w.chart.applyOptions(chartOpts(w.key)); w.cs.applyOptions({upColor:T.up,downColor:T.dn,wickUpColor:T.up,wickDownColor:T.dn}); w.ma.applyOptions({color:T.accent}); w.vs.setData(w.bars.map(vBar)); w.sig=''; } }
 
@@ -573,7 +672,7 @@ async function boot(){
   try{ const [m]=await Promise.all([latest('1m',300),loadWin(WH),loadWin(WL)]); M1.bars=merge(m,M1.bars); M1.ver++; if(M1.bars.length) price(M1.bars[M1.bars.length-1].c); }
   catch(e){ status('载入失败：'+e.message); console.warn(e); }
   READY=true; connect(); status(''); ensure(); }
-window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},VPC,setTf,get READY(){return READY;},get ws(){return ws;}};
+window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet};
 boot();
 
 </script>
