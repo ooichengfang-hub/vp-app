@@ -806,14 +806,21 @@ const IC={
  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>',
  ext:'<path d="M3 18L13 8"/><path d="M13 8l8-8" stroke-dasharray="2 2.5"/><circle cx="3" cy="18" r="1.6"/><circle cx="13" cy="8" r="1.6"/>', edit:'<path d="M4 20l4-1L19 8l-3-3L5 16z"/>'};
 const svg=(k,extra)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"${extra||''}>${IC[k]}</svg>`;
-const GROUPS=[{g:'cur',items:[['cross','十字光标'],['arrow','箭头']]},{g:'line',items:[['tl','趋势线'],['ray','射线'],['hl','水平线'],['hr','水平射线'],['vl','垂直线'],['ch','平行通道']]},{g:'fib',items:[['fib','斐波那契回撤']]},
-  {g:'shape',items:[['rect','矩形']]},{g:'meas',items:[['range','价格区间 / 测量']]},{g:'pos',items:[['long','多头仓位'],['short','空头仓位']]},{g:'text',items:[['text','文字']]}];
+const GROUPS=[{g:'cur',items:[['cross','十字光标'],['arrow','箭头']]},{g:'line',items:[['tl','趋势线（按住 Shift 画水平/垂直/45°）'],['ray','射线（按住 Shift 画水平/垂直/45°）'],['hl','水平线'],['hr','水平射线'],['vl','垂直线'],['ch','平行通道（按住 Shift 锁定基线角度）']]},{g:'fib',items:[['fib','斐波那契回撤（按住 Shift 锁定方向）']]},
+  {g:'shape',items:[['rect','矩形']]},{g:'meas',items:[['range','价格区间 / 测量（按住 Shift 锁定）']]},{g:'pos',items:[['long','多头仓位'],['short','空头仓位']]},{g:'text',items:[['text','文字']]}];
 const GSEL={cur:'cross',line:'tl',fib:'fib',shape:'rect',meas:'range',pos:'long',text:'text'};
 function setTool(t){ if(DMT&&t) DMT.hidden=true; DR.pend=null; DR.tool=t; DR.snap=null; for(const w of WS) w.body.dataset.cur=t?'draw':DR.cur; drBump(); drUi(); }
 function drCreate(type,pts,w){ const d={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),type,pts:pts.map(q=>({t:q.t,p:q.p})),color:type==='fib'?'#787b86':DR.col,lw:type==='fib'||type==='range'?1:2,ls:0,ext:false};
   if(type==='long'||type==='short'){ const {ph}=paneWH(w), span=Math.abs(w.cs.coordinateToPrice(0)-w.cs.coordinateToPrice(ph))||d.pts[0].p*0.02, dist=span*0.07, e=d.pts[0].p, s=type==='long'?1:-1; d.tp=e+s*2*dist; d.sl=e-s*dist; d.t2=d.pts[0].t+24*SEC[w.tf]; }
   if(type==='text'){ const s=prompt('输入文字','文字'); if(s==null||!s.trim()){ setTool(DR.stay?DR.tool:null); return null; } d.text=s.trim(); }
   const before=drSnapS(); DR.list.push(d); drPush(before); DR.sel=d.id; DR.selW=w; drSave(); if(!DR.stay) setTool(null); else { DR.pend=null; drBump(); } drUi(); return d; }
+// Shift：相对另一锚点锁定为水平 / 垂直 / 45°（屏幕像素），优先于磁铁
+const SHT=['tl','ray','range','fib','ch'];
+function shiftC(w,an,q){ const a=P2(w,an); if(!okP(a)||q.x==null||q.y==null) return q; const dx=q.x-a.x, dy=q.y-a.y, ang=Math.atan2(-dy,dx)*180/Math.PI, st=Math.round(ang/45)*45, m=((st%180)+180)%180;
+  if(m===0) return {...q,p:an.p,y:a.y,snap:false}; if(m===90) return {...q,t:an.t,x:a.x,snap:false};
+  const L=Math.max(Math.abs(dx),Math.abs(dy)), nx=a.x+Math.sign(dx||1)*L, ny=a.y+(st===45||st===-135?-1:1)*L; const t=xToT(w,nx), p=w.cs.coordinateToPrice(ny); return t==null||p==null?q:{...q,x:nx,y:ny,t,p,snap:false}; }
+function shiftPend(w,q,e){ const pd=DR.pend; if(!e||!e.shiftKey||!pd||pd.pts.length!==2||!SHT.includes(pd.type)) return q; return shiftC(w,pd.pts[0],q); }
+function shiftAnchor(d,k){ if(!SHT.includes(d.type)&&d.type!=='rect') return null; if(k===0) return d.pts[1]; if(k===1) return d.pts[0]; return null; }
 function drPlace(w,q){ const t=DR.tool, N=NPT[t], P={t:q.t,p:q.p};
   if(!DR.pend){ if(N===1){ drCreate(t,[P],w); return; } DR.pend={type:t,pts:[P,{...P}],color:t==='fib'?'#787b86':DR.col,lw:t==='fib'||t==='range'?1:2,ls:0,ext:false}; drBump(); return; }
   const pd=DR.pend; pd.pts[pd.pts.length-1]=P; if(pd.pts.length>=N){ DR.pend=null; drCreate(pd.type,pd.pts,w); } else { pd.pts.push({...P}); drBump(); } }
@@ -822,16 +829,17 @@ function drClear(){ if(!DR.list.length) return; if(!confirm('删除全部 '+DR.l
 function drEdit(d,fn){ const before=drSnapS(); fn(d); drPush(before); drSave(); drBump(); drUi(); }
 // ---------- 指针事件：工具激活或点中绘图时才接管，其余交给图表平移/缩放 ----------
 function drDown(w,e){ w.own=false; if(e.button>0||!e.target.closest||!e.target.closest('.chart')) return; ACTIVE=w; const q=evPt(w,e); if(q.t==null||q.p==null) return; const touch=e.pointerType==='touch';
-  if(DR.tool){ w.own=true; e.stopPropagation(); e.preventDefault(); DR.down={w,x:e.clientX,y:e.clientY,n:DR.pend?DR.pend.pts.length:0}; drPlace(w,q); return; }
+  if(DR.tool){ w.own=true; e.stopPropagation(); e.preventDefault(); DR.down={w,x:e.clientX,y:e.clientY,n:DR.pend?DR.pend.pts.length:0}; drPlace(w,shiftPend(w,q,e)); return; }
   if(RP.sel) return; const h=drHit(w,q.x,q.y,touch); if(!h){ if(DR.sel){ DR.sel=null; drBump(); drUi(); } return; }
   w.own=true; e.stopPropagation(); e.preventDefault(); DR.sel=h.d.id; DR.selW=w; DR.hov=h.d.id;
   if(!(h.d.lock||DR.lockAll)) DR.drag={w,d:h.d,k:h.k,s:q,orig:JSON.stringify(h.d),before:drSnapS(),moved:false};
   try{ w.body.setPointerCapture(e.pointerId); }catch(_){} drBump(); drUi(); }
 function drMoveG(e){ const g=DR.drag; if(g){ const q=evPt(g.w,e); if(q.t==null||q.p==null) return; const o=JSON.parse(g.orig), i=DR.list.indexOf(g.d); if(i<0) return;
-    const nd=g.k==null?drShift(o,q.t-g.s.t,q.p-g.s.p):(drApply(o,g.k,q),o); Object.assign(g.d,nd); g.moved=true; DR.snap=q.snap?{w:g.w,t:q.t,p:q.p}:null; g.w.body.dataset.cur='grab'; drBump(); return; }
-  if(DR.pend){ const w=WS.find(x=>{ const r=x.body.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }); if(!w) return; const q=evPt(w,e); if(q.t==null||q.p==null) return; DR.pend.pts[DR.pend.pts.length-1]={t:q.t,p:q.p}; drBump(); } }
+    let nd; if(g.k==null){ let dt=q.t-g.s.t, dp=q.p-g.s.p; if(e.shiftKey){ if(Math.abs(q.x-g.s.x)>=Math.abs(q.y-g.s.y)) dp=0; else dt=0; } nd=drShift(o,dt,dp); }
+    else { let qq=q; const an=e.shiftKey?shiftAnchor(o,g.k):null; if(an) qq=shiftC(g.w,an,q); drApply(o,g.k,qq); nd=o; } Object.assign(g.d,nd); g.moved=true; DR.snap=q.snap?{w:g.w,t:q.t,p:q.p}:null; g.w.body.dataset.cur='grab'; drBump(); return; }
+  if(DR.pend){ const w=WS.find(x=>{ const r=x.body.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }); if(!w) return; let q=evPt(w,e); if(q.t==null||q.p==null) return; q=shiftPend(w,q,e); DR.pend.pts[DR.pend.pts.length-1]={t:q.t,p:q.p}; drBump(); } }
 function drUpG(e){ for(const w of WS) w.own=false; const g=DR.drag; if(g){ DR.drag=null; if(g.moved){ drPush(g.before); drSave(); } DR.snap=null; drBump(); drUi(); return; }
-  const dn=DR.down; DR.down=null; if(dn&&DR.pend&&DR.pend.pts.length===dn.n+2-(dn.n?1:0)&&Math.hypot(e.clientX-dn.x,e.clientY-dn.y)>8){ const q=evPt(dn.w,e); if(q.t!=null&&q.p!=null) drPlace(dn.w,q); } }
+  const dn=DR.down; DR.down=null; if(dn&&DR.pend&&DR.pend.pts.length===dn.n+2-(dn.n?1:0)&&Math.hypot(e.clientX-dn.x,e.clientY-dn.y)>8){ const q=evPt(dn.w,e); if(q.t!=null&&q.p!=null) drPlace(dn.w,shiftPend(dn.w,q,e)); } }
 function drHover(w,e){ if(DR.drag) return; if(!e.target.closest||!e.target.closest('.chart')){ return; } const q=evPt(w,e); let ch=false;
   const sn=q.snap&&q.t!=null?{w,t:q.t,p:q.p,b:q.bar}:null; if(JSON.stringify(sn&&[sn.t,sn.p,w.key])!==JSON.stringify(DR.snap&&[DR.snap.t,DR.snap.p,DR.snap.w.key])){ DR.snap=sn; ch=true; }
   if(!DR.tool){ const h=e.pointerType==='touch'?null:drHit(w,q.x,q.y,false), id=h?h.d.id:null; if(id!==DR.hov){ DR.hov=id; ch=true; } w.body.dataset.cur=h?(h.k!=null?'move':'pointer'):DR.cur; } else w.body.dataset.cur='draw';
