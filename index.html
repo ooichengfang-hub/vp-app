@@ -124,11 +124,25 @@ body.rp-on main{padding-bottom:128px}
   .sheet{width:100%;border-radius:20px 20px 0 0;max-height:88vh;padding-bottom:max(18px,env(safe-area-inset-bottom))}
 }
 .body canvas.dw{position:absolute;left:0;top:0;z-index:6;pointer-events:none;touch-action:none}.body canvas.dw.on{pointer-events:auto;cursor:crosshair}
-.dt{position:fixed;left:12px;top:76px;z-index:31;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:16px;background:var(--pill);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 4px 24px rgba(0,0,0,.14);border:.5px solid var(--line)}
-.dt[hidden]{display:none}.dt button{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--text)}.dt button:hover{background:var(--seg)}
-.dt button.on{background:var(--accent);color:#fff}.dt button:disabled{opacity:.3;cursor:default;background:none}.dt svg{width:18px;height:18px}
-.dt hr{border:0;height:.5px;background:var(--line);margin:2px 4px}.dt-c{display:grid;grid-template-columns:1fr 1fr;gap:2px}.dt-c button{width:15px;height:15px;border-radius:50%;background:var(--c)!important;margin:auto;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6)}.dt-c button.on{outline:2px solid var(--text);outline-offset:1px}
-@media (max-width:820px){.dt{top:auto;bottom:max(70px,env(safe-area-inset-bottom));left:8px;flex-direction:row;flex-wrap:wrap;max-width:calc(100vw - 16px)}.dt hr{width:.5px;height:24px;margin:4px 2px}.dt-c{grid-template-columns:repeat(6,1fr)}}
+main{grid-template-columns:40px 1fr 1fr}
+.tvb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 3px;border-radius:14px;background:var(--pill);border:.5px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.06);align-self:start;position:relative;z-index:25}
+.tvb hr{width:24px;border:0;height:.5px;background:var(--line);margin:3px 0}
+.tvb .tg{position:relative;display:flex}.tvb .tb{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--text);position:relative}
+.tvb .tb:hover,.tvb .tg:hover .tb{background:var(--seg)}.tvb .tb svg{width:19px;height:19px}.tvb .tb:disabled{opacity:.3}
+.tvb .tg.on .tb,.tvb .tb.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.tvb .ta{position:absolute;right:-1px;bottom:1px;width:9px;height:9px;opacity:.45;color:var(--text);padding:0}.tvb .ta:hover{opacity:1}.tvb .ta svg{width:7px;height:7px}
+.tvb .mg{position:absolute;right:2px;top:1px;font-size:8px;font-weight:700;color:var(--accent)}
+.tvb .fly{position:absolute;left:calc(100% + 8px);top:-4px;min-width:200px;padding:5px;border-radius:12px;background:var(--pill);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 8px 30px rgba(0,0,0,.18);border:.5px solid var(--line);display:flex;flex-direction:column;z-index:40}
+.tvb .fly[hidden]{display:none}.tvb .fly button{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;color:var(--text);font-size:13px;text-align:left;white-space:nowrap}.tvb .fly button:hover{background:var(--seg)}.tvb .fly button.on{color:var(--accent)}.tvb .fly svg{width:18px;height:18px;flex:none}
+.tvb [data-tip]:hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:rgba(30,30,32,.92);color:#fff;font-size:12px;padding:5px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;z-index:50}
+.tvb .tg:has(.fly:not([hidden])) [data-tip]::after{display:none}
+.body[data-cur=draw] .chart,.body[data-cur=draw] .chart *,.body[data-cur=cross] .chart canvas{cursor:crosshair!important}.body[data-cur=pointer] .chart *{cursor:pointer!important}.body[data-cur=move] .chart *{cursor:move!important}.body[data-cur=grab] *{cursor:grabbing!important}.body[data-cur=arrow] .chart canvas{cursor:default!important}
+.dmt{position:absolute;z-index:8;display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--pill);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 4px 18px rgba(0,0,0,.18);border:.5px solid var(--line)}
+.dmt[hidden]{display:none}.dmt>button{min-width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--text);font-size:11px;font-weight:600;padding:0 4px;position:relative}.dmt>button:hover{background:var(--seg)}.dmt>button.on{color:var(--accent)}.dmt>button[hidden]{display:none}
+.dmt svg{width:17px;height:17px;fill:none}.dmt i{width:16px;height:16px;border-radius:4px;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}.dmt-n{font-size:11px;color:var(--text);opacity:.6;padding:0 6px 0 4px;white-space:nowrap}
+.dmt-pal{position:absolute;top:calc(100% + 6px);left:30px;display:grid;grid-template-columns:repeat(4,22px);gap:6px;padding:8px;border-radius:10px;background:var(--pill);box-shadow:0 6px 22px rgba(0,0,0,.2);border:.5px solid var(--line)}.dmt-pal[hidden]{display:none}.dmt-pal button{width:22px;height:22px;border-radius:6px}
+.dmt [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(30,30,32,.92);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none}
+@media (max-width:820px){main{grid-template-columns:1fr}.tvb{flex-direction:row;flex-wrap:wrap;align-self:stretch;position:sticky;top:0;padding:3px 6px;justify-content:flex-start}.tvb hr{width:.5px;height:22px;margin:0 3px}.tvb .fly{left:0;top:calc(100% + 6px)}.tvb [data-tip]:hover::after{display:none}}
 </style>
 </head>
 <body>
@@ -140,11 +154,11 @@ body.rp-on main{padding-bottom:128px}
   <span class="conn" id="conn" title="实时连接"></span>
   <button class="icon ms" id="msBtn" aria-label="市场结构 HH/HL" title="市场结构 HH / HL / LH / LL（开/关）">HL</button>
   <button class="icon ms smc" id="smcBtn" aria-label="BOS / CHoCH / FVG" title="BOS → CHoCH → FVG 入场（开/关）">SMC</button>
-  <button class="icon" id="drBtn" aria-label="画线" title="画线工具"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg></button>
   <button class="icon" id="rpBtn" aria-label="回放" title="K线回放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg></button>
   <button class="icon" id="setBtn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 </header>
 <main>
+  <nav class="tvb" id="tvb" aria-label="绘图工具"></nav>
   <section class="card" id="w1">
     <div class="ch"><h2>1 小时</h2><span class="note" title="成交量分布由 1 分钟K线估算（按每根K线高低区间平均分配成交额），不是逐笔成交">每根K线附该小时成交量分布</span></div>
     <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
@@ -154,19 +168,6 @@ body.rp-on main{padding-bottom:128px}
     <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
   </section>
 </main>
-<div class="dt" id="dt" hidden>
-  <button data-dt="sel" title="选择 / 拖动（点线选中，Delete 删除）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 1.5L10 19z"/></svg></button>
-  <button data-dt="h" title="水平线（价格位）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/></svg></button>
-  <button data-dt="tl" title="趋势线（两点）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="5" r="1.6"/></svg></button>
-  <button data-dt="ray" title="水平射线（向右）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.8"/><path d="M7 12h14M17 8l4 4-4 4"/></svg></button>
-  <button data-dt="rect" title="矩形 / 区间"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="10" rx="1.5"/></svg></button>
-  <hr>
-  <button id="dtExt" title="趋势线向右延伸"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18L14 8"/><path d="M14 8l6-6" stroke-dasharray="2 2.5"/></svg></button>
-  <button id="dtMag" title="磁吸到 OHLC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 8h4M14 8h4"/></svg></button>
-  <hr><div class="dt-c"></div><hr>
-  <button id="dtDel" title="删除选中（Delete）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
-  <button id="dtClr" title="清除全部"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
-</div>
 <div class="rp" id="rp" hidden>
   <div class="rp-sel"><span class="hint">点击任一窗口的K线作为起点，或输入时间（UTC+8）</span><input type="datetime-local" id="rpDate"><button class="rp-b acc" id="rpGo">开始</button><button class="rp-b" id="rpCancel">取消</button></div>
   <div class="rp-main">
@@ -684,76 +685,204 @@ function rpInitUi(){ const d=new Date((minNow()-86400+TZ)*1000); $('rpDate').val
 
 // ---------- 启动 ----------
 let WH, WL, WS=[], READY=false;
-// ---------- 画线（价格+时间坐标，两窗口共用，按品种存 localStorage） ----------
-const DKEY='vp2_draw_'+SYM, DCOLS=['#0a84ff','#ff3b30','#34c759','#ff9f0a','#af52de','#8e8e93'];
-const DR={list:[],v:0,tool:null,sel:null,col:DCOLS[0],ext:false,mag:false,pend:null,drag:null};
-function drLoad(){ try{ const a=JSON.parse(localStorage.getItem(DKEY)||'[]'); if(Array.isArray(a)) DR.list=a.filter(d=>d&&d.id&&d.type&&d.p1); }catch(e){} }
+// ---------- 画线工具（仿 TradingView 交互，自研实现；价格+时间坐标，两窗口共用，按品种存 localStorage） ----------
+const DKEY='vp2_draw_'+SYM, DCKEY='vp2_drawcfg', DCOLS=['#2962ff','#f23645','#089981','#ff9800','#9c27b0','#00bcd4','#787b86','#e91e63'];
+const NPT={tl:2,ray:2,hl:1,hr:1,vl:1,ch:3,fib:2,rect:2,range:2,long:1,short:1,text:1};
+const DNAME={tl:'趋势线',ray:'射线',hl:'水平线',hr:'水平射线',vl:'垂直线',ch:'平行通道',fib:'斐波那契回撤',rect:'矩形',range:'价格区间',long:'多头仓位',short:'空头仓位',text:'文字'};
+const FIBL=[0,0.236,0.382,0.5,0.618,0.786,1];
+const DR={list:[],v:0,tool:null,cur:'cross',sel:null,selW:null,hov:null,mag:0,magLast:1,stay:false,hide:false,lockAll:false,pend:null,drag:null,snap:null,col:DCOLS[0],undo:[],redo:[]};
+const MC=document.createElement('canvas').getContext('2d');
+function drLoad(){ try{ const a=JSON.parse(localStorage.getItem(DKEY)||'[]'); if(Array.isArray(a)) DR.list=a.filter(d=>d&&d.id&&d.type).map(d=>{ if(!d.pts&&d.p1){ d.pts=[d.p1]; if(d.p2) d.pts.push(d.p2); delete d.p1; delete d.p2; if(d.type==='h') d.type='hl'; if(d.type==='ray'&&d.pts.length===1) d.type='hr'; } return d; }).filter(d=>d.pts&&d.pts.length); }catch(e){}
+  try{ const c=JSON.parse(localStorage.getItem(DCKEY)||'{}'); for(const k of ['mag','magLast','stay','hide','lockAll','cur','col']) if(c[k]!=null) DR[k]=c[k]; }catch(e){} }
 const drSave=()=>{ try{ localStorage.setItem(DKEY,JSON.stringify(DR.list)); }catch(e){} };
-const drBump=()=>{ DR.v++; };
-// 时间 ↔ 逻辑坐标：K线 ts 覆盖 [ts, ts+S)，中心在 ts+S/2，所以 1H 与小周期上同一时刻对齐
+const drSaveCfg=()=>{ try{ localStorage.setItem(DCKEY,JSON.stringify({mag:DR.mag,magLast:DR.magLast,stay:DR.stay,hide:DR.hide,lockAll:DR.lockAll,cur:DR.cur,col:DR.col})); }catch(e){} };
+const drBump=()=>{ DR.v++; }, drSnapS=()=>JSON.stringify(DR.list), drById=id=>DR.list.find(d=>d.id===id);
+function drPush(before){ DR.undo.push(before); if(DR.undo.length>100) DR.undo.shift(); DR.redo=[]; drUi(); }
+function drUndo(){ if(!DR.undo.length) return; DR.redo.push(drSnapS()); DR.list=JSON.parse(DR.undo.pop()); if(!drById(DR.sel)) DR.sel=null; drSave(); drBump(); drUi(); }
+function drRedo(){ if(!DR.redo.length) return; DR.undo.push(drSnapS()); DR.list=JSON.parse(DR.redo.pop()); if(!drById(DR.sel)) DR.sel=null; drSave(); drBump(); drUi(); }
+// 时间 ↔ x：K线覆盖 [ts, ts+S)，中心 ts+S/2，所以 1H 与小周期上同一时刻对齐
 function dX0(w){ const ts=w.chart.timeScale(); const x0=ts.logicalToCoordinate(0); return x0==null?null:{x0,sp:ts.options().barSpacing}; }
-function tToX(w,t){ const bs=w.bars, n=bs.length; if(!n) return null; const S=SEC[w.tf], g=dX0(w); if(!g) return null; let L;
+function tToX(w,t){ const bs=w.bars, n=bs.length; if(!n||t==null) return null; const S=SEC[w.tf], g=dX0(w); if(!g) return null; let L;
   if(t<bs[0].ts) L=-0.5+(t-bs[0].ts)/S; else { let j=VPC.lowerIdx(bs,t+1)-1; if(j<0) j=0; L=j-0.5+(t-bs[j].ts)/S; if(j<n-1&&L>j+0.5) L=j+0.5; }
   return g.x0+L*g.sp; }
-function xToT(w,x,snap){ const bs=w.bars, n=bs.length, S=SEC[w.tf], g=dX0(w); if(!n||!g) return null; const L=(x-g.x0)/g.sp; let j=Math.round(L);
-  if(snap&&j>=0&&j<n) return bs[j].ts+S/2; if(j<0) return bs[0].ts+(L+0.5)*S; if(j>n-1) return bs[n-1].ts+(L-(n-1)+0.5)*S; return bs[j].ts+(L-j+0.5)*S; }
-function evPt(w,e){ const r=w.dw.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top; let t=xToT(w,x,DR.mag), p=w.cs.coordinateToPrice(y);
-  if(DR.mag){ const g=dX0(w), j=g?Math.round((x-g.x0)/g.sp):-1, b=w.bars[j]; if(b){ let best=null,bd=1e9; for(const v of [b.o,b.h,b.l,b.c]){ const yy=w.cs.priceToCoordinate(v); if(yy!=null&&Math.abs(yy-y)<bd){ bd=Math.abs(yy-y); best=v; } } if(best!=null&&bd<40) p=best; } }
-  return {x,y,t,p}; }
-function drPx(w,d){ const P=q=>q?{x:tToX(w,q.t),y:w.cs.priceToCoordinate(q.p)}:null; return {a:P(d.p1),b:P(d.p2)}; }
+function xToT(w,x){ const bs=w.bars, n=bs.length, S=SEC[w.tf], g=dX0(w); if(!n||!g) return null; const L=(x-g.x0)/g.sp; const j=Math.round(L);
+  if(j<0) return bs[0].ts+(L+0.5)*S; if(j>n-1) return bs[n-1].ts+(L-(n-1)+0.5)*S; return bs[j].ts+(L-j+0.5)*S; }
+const paneWH=w=>{ const ts=w.chart.timeScale(); return {pw:ts.width(),ph:w.body.clientHeight-ts.height()}; };
+// 磁铁：弱=10px 内吸附最近 OHLC；强=总是吸附光标所在K线最近的 OHLC；按住 Ctrl/⌘ 临时切换
+function magEff(e){ let m=DR.mag; if(e&&(e.ctrlKey||e.metaKey)) m=m?0:(DR.magLast||2); return m; }
+function evPt(w,e){ const r=w.body.getBoundingClientRect(); let x=e.clientX-r.left, y=e.clientY-r.top; let t=xToT(w,x), p=w.cs.coordinateToPrice(y), snap=false, bar=null; const m=magEff(e);
+  if(m){ const g=dX0(w), j=g?Math.round((x-g.x0)/g.sp):-1, b=w.bars[j]; if(b){ let best=null,bd=1e9; for(const v of [b.o,b.h,b.l,b.c]){ const yy=w.cs.priceToCoordinate(v); if(yy!=null&&Math.abs(yy-y)<bd){ bd=Math.abs(yy-y); best=v; } }
+    if(best!=null&&(m===2||bd<=10)){ p=best; t=b.ts+SEC[w.tf]/2; snap=true; bar=b; x=tToX(w,t); y=w.cs.priceToCoordinate(p); } } }
+  return {x,y,t,p,snap,bar}; }
+const P2=(w,q)=>q?{x:tToX(w,q.t),y:w.cs.priceToCoordinate(q.p)}:null;
 function segD(px,py,ax,ay,bx,by){ const dx=bx-ax, dy=by-ay, l=dx*dx+dy*dy; let u=l?((px-ax)*dx+(py-ay)*dy)/l:0; u=Math.max(0,Math.min(1,u)); return Math.hypot(px-(ax+u*dx),py-(ay+u*dy)); }
-function extEnd(a,b,W){ if(Math.abs(b.x-a.x)<1e-6) return b; const k=(b.y-a.y)/(b.x-a.x), X=b.x>=a.x?W:0; return {x:X,y:a.y+k*(X-a.x)}; }
-function drHit(w,x,y){ const pw=w.chart.timeScale().width(); let best=null, bd=8;
-  for(let k=DR.list.length-1;k>=0;k--){ const d=DR.list[k], {a,b}=drPx(w,d); if(!a||a.y==null) continue; let dist=1e9, h=null;
-    if(d.type==='h') dist=Math.abs(y-a.y);
-    else if(d.type==='ray') dist=x>=a.x-4?Math.abs(y-a.y):Math.hypot(x-a.x,y-a.y);
-    else if(b&&a.x!=null&&b.x!=null&&b.y!=null){ if(d.type==='tl'){ const e=d.ext?extEnd(a,b,pw):b; dist=segD(x,y,a.x,a.y,e.x,e.y); }
-      else { const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y); dist=(x>=x0-4&&x<=x1+4&&y>=y0-4&&y<=y1+4)?Math.min(Math.abs(x-x0),Math.abs(x-x1),Math.abs(y-y0),Math.abs(y-y1),(x>x0&&x<x1&&y>y0&&y<y1)?3:1e9):1e9; }
-      if(Math.hypot(x-b.x,y-b.y)<10) { dist=0; h='b'; } }
-    if(a.x!=null&&d.type!=='h'&&Math.hypot(x-a.x,y-a.y)<10){ dist=0; h='a'; }
-    if(dist<bd){ bd=dist; best={d,h}; } }
-  return best; }
-function drSelect(id){ DR.sel=id; drBump(); drUi(); }
-function drDel(){ if(!DR.sel) return; DR.list=DR.list.filter(d=>d.id!==DR.sel); DR.sel=null; drSave(); drBump(); drUi(); }
-function drClear(){ if(!DR.list.length) return; if(!confirm('清除全部 '+DR.list.length+' 条画线？')) return; DR.list=[]; DR.sel=null; drSave(); drBump(); drUi(); }
-function drTool(t){ DR.tool=DR.tool===t?null:t; DR.pend=null; DR.drag=null; for(const w of WS) w.dw.classList.toggle('on',!!DR.tool); drBump(); drUi(); }
-function drAdd(d){ d.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6); d.color=DR.col; DR.list.push(d); DR.sel=d.id; drSave(); DR.tool=null; DR.pend=null; for(const w of WS) w.dw.classList.remove('on'); drBump(); drUi(); }
-function drDown(w,e){ if(!DR.tool) return; e.preventDefault(); e.stopPropagation(); try{ w.dw.setPointerCapture(e.pointerId); }catch(_){} const q=evPt(w,e); if(q.t==null||q.p==null) return; const P={t:q.t,p:q.p};
-  if(DR.tool==='sel'){ const h=drHit(w,q.x,q.y); if(!h){ drSelect(null); return; } drSelect(h.d.id); DR.drag={w,d:h.d,h:h.h,s:q,o1:{...h.d.p1},o2:h.d.p2?{...h.d.p2}:null}; return; }
-  if(DR.tool==='h'||DR.tool==='ray'){ drAdd({type:DR.tool,p1:P}); return; }
-  if(DR.pend&&DR.pend.w===w){ DR.pend.d.p2=P; const d=DR.pend.d; DR.pend=null; drAdd(d); return; }
-  DR.pend={w,d:{type:DR.tool,p1:P,p2:{...P},ext:DR.tool==='tl'&&DR.ext},sx:q.x,sy:q.y,down:true}; drBump(); }
-function drMove(w,e){ if(!DR.tool) return; const q=evPt(w,e); if(q.t==null||q.p==null) return;
-  if(DR.drag&&DR.drag.w===w){ const g=DR.drag, d=g.d; if(g.h==='a') d.p1={t:q.t,p:q.p}; else if(g.h==='b') d.p2={t:q.t,p:q.p};
-    else { const t0=xToT(w,g.s.x,false), dt=q.t-(t0==null?q.t:t0), dp=q.p-g.s.p; d.p1={t:g.o1.t+(d.type==='h'?0:dt),p:g.o1.p+dp}; if(g.o2) d.p2={t:g.o2.t+dt,p:g.o2.p+dp}; } drBump(); return; }
-  if(DR.pend&&DR.pend.w===w){ DR.pend.d.p2={t:q.t,p:q.p}; drBump(); } }
-function drUp(w,e){ if(DR.drag){ DR.drag=null; drSave(); drBump(); return; } if(DR.pend&&DR.pend.down&&DR.pend.w===w){ DR.pend.down=false; const q=evPt(w,e); if(Math.hypot(q.x-DR.pend.sx,q.y-DR.pend.sy)>6){ const d=DR.pend.d; DR.pend=null; drAdd(d); } } }
-function drShape(o,w,d,pw,sel){ const {a,b}=drPx(w,d); if(!a||a.y==null) return; const col=d.color||DCOLS[0]; o.strokeStyle=col; o.fillStyle=col; o.lineWidth=sel?2.5:1.5; o.setLineDash([]);
-  const dot=p=>{ if(!sel||!p||p.x==null) return; o.beginPath(); o.arc(p.x,p.y,4.5,0,7); o.fillStyle=T.dark?'#1c1c1e':'#fff'; o.fill(); o.lineWidth=2; o.stroke(); o.fillStyle=col; };
-  const tag=(y)=>{ const s=fmtP(w.cs.coordinateToPrice(y)); o.font='600 10px '+FONT; const tw=o.measureText(s).width+8; o.globalAlpha=.9; o.fillRect(pw-tw-2,y-8,tw,16); o.globalAlpha=1; o.fillStyle='#fff'; o.textAlign='left'; o.fillText(s,pw-tw+2,y+3.5); o.fillStyle=col; };
-  if(d.type==='h'){ o.beginPath(); o.moveTo(0,Math.round(a.y)+.5); o.lineTo(pw,Math.round(a.y)+.5); o.stroke(); tag(a.y); return; }
-  if(a.x==null) return;
-  if(d.type==='ray'){ o.beginPath(); o.moveTo(a.x,Math.round(a.y)+.5); o.lineTo(pw,Math.round(a.y)+.5); o.stroke(); tag(a.y); dot(a); return; }
-  if(!b||b.x==null||b.y==null) return;
-  if(d.type==='tl'){ const e=d.ext?extEnd(a,b,pw):b; o.beginPath(); o.moveTo(a.x,a.y); o.lineTo(e.x,e.y); o.stroke(); dot(a); dot(b); return; }
-  if(d.type==='rect'){ const x0=Math.min(a.x,b.x), y0=Math.min(a.y,b.y), ww=Math.abs(b.x-a.x), hh=Math.abs(b.y-a.y); o.globalAlpha=.14; o.fillRect(x0,y0,ww,hh); o.globalAlpha=1; o.strokeRect(Math.round(x0)+.5,Math.round(y0)+.5,ww,hh); dot(a); dot(b); } }
+function extEnd(a,b,W){ if(Math.abs(b.x-a.x)<1e-6) return {x:b.x,y:b.y>a.y?1e5:-1e5}; const k=(b.y-a.y)/(b.x-a.x), X=b.x>=a.x?W+50:-50; return {x:X,y:a.y+k*(X-a.x)}; }
+const okP=p=>p&&p.x!=null&&p.y!=null&&isFinite(p.x)&&isFinite(p.y);
+// 锚点（拖动句柄）：{x,y,k}
+function hs(w,d){ const {pw,ph}=paneWH(w), A=d.pts.map(q=>P2(w,q)), out=[];
+  if(d.type==='hl'){ if(A[0].y!=null) out.push({x:pw/2,y:A[0].y,k:0}); }
+  else if(d.type==='vl'){ if(A[0].x!=null) out.push({x:A[0].x,y:ph/2,k:0}); }
+  else if(d.type==='long'||d.type==='short'){ const a=A[0], x1=tToX(w,d.t2), yt=w.cs.priceToCoordinate(d.tp), ys=w.cs.priceToCoordinate(d.sl); if(okP(a)){ out.push({x:a.x,y:a.y,k:0}); if(yt!=null) out.push({x:a.x,y:yt,k:'tp'}); if(ys!=null) out.push({x:a.x,y:ys,k:'sl'}); if(x1!=null) out.push({x:x1,y:a.y,k:'t2'}); } }
+  else A.forEach((a,i)=>{ if(okP(a)) out.push({x:a.x,y:a.y,k:i}); });
+  return out; }
+function drApply(d,k,q){ if(d.type==='hl'){ d.pts[0]={t:d.pts[0].t,p:q.p}; return; } if(d.type==='vl'){ d.pts[0]={t:q.t,p:d.pts[0].p}; return; }
+  if(k==='tp') d.tp=q.p; else if(k==='sl') d.sl=q.p; else if(k==='t2') d.t2=Math.max(q.t,d.pts[0].t+60); else d.pts[k]={t:q.t,p:q.p}; }
+function drShift(o,dt,dp){ const d=JSON.parse(JSON.stringify(o)); if(d.type==='hl') dt=0; if(d.type==='vl') dp=0; d.pts=d.pts.map(q=>({t:q.t+dt,p:q.p+dp})); if(d.tp!=null){ d.tp+=dp; d.sl+=dp; d.t2+=dt; } return d; }
+function chOff(a,b,c){ const k=Math.abs(b.x-a.x)<1e-6?0:(b.y-a.y)/(b.x-a.x); return c.y-(a.y+k*(c.x-a.x)); }
+function txtBox(w,d){ const a=P2(w,d.pts[0]); MC.font='600 13px '+FONT; const tw=MC.measureText(d.text||'').width; return okP(a)?{x0:a.x,y0:a.y-16,x1:a.x+tw+8,y1:a.y+4}:null; }
+function bodyDist(w,d,x,y){ const {pw}=paneWH(w), A=d.pts.map(q=>P2(w,q)), a=A[0], b=A[1]; const inBox=(x0,y0,x1,y1)=>x>=Math.min(x0,x1)-4&&x<=Math.max(x0,x1)+4&&y>=Math.min(y0,y1)-4&&y<=Math.max(y0,y1)+4;
+  switch(d.type){
+  case 'hl': return a.y==null?1e9:Math.abs(y-a.y);
+  case 'hr': return !okP(a)?1e9:(x>=a.x-4?Math.abs(y-a.y):Math.hypot(x-a.x,y-a.y));
+  case 'vl': return a.x==null?1e9:Math.abs(x-a.x);
+  case 'tl': case 'ray': { if(!okP(a)||!okP(b)) return 1e9; const e=(d.type==='ray'||d.ext)?extEnd(a,b,pw):b; return segD(x,y,a.x,a.y,e.x,e.y); }
+  case 'ch': { const c=A[2]; if(!okP(a)||!okP(b)||!okP(c)) return 1e9; const off=chOff(a,b,c), e=d.ext?extEnd(a,b,pw):b; const d1=segD(x,y,a.x,a.y,e.x,e.y), d2=segD(x,y,a.x,a.y+off,e.x,e.y+off); let m=Math.min(d1,d2);
+    if(x>=Math.min(a.x,e.x)&&x<=Math.max(a.x,e.x)){ const k=(e.y-a.y)/((e.x-a.x)||1e-9), yl=a.y+k*(x-a.x); if((y-yl)*(y-yl-off)<=0) m=Math.min(m,3); } return m; }
+  case 'fib': case 'rect': case 'range': { if(!okP(a)||!okP(b)) return 1e9; const x1=(d.ext&&d.type!=='range')?pw:b.x; return inBox(a.x,a.y,x1,b.y)?3:1e9; }
+  case 'long': case 'short': { if(!okP(a)) return 1e9; const x1=tToX(w,d.t2), yt=w.cs.priceToCoordinate(d.tp), ys=w.cs.priceToCoordinate(d.sl); return (x1!=null&&yt!=null&&ys!=null&&inBox(a.x,yt,x1,ys))?3:1e9; }
+  case 'text': { const bb=txtBox(w,d); return bb&&inBox(bb.x0,bb.y0,bb.x1,bb.y1)?2:1e9; } }
+  return 1e9; }
+function drHit(w,x,y,touch){ if(DR.hide) return null; const R=touch?16:8; const sd=drById(DR.sel);
+  if(sd) for(const h of hs(w,sd)) if(Math.hypot(x-h.x,y-h.y)<=R) return {d:sd,k:h.k};
+  let best=null, bd=touch?12:6; for(let i=DR.list.length-1;i>=0;i--){ const d=DR.list[i], dist=bodyDist(w,d,x,y); if(dist<=bd){ bd=dist; best={d,k:null}; } } return best; }
+// ---------- 渲染 ----------
+const DASH=[[],[6,4],[1.5,3]];
+function tagR(o,w,y,col,pw){ const s=fmtP(w.cs.coordinateToPrice(y)); o.font='600 10px '+FONT; const tw=o.measureText(s).width+8; o.save(); o.setLineDash([]); o.fillStyle=col; o.globalAlpha=.92; o.fillRect(pw-tw-2,y-8,tw,16); o.globalAlpha=1; o.fillStyle='#fff'; o.textAlign='left'; o.fillText(s,pw-tw+2,y+3.5); o.restore(); }
+function lbl(o,s,x,y,col,bg,al){ o.save(); o.setLineDash([]); o.font='600 11px '+FONT; const lines=String(s).split('\n'), tw=Math.max(...lines.map(l=>o.measureText(l).width))+12, th=lines.length*15+6; let X=al==='c'?x-tw/2:x; o.fillStyle=bg; o.globalAlpha=.94; o.beginPath(); o.roundRect?o.roundRect(X,y-th/2,tw,th,5):o.rect(X,y-th/2,tw,th); o.fill(); o.globalAlpha=1; o.fillStyle=col; o.textAlign='left'; lines.forEach((l,i)=>o.fillText(l,X+6,y-th/2+15+i*15-2)); o.restore(); }
+const pct=v=>(v>=0?'+':'')+v.toFixed(2)+'%', dur=s=>{ s=Math.abs(s); const d=Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.round(s%3600/60); return (d?d+'天':'')+(h?h+'小时':'')+(m&&!d?m+'分':'')||'0分'; };
+function drShape(o,w,d,pw,ph,sel,hov,pend){ const A=d.pts.map(q=>P2(w,q)), a=A[0], b=A[1], col=d.color||DCOLS[0], lw=(d.lw||2)+(hov&&!sel?1:0);
+  o.strokeStyle=col; o.fillStyle=col; o.lineWidth=lw; o.setLineDash(DASH[d.ls||0]); o.lineCap='round';
+  const L=(p,q)=>{ o.beginPath(); o.moveTo(p.x,p.y); o.lineTo(q.x,q.y); o.stroke(); };
+  switch(d.type){
+  case 'hl': if(a.y==null) return; L({x:0,y:a.y},{x:pw,y:a.y}); tagR(o,w,a.y,col,pw); break;
+  case 'hr': if(!okP(a)) return; L(a,{x:pw,y:a.y}); tagR(o,w,a.y,col,pw); break;
+  case 'vl': if(a.x==null) return; L({x:a.x,y:0},{x:a.x,y:ph}); break;
+  case 'tl': case 'ray': if(!okP(a)||!okP(b)) return; L(a,(d.type==='ray'||d.ext)?extEnd(a,b,pw):b); break;
+  case 'ch': { if(!okP(a)||!okP(b)) return; const c=A[2]&&okP(A[2])&&d.pts.length>2?A[2]:null, e=d.ext?extEnd(a,b,pw):b; L(a,e); if(!c) break; const off=chOff(a,b,c);
+    L({x:a.x,y:a.y+off},{x:e.x,y:e.y+off}); o.save(); o.globalAlpha=.1; o.beginPath(); o.moveTo(a.x,a.y); o.lineTo(e.x,e.y); o.lineTo(e.x,e.y+off); o.lineTo(a.x,a.y+off); o.fill(); o.restore();
+    o.save(); o.lineWidth=1; o.setLineDash([4,4]); o.globalAlpha=.7; L({x:a.x,y:a.y+off/2},{x:e.x,y:e.y+off/2}); o.restore(); break; }
+  case 'rect': { if(!okP(a)||!okP(b)) return; const x1=d.ext?pw:b.x; o.save(); o.globalAlpha=.15; o.fillRect(Math.min(a.x,x1),Math.min(a.y,b.y),Math.abs(x1-a.x),Math.abs(b.y-a.y)); o.restore(); o.strokeRect(Math.min(a.x,x1),Math.min(a.y,b.y),Math.abs(x1-a.x),Math.abs(b.y-a.y)); break; }
+  case 'fib': { if(!okP(a)||!okP(b)) return; const p1=d.pts[0].p, p2=d.pts[1].p, xl=Math.min(a.x,b.x), xr=d.ext?pw:Math.max(a.x,b.x); o.save(); o.lineWidth=1; o.setLineDash([]);
+    o.strokeStyle=col; o.globalAlpha=.5; L(a,b); o.globalAlpha=1; let prev=null;
+    for(const l of FIBL){ const pr=p2+(p1-p2)*l, y=w.cs.priceToCoordinate(pr); if(y==null) continue; if(prev!=null){ o.save(); o.globalAlpha=.06+.04*(FIBL.indexOf(l)%2); o.fillRect(xl,Math.min(prev,y),xr-xl,Math.abs(y-prev)); o.restore(); }
+      o.beginPath(); o.moveTo(xl,y); o.lineTo(xr,y); o.stroke(); o.font='600 10px '+FONT; o.textAlign='right'; o.fillText(l+' ('+fmtP(pr)+')',xl-4,y+3.5); prev=y; } o.restore(); break; }
+  case 'range': { if(!okP(a)||!okP(b)) return; const p1=d.pts[0].p, p2=d.pts[1].p, dp=p2-p1, up=dp>=0, c2=up?'#2962ff':'#f23645', S=SEC[w.tf], nb=Math.round((d.pts[1].t-d.pts[0].t)/S);
+    o.save(); o.setLineDash([]); o.fillStyle=c2; o.globalAlpha=.14; o.fillRect(Math.min(a.x,b.x),Math.min(a.y,b.y),Math.abs(b.x-a.x),Math.abs(b.y-a.y)); o.globalAlpha=1; o.strokeStyle=c2; o.lineWidth=1.5;
+    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; L({x:mx,y:a.y},{x:mx,y:b.y}); L({x:a.x,y:my},{x:b.x,y:my}); const ah=up?6:-6; o.beginPath(); o.moveTo(mx-5,b.y+ah); o.lineTo(mx,b.y); o.lineTo(mx+5,b.y+ah); o.stroke(); o.restore();
+    lbl(o,(dp>=0?'+':'')+fmtP(dp)+' ('+pct(dp/p1*100)+')\n'+nb+' 根K线 · '+dur(d.pts[1].t-d.pts[0].t),mx,(up?Math.min(a.y,b.y)-24:Math.max(a.y,b.y)+24),'#fff',c2,'c'); break; }
+  case 'long': case 'short': { if(!okP(a)) return; const x1=tToX(w,d.t2), yt=w.cs.priceToCoordinate(d.tp), ys=w.cs.priceToCoordinate(d.sl); if(x1==null||yt==null||ys==null) return; const e=d.pts[0].p, lg=d.type==='long';
+    const rw=Math.abs(e-d.sl), rr=rw?Math.abs(d.tp-e)/rw:0; o.save(); o.setLineDash([]); o.globalAlpha=.2; o.fillStyle='#089981'; o.fillRect(a.x,Math.min(a.y,yt),x1-a.x,Math.abs(yt-a.y)); o.fillStyle='#f23645'; o.fillRect(a.x,Math.min(a.y,ys),x1-a.x,Math.abs(ys-a.y)); o.globalAlpha=1;
+    o.lineWidth=1.5; o.strokeStyle='#787b86'; L(a,{x:x1,y:a.y}); o.restore(); const xm=(a.x+x1)/2;
+    lbl(o,'目标 '+fmtP(d.tp)+'  '+pct((d.tp-e)/e*100),xm,yt+(yt<a.y?-14:14),'#fff','#089981','c'); lbl(o,'止损 '+fmtP(d.sl)+'  '+pct((d.sl-e)/e*100),xm,ys+(ys<a.y?-14:14),'#fff','#f23645','c');
+    lbl(o,(lg?'多头':'空头')+' 入场 '+fmtP(e)+'  盈亏比 '+rr.toFixed(2),xm,a.y+(lg?14:-14),'#fff','#787b86','c'); break; }
+  case 'text': { if(!okP(a)) return; o.save(); o.font='600 13px '+FONT; o.textAlign='left'; o.fillText(d.text||'',a.x+4,a.y); if(sel||hov){ const bb=txtBox(w,d); o.lineWidth=1; o.setLineDash([3,3]); o.strokeRect(bb.x0,bb.y0,bb.x1-bb.x0,bb.y1-bb.y0); } o.restore(); break; } }
+  if(sel||pend){ o.setLineDash([]); for(const h of hs(w,d)){ o.beginPath(); o.arc(h.x,h.y,5,0,7); o.fillStyle=T.dark?'#131722':'#fff'; o.fill(); o.lineWidth=2; o.strokeStyle=col; o.stroke(); } } }
 function drDraw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.chart.timeScale(), vr=ts.getVisibleLogicalRange(), bs=w.bars; const ref=bs.length?bs[bs.length-1].c:1;
   const sig=[W0,H0,vr?vr.from.toFixed(3)+','+vr.to.toFixed(3):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),ts.options().barSpacing,w.ver,bs.length,DR.v,T.dark].join('|'); if(sig===w.dsig) return; w.dsig=sig;
-  const o=fit(w.dw,W0,H0); if(!bs.length) return; const pw=ts.width(), ph=H0-ts.height(); o.save(); o.beginPath(); o.rect(0,0,pw,ph); o.clip();
-  for(const d of DR.list) drShape(o,w,d,pw,d.id===DR.sel); if(DR.pend) drShape(o,w,DR.pend.d,pw,true); o.restore(); w.drN=DR.list.length; }
-function drUi(){ const bar=$('dt'); if(!bar) return; for(const b of bar.querySelectorAll('[data-dt]')) b.classList.toggle('on',DR.tool===b.dataset.dt);
-  for(const b of bar.querySelectorAll('[data-dc]')) b.classList.toggle('on',DR.col===b.dataset.dc);
-  $('dtExt').classList.toggle('on',DR.ext); $('dtMag').classList.toggle('on',DR.mag); $('dtDel').disabled=!DR.sel; $('dtClr').disabled=!DR.list.length; $('drBtn').classList.toggle('on',!bar.hidden); }
-function drInitUi(){ const bar=$('dt'); $('drBtn').onclick=()=>{ bar.hidden=!bar.hidden; if(bar.hidden&&DR.tool) drTool(DR.tool); drUi(); };
-  bar.querySelector('.dt-c').innerHTML=DCOLS.map(c=>`<button data-dc="${c}" style="--c:${c}" aria-label="颜色"></button>`).join('');
-  bar.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.dt) drTool(b.dataset.dt); else if(b.dataset.dc){ DR.col=b.dataset.dc; const d=DR.list.find(x=>x.id===DR.sel); if(d){ d.color=DR.col; drSave(); drBump(); } drUi(); }
-    else if(b.id==='dtExt'){ DR.ext=!DR.ext; const d=DR.list.find(x=>x.id===DR.sel); if(d&&d.type==='tl'){ d.ext=DR.ext; drSave(); drBump(); } drUi(); }
-    else if(b.id==='dtMag'){ DR.mag=!DR.mag; drUi(); } else if(b.id==='dtDel') drDel(); else if(b.id==='dtClr') drClear(); };
-  addEventListener('keydown',e=>{ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')) return; if(e.key==='Escape'){ if(DR.tool) drTool(DR.tool); DR.pend=null; drSelect(null); } else if((e.key==='Delete'||e.key==='Backspace')&&DR.sel){ e.preventDefault(); drDel(); } });
+  const o=fit(w.dw,W0,H0); if(!bs.length) return; const {pw,ph}=paneWH(w); o.save(); o.beginPath(); o.rect(0,0,pw,ph); o.clip();
+  if(!DR.hide){ for(const d of DR.list) drShape(o,w,d,pw,ph,d.id===DR.sel,d.id===DR.hov,false); }
+  if(DR.pend) drShape(o,w,DR.pend,pw,ph,false,false,true);
+  if(DR.snap&&DR.snap.w===w){ const p=P2(w,DR.snap); if(okP(p)){ o.setLineDash([]); o.beginPath(); o.arc(p.x,p.y,4,0,7); o.fillStyle=T.accent; o.fill(); o.lineWidth=2; o.strokeStyle=T.dark?'#000':'#fff'; o.stroke(); } }
+  o.restore(); w.drN=DR.list.length; if(w===(DR.selW||WH)) dmtPos(w,pw,ph); }
+// ---------- 选中后的浮动小工具栏 ----------
+let DMT=null;
+function dmtPos(w,pw,ph){ const d=drById(DR.sel); if(!DMT) return; if(!d||DR.hide||DR.drag||DR.tool){ DMT.hidden=true; return; } if(DMT.parentNode!==w.body) w.body.appendChild(DMT);
+  const H=hs(w,d).filter(h=>h.x>=-20&&h.x<=pw+20&&h.y>=-20&&h.y<=ph+20); if(!H.length){ DMT.hidden=true; return; } DMT.hidden=false; dmtSync(d);
+  const bw=DMT.offsetWidth||260, x=H.reduce((s,h)=>s+h.x,0)/H.length, ymin=Math.min(...H.map(h=>h.y)), ymax=Math.max(...H.map(h=>h.y)); let y=ymin-52; if(y<4) y=Math.min(ph-44,ymax+18);
+  DMT.style.left=Math.max(4,Math.min(pw-bw-4,x-bw/2))+'px'; DMT.style.top=Math.max(4,y)+'px'; }
+const IC={
+ cross:'<path d="M12 3v18M3 12h18"/>', arrow:'<path d="M6 3l12 9-5.5 1.2L16 20l-2.4 1-2.6-6.3L6 18z"/>',
+ tl:'<path d="M4 20L20 4"/><circle cx="4" cy="20" r="1.8"/><circle cx="20" cy="4" r="1.8"/>', ray:'<path d="M4 20L21 3"/><circle cx="4" cy="20" r="1.8"/><circle cx="11" cy="13" r="1.8"/>',
+ hl:'<path d="M2 12h20"/><circle cx="12" cy="12" r="1.8"/>', hr:'<path d="M5 12h17"/><circle cx="5" cy="12" r="1.8"/>', vl:'<path d="M12 2v20"/><circle cx="12" cy="12" r="1.8"/>',
+ ch:'<path d="M3 15L15 3M9 21L21 9"/><circle cx="3" cy="15" r="1.6"/><circle cx="15" cy="3" r="1.6"/><circle cx="21" cy="9" r="1.6"/>',
+ fib:'<path d="M3 4h18M3 9h18M3 13h18M3 17h18M3 21h18" stroke-width="1.4"/>', rect:'<rect x="3.5" y="6" width="17" height="12" rx="1"/><circle cx="3.5" cy="6" r="1.6"/><circle cx="20.5" cy="18" r="1.6"/>',
+ range:'<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4M4 3h16M4 21h16"/>',
+ long:'<rect x="3" y="3" width="18" height="9" fill="#089981" fill-opacity=".35" stroke="none"/><rect x="3" y="12" width="18" height="6" fill="#f23645" fill-opacity=".35" stroke="none"/><path d="M3 12h18"/>',
+ short:'<rect x="3" y="6" width="18" height="6" fill="#f23645" fill-opacity=".35" stroke="none"/><rect x="3" y="12" width="18" height="9" fill="#089981" fill-opacity=".35" stroke="none"/><path d="M3 12h18"/>',
+ text:'<path d="M5 5h14M12 5v15M9 20h6"/>', mag:'<path d="M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z"/><path d="M6 7h4M14 7h4"/>',
+ stay:'<path d="M4 20l4-1L19 8l-3-3L5 16z"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M15.5 15v-1.5a2 2 0 0 1 4 0V15"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', unlock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', eyeoff:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M3 3l18 18"/>',
+ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>',
+ ext:'<path d="M3 18L13 8"/><path d="M13 8l8-8" stroke-dasharray="2 2.5"/><circle cx="3" cy="18" r="1.6"/><circle cx="13" cy="8" r="1.6"/>', edit:'<path d="M4 20l4-1L19 8l-3-3L5 16z"/>'};
+const svg=(k,extra)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"${extra||''}>${IC[k]}</svg>`;
+const GROUPS=[{g:'cur',items:[['cross','十字光标'],['arrow','箭头']]},{g:'line',items:[['tl','趋势线'],['ray','射线'],['hl','水平线'],['hr','水平射线'],['vl','垂直线'],['ch','平行通道']]},{g:'fib',items:[['fib','斐波那契回撤']]},
+  {g:'shape',items:[['rect','矩形']]},{g:'meas',items:[['range','价格区间 / 测量']]},{g:'pos',items:[['long','多头仓位'],['short','空头仓位']]},{g:'text',items:[['text','文字']]}];
+const GSEL={cur:'cross',line:'tl',fib:'fib',shape:'rect',meas:'range',pos:'long',text:'text'};
+function setTool(t){ if(DMT&&t) DMT.hidden=true; DR.pend=null; DR.tool=t; DR.snap=null; for(const w of WS) w.body.dataset.cur=t?'draw':DR.cur; drBump(); drUi(); }
+function drCreate(type,pts,w){ const d={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),type,pts:pts.map(q=>({t:q.t,p:q.p})),color:type==='fib'?'#787b86':DR.col,lw:type==='fib'||type==='range'?1:2,ls:0,ext:false};
+  if(type==='long'||type==='short'){ const {ph}=paneWH(w), span=Math.abs(w.cs.coordinateToPrice(0)-w.cs.coordinateToPrice(ph))||d.pts[0].p*0.02, dist=span*0.07, e=d.pts[0].p, s=type==='long'?1:-1; d.tp=e+s*2*dist; d.sl=e-s*dist; d.t2=d.pts[0].t+24*SEC[w.tf]; }
+  if(type==='text'){ const s=prompt('输入文字','文字'); if(s==null||!s.trim()){ setTool(DR.stay?DR.tool:null); return null; } d.text=s.trim(); }
+  const before=drSnapS(); DR.list.push(d); drPush(before); DR.sel=d.id; DR.selW=w; drSave(); if(!DR.stay) setTool(null); else { DR.pend=null; drBump(); } drUi(); return d; }
+function drPlace(w,q){ const t=DR.tool, N=NPT[t], P={t:q.t,p:q.p};
+  if(!DR.pend){ if(N===1){ drCreate(t,[P],w); return; } DR.pend={type:t,pts:[P,{...P}],color:t==='fib'?'#787b86':DR.col,lw:t==='fib'||t==='range'?1:2,ls:0,ext:false}; drBump(); return; }
+  const pd=DR.pend; pd.pts[pd.pts.length-1]=P; if(pd.pts.length>=N){ DR.pend=null; drCreate(pd.type,pd.pts,w); } else { pd.pts.push({...P}); drBump(); } }
+function drDel(){ const d=drById(DR.sel); if(!d) return; const before=drSnapS(); DR.list=DR.list.filter(x=>x!==d); DR.sel=null; drPush(before); drSave(); drBump(); drUi(); }
+function drClear(){ if(!DR.list.length) return; if(!confirm('删除全部 '+DR.list.length+' 个绘图？（可用 Ctrl+Z 撤销）')) return; const before=drSnapS(); DR.list=[]; DR.sel=null; drPush(before); drSave(); drBump(); drUi(); }
+function drEdit(d,fn){ const before=drSnapS(); fn(d); drPush(before); drSave(); drBump(); drUi(); }
+// ---------- 指针事件：工具激活或点中绘图时才接管，其余交给图表平移/缩放 ----------
+function drDown(w,e){ w.own=false; if(e.button>0||!e.target.closest||!e.target.closest('.chart')) return; ACTIVE=w; const q=evPt(w,e); if(q.t==null||q.p==null) return; const touch=e.pointerType==='touch';
+  if(DR.tool){ w.own=true; e.stopPropagation(); e.preventDefault(); DR.down={w,x:e.clientX,y:e.clientY,n:DR.pend?DR.pend.pts.length:0}; drPlace(w,q); return; }
+  if(RP.sel) return; const h=drHit(w,q.x,q.y,touch); if(!h){ if(DR.sel){ DR.sel=null; drBump(); drUi(); } return; }
+  w.own=true; e.stopPropagation(); e.preventDefault(); DR.sel=h.d.id; DR.selW=w; DR.hov=h.d.id;
+  if(!(h.d.lock||DR.lockAll)) DR.drag={w,d:h.d,k:h.k,s:q,orig:JSON.stringify(h.d),before:drSnapS(),moved:false};
+  try{ w.body.setPointerCapture(e.pointerId); }catch(_){} drBump(); drUi(); }
+function drMoveG(e){ const g=DR.drag; if(g){ const q=evPt(g.w,e); if(q.t==null||q.p==null) return; const o=JSON.parse(g.orig), i=DR.list.indexOf(g.d); if(i<0) return;
+    const nd=g.k==null?drShift(o,q.t-g.s.t,q.p-g.s.p):(drApply(o,g.k,q),o); Object.assign(g.d,nd); g.moved=true; DR.snap=q.snap?{w:g.w,t:q.t,p:q.p}:null; g.w.body.dataset.cur='grab'; drBump(); return; }
+  if(DR.pend){ const w=WS.find(x=>{ const r=x.body.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }); if(!w) return; const q=evPt(w,e); if(q.t==null||q.p==null) return; DR.pend.pts[DR.pend.pts.length-1]={t:q.t,p:q.p}; drBump(); } }
+function drUpG(e){ for(const w of WS) w.own=false; const g=DR.drag; if(g){ DR.drag=null; if(g.moved){ drPush(g.before); drSave(); } DR.snap=null; drBump(); drUi(); return; }
+  const dn=DR.down; DR.down=null; if(dn&&DR.pend&&DR.pend.pts.length===dn.n+2-(dn.n?1:0)&&Math.hypot(e.clientX-dn.x,e.clientY-dn.y)>8){ const q=evPt(dn.w,e); if(q.t!=null&&q.p!=null) drPlace(dn.w,q); } }
+function drHover(w,e){ if(DR.drag) return; if(!e.target.closest||!e.target.closest('.chart')){ return; } const q=evPt(w,e); let ch=false;
+  const sn=q.snap&&q.t!=null?{w,t:q.t,p:q.p,b:q.bar}:null; if(JSON.stringify(sn&&[sn.t,sn.p,w.key])!==JSON.stringify(DR.snap&&[DR.snap.t,DR.snap.p,DR.snap.w.key])){ DR.snap=sn; ch=true; }
+  if(!DR.tool){ const h=e.pointerType==='touch'?null:drHit(w,q.x,q.y,false), id=h?h.d.id:null; if(id!==DR.hov){ DR.hov=id; ch=true; } w.body.dataset.cur=h?(h.k!=null?'move':'pointer'):DR.cur; } else w.body.dataset.cur='draw';
+  if(ch) drBump(); }
+function drCross(w,e){ const s=DR.snap; if(!s||s.w!==w||!s.b||DR.drag) return; try{ w.chart.setCrosshairPosition(s.p,ct(s.b.ts),w.cs); }catch(_){} }
+function drAttach(w){ w.dw=w.body.querySelector('canvas.dw'); w.dsig=''; const B=w.body; B.dataset.cur=DR.cur;
+  const own=e=>{ if(w.own){ e.stopPropagation(); if(e.cancelable&&e.type!=='mousedown') e.preventDefault(); } };
+  B.addEventListener('pointerdown',e=>drDown(w,e),true); B.addEventListener('mousedown',own,true); B.addEventListener('touchstart',own,{capture:true,passive:false}); B.addEventListener('touchmove',own,{capture:true,passive:false});
+  B.addEventListener('pointermove',e=>drHover(w,e)); B.addEventListener('mousemove',e=>drCross(w,e));
+  B.addEventListener('pointerleave',()=>{ if(DR.snap&&DR.snap.w===w&&!DR.drag){ DR.snap=null; drBump(); } if(DR.hov&&!DR.drag){ DR.hov=null; drBump(); } });
+  B.addEventListener('dblclick',e=>{ const d=drById(DR.sel); if(d&&d.type==='text'&&!DR.tool){ const s=prompt('编辑文字',d.text); if(s!=null&&s.trim()) drEdit(d,x=>x.text=s.trim()); } }); }
+// ---------- 左侧工具栏 ----------
+function drUi(){ const bar=$('tvb'); if(!bar) return; const inG=g=>GROUPS.find(x=>x.g===g).items.some(i=>i[0]===DR.tool);
+  for(const b of bar.querySelectorAll('.tg')){ const g=b.dataset.g, k=GSEL[g]; if(!k) continue; b.querySelector('.tb').innerHTML=svg(k); b.querySelector('.tb').dataset.tip=GROUPS.find(x=>x.g===g).items.find(i=>i[0]===k)[1]; b.classList.toggle('on',g==='cur'?!DR.tool:inG(g)); }
+  for(const b of bar.querySelectorAll('.fly button')) b.classList.toggle('on',b.closest('.tg').dataset.g==='cur'?(!DR.tool&&b.dataset.t===DR.cur):b.dataset.t===DR.tool);
+  $('tvMag').classList.toggle('on',!!DR.mag); $('tvMag').dataset.tip=DR.mag===2?'强磁铁（开）':DR.mag===1?'弱磁铁（开）':'磁铁（关）— 按住 Ctrl/⌘ 临时开启'; $('tvMag').querySelector('.mg').textContent=DR.mag===2?'强':DR.mag===1?'弱':'';
+  for(const b of bar.querySelectorAll('[data-m]')) b.classList.toggle('on',+b.dataset.m===DR.mag);
+  $('tvStay').classList.toggle('on',DR.stay); $('tvLock').classList.toggle('on',DR.lockAll); $('tvLock').innerHTML=svg(DR.lockAll?'lock':'unlock'); $('tvHide').classList.toggle('on',DR.hide); $('tvHide').innerHTML=svg(DR.hide?'eyeoff':'eye');
+  $('tvUndo').disabled=!DR.undo.length; $('tvRedo').disabled=!DR.redo.length; $('tvDel').disabled=!DR.list.length; }
+function dmtSync(d){ if(!DMT) return; DMT.querySelector('[data-a=col] i').style.background=d.color; DMT.querySelector('[data-a=lw]').textContent=(d.lw||2)+'px';
+  DMT.querySelector('[data-a=ls]').innerHTML=`<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18" stroke-dasharray="${['','5 3','1 3.5'][d.ls||0]}"/></svg>`;
+  const ex=DMT.querySelector('[data-a=ext]'); ex.hidden=!['tl','ch','fib','rect'].includes(d.type); ex.classList.toggle('on',!!d.ext); DMT.querySelector('[data-a=txt]').hidden=d.type!=='text';
+  const lk=DMT.querySelector('[data-a=lock]'); lk.classList.toggle('on',!!d.lock); lk.innerHTML=svg(d.lock?'lock':'unlock'); DMT.querySelector('.dmt-n').textContent=DNAME[d.type]||''; }
+function drInitUi(){ const bar=$('tvb'); if(!bar) return; let h='';
+  for(const G of GROUPS){ h+=`<div class="tg" data-g="${G.g}"><button class="tb" data-tip=""></button>${G.items.length>1?`<button class="ta" aria-label="更多"><svg viewBox="0 0 8 8"><path d="M2 1l4 3-4 3z" fill="currentColor"/></svg></button><div class="fly" hidden>${G.items.map(i=>`<button data-t="${i[0]}">${svg(i[0])}<span>${i[1]}</span></button>`).join('')}</div>`:''}</div>`; if(G.g==='cur') h+='<hr>'; }
+  h+=`<hr><div class="tg" data-g="mag2"><button class="tb" id="tvMag" data-tip="">${svg('mag')}<b class="mg"></b></button><button class="ta" aria-label="磁铁模式"><svg viewBox="0 0 8 8"><path d="M2 1l4 3-4 3z" fill="currentColor"/></svg></button><div class="fly" hidden><button data-m="1">${svg('mag')}<span>弱磁铁（靠近 OHLC 10px 内吸附）</span></button><button data-m="2">${svg('mag')}<span>强磁铁（总是吸附最近 OHLC）</span></button><button data-m="0">${svg('cross')}<span>关闭磁铁</span></button></div></div>`;
+  h+=`<button class="tb" id="tvStay" data-tip="保持绘图模式（画完不退出）">${svg('stay')}</button><button class="tb" id="tvLock" data-tip="锁定所有绘图"></button><button class="tb" id="tvHide" data-tip="隐藏所有绘图"></button><hr><button class="tb" id="tvUndo" data-tip="撤销（Ctrl+Z）">${svg('undo')}</button><button class="tb" id="tvRedo" data-tip="重做（Ctrl+Shift+Z）">${svg('redo')}</button><button class="tb" id="tvDel" data-tip="删除所有绘图">${svg('trash')}</button>`;
+  bar.innerHTML=h; const closeFly=()=>bar.querySelectorAll('.fly').forEach(f=>f.hidden=true);
+  bar.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const tg=b.closest('.tg'), g=tg&&tg.dataset.g;
+    if(b.classList.contains('ta')){ const f=tg.querySelector('.fly'), was=f.hidden; closeFly(); f.hidden=!was; return; }
+    if(b.dataset.m!=null){ DR.mag=+b.dataset.m; if(DR.mag) DR.magLast=DR.mag; closeFly(); drSaveCfg(); drBump(); drUi(); return; }
+    if(b.dataset.t){ closeFly(); const t=b.dataset.t; GSEL[g]=t; if(g==='cur'){ DR.cur=t; drSaveCfg(); setTool(null); } else setTool(t); return; }
+    closeFly();
+    if(b.id==='tvMag'){ DR.mag=DR.mag?0:(DR.magLast||1); drSaveCfg(); drBump(); drUi(); }
+    else if(b.id==='tvStay'){ DR.stay=!DR.stay; drSaveCfg(); drUi(); } else if(b.id==='tvLock'){ DR.lockAll=!DR.lockAll; drSaveCfg(); drUi(); } else if(b.id==='tvHide'){ DR.hide=!DR.hide; if(DR.hide) DR.sel=null; drSaveCfg(); drBump(); drUi(); }
+    else if(b.id==='tvUndo') drUndo(); else if(b.id==='tvRedo') drRedo(); else if(b.id==='tvDel') drClear();
+    else if(g){ const t=GSEL[g]; if(g==='cur'){ DR.cur=t; setTool(null); } else setTool(DR.tool===t?null:t); } });
+  document.addEventListener('pointerdown',e=>{ if(!e.target.closest('.tvb')) closeFly(); if(!e.target.closest('.dmt')&&DMT) DMT.querySelector('.dmt-pal').hidden=true; },true);
+  DMT=document.createElement('div'); DMT.className='dmt'; DMT.hidden=true;
+  DMT.innerHTML=`<span class="dmt-n"></span><button data-a="col" data-tip="颜色"><i></i></button><button data-a="lw" data-tip="线宽"></button><button data-a="ls" data-tip="线型"></button><button data-a="ext" data-tip="向右延伸">${svg('ext')}</button><button data-a="txt" data-tip="编辑文字">${svg('edit')}</button><button data-a="lock" data-tip="锁定"></button><button data-a="del" data-tip="删除（Delete）">${svg('trash')}</button><div class="dmt-pal" hidden>${DCOLS.map(c=>`<button data-c="${c}" style="background:${c}"></button>`).join('')}</div>`;
+  DMT.addEventListener('pointerdown',e=>e.stopPropagation()); DMT.addEventListener('mousedown',e=>e.stopPropagation());
+  DMT.addEventListener('click',e=>{ const b=e.target.closest('button'); const d=drById(DR.sel); if(!b||!d) return; const a=b.dataset.a;
+    if(b.dataset.c){ DR.col=b.dataset.c; drSaveCfg(); drEdit(d,x=>x.color=b.dataset.c); DMT.querySelector('.dmt-pal').hidden=true; return; }
+    if(a==='col'){ const p=DMT.querySelector('.dmt-pal'); p.hidden=!p.hidden; } else if(a==='lw') drEdit(d,x=>x.lw=((x.lw||2)%4)+1); else if(a==='ls') drEdit(d,x=>x.ls=((x.ls||0)+1)%3);
+    else if(a==='ext') drEdit(d,x=>x.ext=!x.ext); else if(a==='lock') drEdit(d,x=>x.lock=!x.lock); else if(a==='del') drDel(); else if(a==='txt'){ const s=prompt('编辑文字',d.text); if(s!=null&&s.trim()) drEdit(d,x=>x.text=s.trim()); } });
+  addEventListener('pointermove',drMoveG); addEventListener('pointerup',drUpG); addEventListener('pointercancel',drUpG);
+  addEventListener('keydown',e=>{ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')) return; const mod=e.ctrlKey||e.metaKey;
+    if(mod&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); e.shiftKey?drRedo():drUndo(); return; } if(mod&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); drRedo(); return; }
+    if(e.key==='Escape'){ if(DR.pend){ DR.pend=null; drBump(); } else if(DR.tool) setTool(null); else if(DR.sel){ DR.sel=null; drBump(); drUi(); } }
+    else if((e.key==='Delete'||e.key==='Backspace')&&DR.sel){ e.preventDefault(); drDel(); } });
   drUi(); }
-function drAttach(w){ w.dw=w.body.querySelector('canvas.dw'); w.dsig='';
-  w.dw.addEventListener('pointerdown',e=>drDown(w,e)); w.dw.addEventListener('pointermove',e=>drMove(w,e)); w.dw.addEventListener('pointerup',e=>drUp(w,e)); w.dw.addEventListener('pointercancel',()=>{ DR.drag=null; });
-  w.chart.subscribeClick(p=>{ if(DR.tool||RP.sel||!p||!p.point) return; const h=drHit(w,p.point.x,p.point.y); if(h||DR.sel) drSelect(h?h.d.id:null); }); }
 function loadScript(src){ return new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 async function boot(){
   if(!window.LightweightCharts){ try{ await loadScript('https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js'); }catch(e){ status('图表库载入失败'); return; } }
@@ -762,7 +891,7 @@ async function boot(){
   try{ const [m]=await Promise.all([latest('1m',300),loadWin(WH),loadWin(WL)]); M1.bars=merge(m,M1.bars); M1.ver++; if(M1.bars.length) price(M1.bars[M1.bars.length-1].c); }
   catch(e){ status('载入失败：'+e.message); console.warn(e); }
   READY=true; connect(); status(''); ensure(); }
-window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,drTool};
+window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById};
 boot();
 
 </script>
