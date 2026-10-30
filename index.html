@@ -123,6 +123,12 @@ body.rp-on main{padding-bottom:128px}
   .scrim{align-items:flex-end}
   .sheet{width:100%;border-radius:20px 20px 0 0;max-height:88vh;padding-bottom:max(18px,env(safe-area-inset-bottom))}
 }
+.body canvas.dw{position:absolute;left:0;top:0;z-index:6;pointer-events:none;touch-action:none}.body canvas.dw.on{pointer-events:auto;cursor:crosshair}
+.dt{position:fixed;left:12px;top:76px;z-index:31;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:16px;background:var(--pill);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 4px 24px rgba(0,0,0,.14);border:.5px solid var(--line)}
+.dt[hidden]{display:none}.dt button{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--text)}.dt button:hover{background:var(--seg)}
+.dt button.on{background:var(--accent);color:#fff}.dt button:disabled{opacity:.3;cursor:default;background:none}.dt svg{width:18px;height:18px}
+.dt hr{border:0;height:.5px;background:var(--line);margin:2px 4px}.dt-c{display:grid;grid-template-columns:1fr 1fr;gap:2px}.dt-c button{width:15px;height:15px;border-radius:50%;background:var(--c)!important;margin:auto;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6)}.dt-c button.on{outline:2px solid var(--text);outline-offset:1px}
+@media (max-width:820px){.dt{top:auto;bottom:max(70px,env(safe-area-inset-bottom));left:8px;flex-direction:row;flex-wrap:wrap;max-width:calc(100vw - 16px)}.dt hr{width:.5px;height:24px;margin:4px 2px}.dt-c{grid-template-columns:repeat(6,1fr)}}
 </style>
 </head>
 <body>
@@ -134,19 +140,33 @@ body.rp-on main{padding-bottom:128px}
   <span class="conn" id="conn" title="实时连接"></span>
   <button class="icon ms" id="msBtn" aria-label="市场结构 HH/HL" title="市场结构 HH / HL / LH / LL（开/关）">HL</button>
   <button class="icon ms smc" id="smcBtn" aria-label="BOS / CHoCH / FVG" title="BOS → CHoCH → FVG 入场（开/关）">SMC</button>
+  <button class="icon" id="drBtn" aria-label="画线" title="画线工具"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg></button>
   <button class="icon" id="rpBtn" aria-label="回放" title="K线回放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg></button>
   <button class="icon" id="setBtn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 </header>
 <main>
   <section class="card" id="w1">
     <div class="ch"><h2>1 小时</h2><span class="note" title="成交量分布由 1 分钟K线估算（按每根K线高低区间平均分配成交额），不是逐笔成交">每根K线附该小时成交量分布</span></div>
-    <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><div class="lg"></div><div class="cd"></div></div>
+    <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
   </section>
   <section class="card" id="w2">
     <div class="ch"><h2 id="w2t">5 分钟</h2><div class="seg" id="tfSeg"></div></div>
-    <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><div class="lg"></div><div class="cd"></div></div>
+    <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
   </section>
 </main>
+<div class="dt" id="dt" hidden>
+  <button data-dt="sel" title="选择 / 拖动（点线选中，Delete 删除）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 1.5L10 19z"/></svg></button>
+  <button data-dt="h" title="水平线（价格位）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/></svg></button>
+  <button data-dt="tl" title="趋势线（两点）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="5" r="1.6"/></svg></button>
+  <button data-dt="ray" title="水平射线（向右）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.8"/><path d="M7 12h14M17 8l4 4-4 4"/></svg></button>
+  <button data-dt="rect" title="矩形 / 区间"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="10" rx="1.5"/></svg></button>
+  <hr>
+  <button id="dtExt" title="趋势线向右延伸"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18L14 8"/><path d="M14 8l6-6" stroke-dasharray="2 2.5"/></svg></button>
+  <button id="dtMag" title="磁吸到 OHLC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 8h4M14 8h4"/></svg></button>
+  <hr><div class="dt-c"></div><hr>
+  <button id="dtDel" title="删除选中（Delete）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+  <button id="dtClr" title="清除全部"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+</div>
 <div class="rp" id="rp" hidden>
   <div class="rp-sel"><span class="hint">点击任一窗口的K线作为起点，或输入时间（UTC+8）</span><input type="datetime-local" id="rpDate"><button class="rp-b acc" id="rpGo">开始</button><button class="rp-b" id="rpCancel">取消</button></div>
   <div class="rp-main">
@@ -563,7 +583,7 @@ function countdown(w){ const el=w.cd, bs=w.bars; if(!CFG.cd||!bs.length){ if(el.
   if(y==null||y<0||y>ph-24){ el.style.display='none'; return; }
   const txt=fmtCd(rem), warn=rem<=10, bg=b.c>=b.o?T.up:T.dn, k=[txt,warn,bg,Math.round(y),pw,w.body.clientWidth].join('|'); if(k===el._k) return; el._k=k;
   el.textContent=txt; el.classList.toggle('warn',warn); el.style.background=bg; el.style.left=(pw+1)+'px'; el.style.width=Math.max(0,w.body.clientWidth-pw-2)+'px'; el.style.top=Math.round(y+9)+'px'; el.style.display='block'; el.dataset.rem=Math.floor(rem); }
-function loop(){ for(const w of WS){ try{ draw(w); if(w.lgDirty) legend(w); countdown(w); }catch(e){ console.error(e); } } requestAnimationFrame(loop); }
+function loop(){ for(const w of WS){ try{ draw(w); drDraw(w); if(w.lgDirty) legend(w); countdown(w); }catch(e){ console.error(e); } } requestAnimationFrame(loop); }
 
 // ---------- 实时 ----------
 let ws=null, pingT=0, retry=0, wsDown=false, open24=null;
@@ -664,15 +684,85 @@ function rpInitUi(){ const d=new Date((minNow()-86400+TZ)*1000); $('rpDate').val
 
 // ---------- 启动 ----------
 let WH, WL, WS=[], READY=false;
+// ---------- 画线（价格+时间坐标，两窗口共用，按品种存 localStorage） ----------
+const DKEY='vp2_draw_'+SYM, DCOLS=['#0a84ff','#ff3b30','#34c759','#ff9f0a','#af52de','#8e8e93'];
+const DR={list:[],v:0,tool:null,sel:null,col:DCOLS[0],ext:false,mag:false,pend:null,drag:null};
+function drLoad(){ try{ const a=JSON.parse(localStorage.getItem(DKEY)||'[]'); if(Array.isArray(a)) DR.list=a.filter(d=>d&&d.id&&d.type&&d.p1); }catch(e){} }
+const drSave=()=>{ try{ localStorage.setItem(DKEY,JSON.stringify(DR.list)); }catch(e){} };
+const drBump=()=>{ DR.v++; };
+// 时间 ↔ 逻辑坐标：K线 ts 覆盖 [ts, ts+S)，中心在 ts+S/2，所以 1H 与小周期上同一时刻对齐
+function dX0(w){ const ts=w.chart.timeScale(); const x0=ts.logicalToCoordinate(0); return x0==null?null:{x0,sp:ts.options().barSpacing}; }
+function tToX(w,t){ const bs=w.bars, n=bs.length; if(!n) return null; const S=SEC[w.tf], g=dX0(w); if(!g) return null; let L;
+  if(t<bs[0].ts) L=-0.5+(t-bs[0].ts)/S; else { let j=VPC.lowerIdx(bs,t+1)-1; if(j<0) j=0; L=j-0.5+(t-bs[j].ts)/S; if(j<n-1&&L>j+0.5) L=j+0.5; }
+  return g.x0+L*g.sp; }
+function xToT(w,x,snap){ const bs=w.bars, n=bs.length, S=SEC[w.tf], g=dX0(w); if(!n||!g) return null; const L=(x-g.x0)/g.sp; let j=Math.round(L);
+  if(snap&&j>=0&&j<n) return bs[j].ts+S/2; if(j<0) return bs[0].ts+(L+0.5)*S; if(j>n-1) return bs[n-1].ts+(L-(n-1)+0.5)*S; return bs[j].ts+(L-j+0.5)*S; }
+function evPt(w,e){ const r=w.dw.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top; let t=xToT(w,x,DR.mag), p=w.cs.coordinateToPrice(y);
+  if(DR.mag){ const g=dX0(w), j=g?Math.round((x-g.x0)/g.sp):-1, b=w.bars[j]; if(b){ let best=null,bd=1e9; for(const v of [b.o,b.h,b.l,b.c]){ const yy=w.cs.priceToCoordinate(v); if(yy!=null&&Math.abs(yy-y)<bd){ bd=Math.abs(yy-y); best=v; } } if(best!=null&&bd<40) p=best; } }
+  return {x,y,t,p}; }
+function drPx(w,d){ const P=q=>q?{x:tToX(w,q.t),y:w.cs.priceToCoordinate(q.p)}:null; return {a:P(d.p1),b:P(d.p2)}; }
+function segD(px,py,ax,ay,bx,by){ const dx=bx-ax, dy=by-ay, l=dx*dx+dy*dy; let u=l?((px-ax)*dx+(py-ay)*dy)/l:0; u=Math.max(0,Math.min(1,u)); return Math.hypot(px-(ax+u*dx),py-(ay+u*dy)); }
+function extEnd(a,b,W){ if(Math.abs(b.x-a.x)<1e-6) return b; const k=(b.y-a.y)/(b.x-a.x), X=b.x>=a.x?W:0; return {x:X,y:a.y+k*(X-a.x)}; }
+function drHit(w,x,y){ const pw=w.chart.timeScale().width(); let best=null, bd=8;
+  for(let k=DR.list.length-1;k>=0;k--){ const d=DR.list[k], {a,b}=drPx(w,d); if(!a||a.y==null) continue; let dist=1e9, h=null;
+    if(d.type==='h') dist=Math.abs(y-a.y);
+    else if(d.type==='ray') dist=x>=a.x-4?Math.abs(y-a.y):Math.hypot(x-a.x,y-a.y);
+    else if(b&&a.x!=null&&b.x!=null&&b.y!=null){ if(d.type==='tl'){ const e=d.ext?extEnd(a,b,pw):b; dist=segD(x,y,a.x,a.y,e.x,e.y); }
+      else { const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y); dist=(x>=x0-4&&x<=x1+4&&y>=y0-4&&y<=y1+4)?Math.min(Math.abs(x-x0),Math.abs(x-x1),Math.abs(y-y0),Math.abs(y-y1),(x>x0&&x<x1&&y>y0&&y<y1)?3:1e9):1e9; }
+      if(Math.hypot(x-b.x,y-b.y)<10) { dist=0; h='b'; } }
+    if(a.x!=null&&d.type!=='h'&&Math.hypot(x-a.x,y-a.y)<10){ dist=0; h='a'; }
+    if(dist<bd){ bd=dist; best={d,h}; } }
+  return best; }
+function drSelect(id){ DR.sel=id; drBump(); drUi(); }
+function drDel(){ if(!DR.sel) return; DR.list=DR.list.filter(d=>d.id!==DR.sel); DR.sel=null; drSave(); drBump(); drUi(); }
+function drClear(){ if(!DR.list.length) return; if(!confirm('清除全部 '+DR.list.length+' 条画线？')) return; DR.list=[]; DR.sel=null; drSave(); drBump(); drUi(); }
+function drTool(t){ DR.tool=DR.tool===t?null:t; DR.pend=null; DR.drag=null; for(const w of WS) w.dw.classList.toggle('on',!!DR.tool); drBump(); drUi(); }
+function drAdd(d){ d.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6); d.color=DR.col; DR.list.push(d); DR.sel=d.id; drSave(); DR.tool=null; DR.pend=null; for(const w of WS) w.dw.classList.remove('on'); drBump(); drUi(); }
+function drDown(w,e){ if(!DR.tool) return; e.preventDefault(); e.stopPropagation(); try{ w.dw.setPointerCapture(e.pointerId); }catch(_){} const q=evPt(w,e); if(q.t==null||q.p==null) return; const P={t:q.t,p:q.p};
+  if(DR.tool==='sel'){ const h=drHit(w,q.x,q.y); if(!h){ drSelect(null); return; } drSelect(h.d.id); DR.drag={w,d:h.d,h:h.h,s:q,o1:{...h.d.p1},o2:h.d.p2?{...h.d.p2}:null}; return; }
+  if(DR.tool==='h'||DR.tool==='ray'){ drAdd({type:DR.tool,p1:P}); return; }
+  if(DR.pend&&DR.pend.w===w){ DR.pend.d.p2=P; const d=DR.pend.d; DR.pend=null; drAdd(d); return; }
+  DR.pend={w,d:{type:DR.tool,p1:P,p2:{...P},ext:DR.tool==='tl'&&DR.ext},sx:q.x,sy:q.y,down:true}; drBump(); }
+function drMove(w,e){ if(!DR.tool) return; const q=evPt(w,e); if(q.t==null||q.p==null) return;
+  if(DR.drag&&DR.drag.w===w){ const g=DR.drag, d=g.d; if(g.h==='a') d.p1={t:q.t,p:q.p}; else if(g.h==='b') d.p2={t:q.t,p:q.p};
+    else { const t0=xToT(w,g.s.x,false), dt=q.t-(t0==null?q.t:t0), dp=q.p-g.s.p; d.p1={t:g.o1.t+(d.type==='h'?0:dt),p:g.o1.p+dp}; if(g.o2) d.p2={t:g.o2.t+dt,p:g.o2.p+dp}; } drBump(); return; }
+  if(DR.pend&&DR.pend.w===w){ DR.pend.d.p2={t:q.t,p:q.p}; drBump(); } }
+function drUp(w,e){ if(DR.drag){ DR.drag=null; drSave(); drBump(); return; } if(DR.pend&&DR.pend.down&&DR.pend.w===w){ DR.pend.down=false; const q=evPt(w,e); if(Math.hypot(q.x-DR.pend.sx,q.y-DR.pend.sy)>6){ const d=DR.pend.d; DR.pend=null; drAdd(d); } } }
+function drShape(o,w,d,pw,sel){ const {a,b}=drPx(w,d); if(!a||a.y==null) return; const col=d.color||DCOLS[0]; o.strokeStyle=col; o.fillStyle=col; o.lineWidth=sel?2.5:1.5; o.setLineDash([]);
+  const dot=p=>{ if(!sel||!p||p.x==null) return; o.beginPath(); o.arc(p.x,p.y,4.5,0,7); o.fillStyle=T.dark?'#1c1c1e':'#fff'; o.fill(); o.lineWidth=2; o.stroke(); o.fillStyle=col; };
+  const tag=(y)=>{ const s=fmtP(w.cs.coordinateToPrice(y)); o.font='600 10px '+FONT; const tw=o.measureText(s).width+8; o.globalAlpha=.9; o.fillRect(pw-tw-2,y-8,tw,16); o.globalAlpha=1; o.fillStyle='#fff'; o.textAlign='left'; o.fillText(s,pw-tw+2,y+3.5); o.fillStyle=col; };
+  if(d.type==='h'){ o.beginPath(); o.moveTo(0,Math.round(a.y)+.5); o.lineTo(pw,Math.round(a.y)+.5); o.stroke(); tag(a.y); return; }
+  if(a.x==null) return;
+  if(d.type==='ray'){ o.beginPath(); o.moveTo(a.x,Math.round(a.y)+.5); o.lineTo(pw,Math.round(a.y)+.5); o.stroke(); tag(a.y); dot(a); return; }
+  if(!b||b.x==null||b.y==null) return;
+  if(d.type==='tl'){ const e=d.ext?extEnd(a,b,pw):b; o.beginPath(); o.moveTo(a.x,a.y); o.lineTo(e.x,e.y); o.stroke(); dot(a); dot(b); return; }
+  if(d.type==='rect'){ const x0=Math.min(a.x,b.x), y0=Math.min(a.y,b.y), ww=Math.abs(b.x-a.x), hh=Math.abs(b.y-a.y); o.globalAlpha=.14; o.fillRect(x0,y0,ww,hh); o.globalAlpha=1; o.strokeRect(Math.round(x0)+.5,Math.round(y0)+.5,ww,hh); dot(a); dot(b); } }
+function drDraw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.chart.timeScale(), vr=ts.getVisibleLogicalRange(), bs=w.bars; const ref=bs.length?bs[bs.length-1].c:1;
+  const sig=[W0,H0,vr?vr.from.toFixed(3)+','+vr.to.toFixed(3):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),ts.options().barSpacing,w.ver,bs.length,DR.v,T.dark].join('|'); if(sig===w.dsig) return; w.dsig=sig;
+  const o=fit(w.dw,W0,H0); if(!bs.length) return; const pw=ts.width(), ph=H0-ts.height(); o.save(); o.beginPath(); o.rect(0,0,pw,ph); o.clip();
+  for(const d of DR.list) drShape(o,w,d,pw,d.id===DR.sel); if(DR.pend) drShape(o,w,DR.pend.d,pw,true); o.restore(); w.drN=DR.list.length; }
+function drUi(){ const bar=$('dt'); if(!bar) return; for(const b of bar.querySelectorAll('[data-dt]')) b.classList.toggle('on',DR.tool===b.dataset.dt);
+  for(const b of bar.querySelectorAll('[data-dc]')) b.classList.toggle('on',DR.col===b.dataset.dc);
+  $('dtExt').classList.toggle('on',DR.ext); $('dtMag').classList.toggle('on',DR.mag); $('dtDel').disabled=!DR.sel; $('dtClr').disabled=!DR.list.length; $('drBtn').classList.toggle('on',!bar.hidden); }
+function drInitUi(){ const bar=$('dt'); $('drBtn').onclick=()=>{ bar.hidden=!bar.hidden; if(bar.hidden&&DR.tool) drTool(DR.tool); drUi(); };
+  bar.querySelector('.dt-c').innerHTML=DCOLS.map(c=>`<button data-dc="${c}" style="--c:${c}" aria-label="颜色"></button>`).join('');
+  bar.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.dt) drTool(b.dataset.dt); else if(b.dataset.dc){ DR.col=b.dataset.dc; const d=DR.list.find(x=>x.id===DR.sel); if(d){ d.color=DR.col; drSave(); drBump(); } drUi(); }
+    else if(b.id==='dtExt'){ DR.ext=!DR.ext; const d=DR.list.find(x=>x.id===DR.sel); if(d&&d.type==='tl'){ d.ext=DR.ext; drSave(); drBump(); } drUi(); }
+    else if(b.id==='dtMag'){ DR.mag=!DR.mag; drUi(); } else if(b.id==='dtDel') drDel(); else if(b.id==='dtClr') drClear(); };
+  addEventListener('keydown',e=>{ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')) return; if(e.key==='Escape'){ if(DR.tool) drTool(DR.tool); DR.pend=null; drSelect(null); } else if((e.key==='Delete'||e.key==='Backspace')&&DR.sel){ e.preventDefault(); drDel(); } });
+  drUi(); }
+function drAttach(w){ w.dw=w.body.querySelector('canvas.dw'); w.dsig='';
+  w.dw.addEventListener('pointerdown',e=>drDown(w,e)); w.dw.addEventListener('pointermove',e=>drMove(w,e)); w.dw.addEventListener('pointerup',e=>drUp(w,e)); w.dw.addEventListener('pointercancel',()=>{ DR.drag=null; });
+  w.chart.subscribeClick(p=>{ if(DR.tool||RP.sel||!p||!p.point) return; const h=drHit(w,p.point.x,p.point.y); if(h||DR.sel) drSelect(h?h.d.id:null); }); }
 function loadScript(src){ return new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 async function boot(){
   if(!window.LightweightCharts){ try{ await loadScript('https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js'); }catch(e){ status('图表库载入失败'); return; } }
-  WH=mkWin('h',$('w1'),()=>'1H',14); WL=mkWin('l',$('w2'),()=>CFG.tf,SPACING[CFG.tf]); WS=[WH,WL]; initUi(); requestAnimationFrame(loop);
+  WH=mkWin('h',$('w1'),()=>'1H',14); WL=mkWin('l',$('w2'),()=>CFG.tf,SPACING[CFG.tf]); WS=[WH,WL]; drLoad(); for(const w of WS) drAttach(w); initUi(); drInitUi(); requestAnimationFrame(loop);
   status('载入中…'); ticker(); setInterval(ticker,300000);
   try{ const [m]=await Promise.all([latest('1m',300),loadWin(WH),loadWin(WL)]); M1.bars=merge(m,M1.bars); M1.ver++; if(M1.bars.length) price(M1.bars[M1.bars.length-1].c); }
   catch(e){ status('载入失败：'+e.message); console.warn(e); }
   READY=true; connect(); status(''); ensure(); }
-window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet};
+window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,drTool};
 boot();
 
 </script>
