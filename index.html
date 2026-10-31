@@ -143,6 +143,7 @@ main{grid-template-columns:40px 1fr 1fr}
 .dmt-pal{position:absolute;top:calc(100% + 6px);left:30px;display:grid;grid-template-columns:repeat(4,22px);gap:6px;padding:8px;border-radius:10px;background:var(--pill);box-shadow:0 6px 22px rgba(0,0,0,.2);border:.5px solid var(--line)}.dmt-pal[hidden]{display:none}.dmt-pal button{width:22px;height:22px;border-radius:6px}
 .dmt [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(30,30,32,.92);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none}
 @media (max-width:820px){main{grid-template-columns:1fr}.tvb{flex-direction:row;flex-wrap:wrap;align-self:stretch;position:sticky;top:0;padding:3px 6px;justify-content:flex-start}.tvb hr{width:.5px;height:22px;margin:0 3px}.tvb .fly{left:0;top:calc(100% + 6px)}.tvb [data-tip]:hover::after{display:none}}
+.al-in{flex:1.4;min-width:0;border:0;background:var(--seg);border-radius:8px;padding:7px 9px;font:inherit;font-size:14px;color:var(--text)}.al-b{flex:1;color:var(--accent);font-weight:500;font-size:15px;padding:10px 0}.al-s{color:var(--sub);font-size:14px}.al-msg{font-size:13px;color:var(--accent);padding:8px 12px 0;min-height:18px}.al-warn{font-size:12.5px;line-height:1.5;background:rgba(255,159,10,.14);color:var(--text);border-radius:12px;padding:10px 12px;margin:4px 0}.al-log{max-height:200px;overflow:auto;font-size:12.5px}.al-log div{padding:7px 12px;border-top:.5px solid var(--sep)}.al-log div:first-child{border-top:0}.al-log span{color:var(--sub);margin-right:8px;font-variant-numeric:tabular-nums}.al-log .nil{color:var(--sub)}#alBtn.on{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -155,6 +156,7 @@ main{grid-template-columns:40px 1fr 1fr}
   <button class="icon ms" id="msBtn" aria-label="市场结构 HH/HL" title="市场结构 HH / HL / LH / LL（开/关）">HL</button>
   <button class="icon ms smc" id="smcBtn" aria-label="BOS / CHoCH / FVG" title="BOS → CHoCH → FVG 入场（开/关）">SMC</button>
   <button class="icon ms smc" id="pdhBtn" aria-label="前一天高低点 PDH/PDL" title="前一天高点 / 低点 PDH / PDL（UTC+8 分日，开/关）">PDH</button>
+  <button class="icon" id="alBtn" aria-label="提醒" title="提醒（Telegram / iPhone / 浏览器）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></button>
   <button class="icon" id="rpBtn" aria-label="回放" title="K线回放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg></button>
   <button class="icon" id="setBtn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
 </header>
@@ -189,6 +191,27 @@ main{grid-template-columns:40px 1fr 1fr}
     </div>
     <div class="rp-row rp-st"><span>练习：</span><span id="rpStats"></span><button id="rpReset">清零</button></div>
     <div class="rp-old" id="rpOld" hidden>起点早于 14 天：实时模式的 VP 只保留 14 天的 1 分钟数据；回放已单独载入起点前 48 小时起的 1 分钟数据来算 VP / 量能。</div>
+  </div>
+</div>
+<div class="scrim" id="alScrim">
+  <div class="sheet" role="dialog" aria-label="提醒">
+    <div class="sh-h"><h3>提醒</h3><button id="alDone">完成</button></div>
+    <div class="al-warn">⚠️ 提醒只在这个页面开着时运行。电脑上标签页可以放后台；iPhone Safari 切走或锁屏后页面会被暂停，就收不到。想要不漏，请在电脑上开着页面，提醒会推到你的 iPhone。</div>
+    <div class="grp-t">Telegram</div>
+    <div class="grp"><div class="rowi"><label for="a_tgOn">发送到 Telegram</label><span class="sw"><input type="checkbox" id="a_tgOn" data-a="tgOn"><i></i></span></div><div class="rowi"><label for="a_tgTok">Bot Token</label><input class="al-in" id="a_tgTok" data-a="tgTok" type="password" placeholder="123456:ABC…" autocomplete="off" spellcheck="false"></div><div class="rowi"><label for="a_tgChat">Chat ID</label><input class="al-in" id="a_tgChat" data-a="tgChat" type="text" placeholder="自动获取或手填" autocomplete="off" spellcheck="false"></div><div class="rowi"><button class="al-b" data-x="chat">自动获取 Chat ID</button><button class="al-b" data-x="tg">发送测试</button></div></div>
+    <div class="foot">在 Telegram 找 @BotFather 发 /newbot 建一个 bot，复制 Token 填上；再打开你的 bot 随便发一句话，然后按「自动获取 Chat ID」。</div>
+    <div class="grp-t">iPhone 直接推送（Bark）</div>
+    <div class="grp"><div class="rowi"><label for="a_bkOn">推送到 iPhone</label><span class="sw"><input type="checkbox" id="a_bkOn" data-a="bkOn"><i></i></span></div><div class="rowi"><label for="a_bkKey">Bark 地址</label><input class="al-in" id="a_bkKey" data-a="bkKey" type="password" placeholder="https://api.day.app/你的key" autocomplete="off" spellcheck="false"></div><div class="rowi"><button class="al-b" data-x="bk">发送测试</button></div></div>
+    <div class="foot">App Store 下载免费的 Bark，打开后复制它给的地址（https://api.day.app/xxxx）贴到这里。</div>
+    <div class="grp-t">浏览器通知</div>
+    <div class="grp"><div class="rowi"><label for="a_nfOn">系统通知</label><span class="sw"><input type="checkbox" id="a_nfOn" data-a="nfOn"><i></i></span></div><div class="rowi"><label>权限</label><span id="alNf" class="al-s"></span></div><div class="rowi"><button class="al-b" data-x="nfp">请求权限</button><button class="al-b" data-x="nf">发送测试</button></div></div>
+    <div class="foot">适合电脑。iPhone 上只有把页面「添加到主屏幕」（iOS 16.4+）才可能支持网页通知，建议 iPhone 用 Bark 或 Telegram。</div>
+    <div id="alMsg" class="al-msg"></div>
+    <div class="grp-t">提醒什么</div>
+    <div class="grp"><div class="rowi"><label for="a_trDraw">价格穿越画线（在画线小工具栏点 🔔 选择哪条线）</label><span class="sw"><input type="checkbox" id="a_trDraw" data-a="trDraw"><i></i></span></div><div class="rowi"><label for="a_trPdh">价格碰到 / 穿越今天的 PDH / PDL</label><span class="sw"><input type="checkbox" id="a_trPdh" data-a="trPdh"><i></i></span></div><div class="rowi"><label for="a_trSmc">SMC：新入场计划、回踩成交、1H BOS / CHoCH</label><span class="sw"><input type="checkbox" id="a_trSmc" data-a="trSmc"><i></i></span></div><div class="rowi"><label for="a_trBrk">1H 收盘突破摆动高 / 低点（策略 F）</label><span class="sw"><input type="checkbox" id="a_trBrk" data-a="trBrk"><i></i></span></div></div>
+    <div class="foot">同一事件只提醒一次（同一条线 5 分钟冷却），两个窗口不会重复。回放和刚载入的历史不会提醒。支持水平线、水平射线、趋势线、射线。</div>
+    <div class="grp-t" style="display:flex">最近提醒<span style="flex:1"></span><button id="alClr" style="color:var(--accent);font-size:12px">清空</button></div>
+    <div class="grp al-log" id="alLog"></div>
   </div>
 </div>
 <div class="scrim" id="scrim">
@@ -613,7 +636,7 @@ function connect(){ const port=retry%2?':8443':''; let s; try{ s=new WebSocket(`
   s.onmessage=e=>{ if(e.data==='pong') return; let m; try{ m=JSON.parse(e.data); }catch(x){ return; } if(!m.data||!m.arg||!m.arg.channel) return; const tf=m.arg.channel.slice(6); for(const a of m.data) onBar(tf,row(a)); };
   s.onclose=s.onerror=()=>{ if(ws!==s) return; s.onclose=s.onerror=s.onmessage=null; try{ s.close(); }catch(e){} ws=null; clearInterval(pingT); setConn(false); wsDown=true; reconnect(); }; }
 function reconnect(){ retry++; setTimeout(connect,Math.min(15000,800*retry)); }
-function onBar(tf,b){ if(tf==='1m'){ upM1(b); price(b.c); } if(RP.on) return; /* 回放时实时推送只存进 M1，不动图表 */ if(tf==='1H') live(WH,b); if(tf===CFG.tf) live(WL,b); }
+function onBar(tf,b){ if(tf==='1m'){ upM1(b); price(b.c); } if(RP.on){ alTick(tf,b); return; } /* 回放时实时推送只存进 M1，不动图表 */ if(tf==='1H') live(WH,b); if(tf===CFG.tf) live(WL,b); alTick(tf,b); }
 async function resync(){ try{ const [m,h,l]=await Promise.all([latest('1m',300),latest('1H',100),latest(CFG.tf,300)]); M1.bars=merge(M1.bars,m); PC.clear(); TC.clear(); M1.ver++; if(RP.on) return; WH.bars=merge(WH.bars,h); render(WH); if(l.length&&WL.bars.length) { WL.bars=merge(WL.bars,l); render(WL); } }catch(e){ console.warn(e); } }
 function price(c,rp){ if(RP.on&&!rp) return; $('last').textContent=fmtP(c); document.title=fmtP(c)+' · BTC 每小时 VP'; if(rp){ $('chg').textContent='回放'; $('chg').className='acc'; } else if(open24){ const r=c/open24-1; $('chg').textContent=(r>=0?'+':'')+(r*100).toFixed(2)+'%'; $('chg').className=r>=0?'up':'dn'; } }
 async function ticker(){ try{ const d=await okx(`market/ticker?instId=${SYM}`); if(d[0]){ open24=+d[0].open24h; price(+d[0].last); } }catch(e){} }
@@ -881,7 +904,7 @@ function drUi(){ const bar=$('tvb'); if(!bar) return; const inG=g=>GROUPS.find(x
 function dmtSync(d){ if(!DMT) return; DMT.querySelector('[data-a=col] i').style.background=d.color; DMT.querySelector('[data-a=lw]').textContent=(d.lw||2)+'px';
   DMT.querySelector('[data-a=ls]').innerHTML=`<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18" stroke-dasharray="${['','5 3','1 3.5'][d.ls||0]}"/></svg>`;
   const ex=DMT.querySelector('[data-a=ext]'); ex.hidden=!['tl','ch','fib','rect'].includes(d.type); ex.classList.toggle('on',!!d.ext); DMT.querySelector('[data-a=txt]').hidden=d.type!=='text';
-  const lk=DMT.querySelector('[data-a=lock]'); lk.classList.toggle('on',!!d.lock); lk.innerHTML=svg(d.lock?'lock':'unlock'); DMT.querySelector('.dmt-n').textContent=DNAME[d.type]||''; }
+  const bl=DMT.querySelector('[data-a=bell]'); bl.hidden=!ALT.includes(d.type); bl.classList.toggle('on',!!d.alert); bl.style.opacity=d.alert?1:.35; const lk=DMT.querySelector('[data-a=lock]'); lk.classList.toggle('on',!!d.lock); lk.innerHTML=svg(d.lock?'lock':'unlock'); DMT.querySelector('.dmt-n').textContent=DNAME[d.type]||''; }
 function drInitUi(){ const bar=$('tvb'); if(!bar) return; let h='';
   for(const G of GROUPS){ h+=`<div class="tg" data-g="${G.g}"><button class="tb" data-tip=""></button>${G.items.length>1?`<button class="ta" aria-label="更多"><svg viewBox="0 0 8 8"><path d="M2 1l4 3-4 3z" fill="currentColor"/></svg></button><div class="fly" hidden>${G.items.map(i=>`<button data-t="${i[0]}">${svg(i[0])}<span>${i[1]}</span></button>`).join('')}</div>`:''}</div>`; if(G.g==='cur') h+='<hr>'; }
   h+=`<hr><div class="tg" data-g="mag2"><button class="tb" id="tvMag" data-tip="">${svg('mag')}<b class="mg"></b></button><button class="ta" aria-label="磁铁模式"><svg viewBox="0 0 8 8"><path d="M2 1l4 3-4 3z" fill="currentColor"/></svg></button><div class="fly" hidden><button data-m="1">${svg('mag')}<span>弱磁铁（靠近 OHLC 10px 内吸附）</span></button><button data-m="2">${svg('mag')}<span>强磁铁（总是吸附最近 OHLC）</span></button><button data-m="0">${svg('cross')}<span>关闭磁铁</span></button></div></div>`;
@@ -898,27 +921,80 @@ function drInitUi(){ const bar=$('tvb'); if(!bar) return; let h='';
     else if(g){ const t=GSEL[g]; if(g==='cur'){ DR.cur=t; setTool(null); } else setTool(DR.tool===t?null:t); } });
   document.addEventListener('pointerdown',e=>{ if(!e.target.closest('.tvb')) closeFly(); if(!e.target.closest('.dmt')&&DMT) DMT.querySelector('.dmt-pal').hidden=true; },true);
   DMT=document.createElement('div'); DMT.className='dmt'; DMT.hidden=true;
-  DMT.innerHTML=`<span class="dmt-n"></span><button data-a="col" data-tip="颜色"><i></i></button><button data-a="lw" data-tip="线宽"></button><button data-a="ls" data-tip="线型"></button><button data-a="ext" data-tip="向右延伸">${svg('ext')}</button><button data-a="txt" data-tip="编辑文字">${svg('edit')}</button><button data-a="lock" data-tip="锁定"></button><button data-a="del" data-tip="删除（Delete）">${svg('trash')}</button><div class="dmt-pal" hidden>${DCOLS.map(c=>`<button data-c="${c}" style="background:${c}"></button>`).join('')}</div>`;
+  DMT.innerHTML=`<span class="dmt-n"></span><button data-a="col" data-tip="颜色"><i></i></button><button data-a="lw" data-tip="线宽"></button><button data-a="ls" data-tip="线型"></button><button data-a="ext" data-tip="向右延伸">${svg('ext')}</button><button data-a="txt" data-tip="编辑文字">${svg('edit')}</button><button data-a="bell" data-tip="价格穿越时提醒">🔔</button><button data-a="lock" data-tip="锁定"></button><button data-a="del" data-tip="删除（Delete）">${svg('trash')}</button><div class="dmt-pal" hidden>${DCOLS.map(c=>`<button data-c="${c}" style="background:${c}"></button>`).join('')}</div>`;
   DMT.addEventListener('pointerdown',e=>e.stopPropagation()); DMT.addEventListener('mousedown',e=>e.stopPropagation());
   DMT.addEventListener('click',e=>{ const b=e.target.closest('button'); const d=drById(DR.sel); if(!b||!d) return; const a=b.dataset.a;
     if(b.dataset.c){ DR.col=b.dataset.c; drSaveCfg(); drEdit(d,x=>x.color=b.dataset.c); DMT.querySelector('.dmt-pal').hidden=true; return; }
     if(a==='col'){ const p=DMT.querySelector('.dmt-pal'); p.hidden=!p.hidden; } else if(a==='lw') drEdit(d,x=>x.lw=((x.lw||2)%4)+1); else if(a==='ls') drEdit(d,x=>x.ls=((x.ls||0)+1)%3);
-    else if(a==='ext') drEdit(d,x=>x.ext=!x.ext); else if(a==='lock') drEdit(d,x=>x.lock=!x.lock); else if(a==='del') drDel(); else if(a==='txt'){ const s=prompt('编辑文字',d.text); if(s!=null&&s.trim()) drEdit(d,x=>x.text=s.trim()); } });
+    else if(a==='ext') drEdit(d,x=>x.ext=!x.ext); else if(a==='lock') drEdit(d,x=>x.lock=!x.lock); else if(a==='bell') drEdit(d,x=>x.alert=!x.alert); else if(a==='del') drDel(); else if(a==='txt'){ const s=prompt('编辑文字',d.text); if(s!=null&&s.trim()) drEdit(d,x=>x.text=s.trim()); } });
   addEventListener('pointermove',drMoveG); addEventListener('pointerup',drUpG); addEventListener('pointercancel',drUpG);
   addEventListener('keydown',e=>{ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')) return; const mod=e.ctrlKey||e.metaKey;
     if(mod&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); e.shiftKey?drRedo():drUndo(); return; } if(mod&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); drRedo(); return; }
     if(e.key==='Escape'){ if(DR.pend){ DR.pend=null; drBump(); } else if(DR.tool) setTool(null); else if(DR.sel){ DR.sel=null; drBump(); drUi(); } }
     else if((e.key==='Delete'||e.key==='Backspace')&&DR.sel){ e.preventDefault(); drDel(); } });
   drUi(); }
+// ---------- 提醒：Telegram / Bark（iPhone）/ 浏览器通知。密钥只存 localStorage（vp2_alerts），不进代码、不进同步 ----------
+const AKEY='vp2_alerts', ALOG='vp2_alerts_log', ACD=300;
+const ADEF={tgOn:false,tgTok:'',tgChat:'',bkOn:false,bkKey:'',nfOn:false,trDraw:true,trPdh:true,trSmc:true,trBrk:false};
+function alLoad(){ let c={}; try{ c=JSON.parse(localStorage.getItem(AKEY)||'{}')||{}; }catch(e){} return Object.assign({},ADEF,c); }
+let AL=alLoad(), ALL=(()=>{ try{ const a=JSON.parse(localStorage.getItem(ALOG)||'[]'); return Array.isArray(a)?a.slice(0,50):[]; }catch(e){ return []; } })();
+const alSave=()=>{ try{ localStorage.setItem(AKEY,JSON.stringify(AL)); }catch(e){} };
+const AS={prev:null,cd:new Map(),seen:new Set(),base:false};
+const hm=t=>{ const d=new Date((t+TZ)*1000); return `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`; };
+function bkUrl(){ let s=(AL.bkKey||'').trim(); if(!s) return null; if(!/^https?:\/\//.test(s)) s='https://api.day.app/'+s; return s.replace(/\/+$/,''); }
+async function alSend(text,only){ const out=[], tit='vp-app 提醒';
+  if((only==='tg'||(!only&&AL.tgOn))&&AL.tgTok&&AL.tgChat) out.push(fetch(`https://api.telegram.org/bot${AL.tgTok.trim()}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:AL.tgChat.trim(),text,disable_web_page_preview:true})}).then(r=>r.json()).then(j=>j.ok?'Telegram ✓':'Telegram ✗ '+(j.description||'')).catch(e=>'Telegram ✗ 网络错误'));
+  const bu=bkUrl(); if((only==='bk'||(!only&&AL.bkOn))&&bu) out.push(fetch(bu,{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({title:tit,body:text,group:'vp-app',sound:'minuet'})}).then(r=>r.json()).then(j=>j.code===200?'Bark ✓':'Bark ✗ '+(j.message||'')).catch(e=>'Bark ✗ 网络错误'));
+  if((only==='nf'||(!only&&AL.nfOn))&&'Notification' in window&&Notification.permission==='granted'){ try{ new Notification(tit,{body:text,tag:'vp'+Date.now()}); out.push(Promise.resolve('通知 ✓')); }catch(e){ out.push(Promise.resolve('通知 ✗ 此浏览器不支持页面直接通知')); } }
+  return Promise.all(out); }
+function alFire(key,text){ const t=nowS(), last=AS.cd.get(key); if(last&&t-last<ACD) return false; AS.cd.set(key,t);
+  ALL.unshift({t,text}); ALL.length=Math.min(ALL.length,50); try{ localStorage.setItem(ALOG,JSON.stringify(ALL)); }catch(e){} alLogUi(); alSend(text); return true; }
+function drLevel(d,t){ if(d.type==='hl') return d.pts[0].p; if(d.type==='hr') return t>=d.pts[0].t?d.pts[0].p:null;
+  if((d.type==='tl'||d.type==='ray')&&d.pts.length===2){ const [a,b]=d.pts; if(a.t===b.t) return null; const v=a.p+(b.p-a.p)*(t-a.t)/(b.t-a.t), lo=Math.min(a.t,b.t), hi=Math.max(a.t,b.t);
+    if(d.type==='ray') return (b.t>a.t?t>=a.t:t<=a.t)?v:null; return t>=lo&&(t<=hi||d.ext)?v:null; } return null; }
+const ALT=['hl','hr','tl','ray'];
+// 价格穿越：每次实时 1 分钟推送调用一次（全局一次，不按窗口，所以两个窗口不会重复）
+function alPrice(c){ const p=AS.prev; AS.prev=c; if(p==null||p===c) return; const t=nowS(), X=L=>L!=null&&(p-L)*(c-L)<=0&&p!==L;
+  const up=c>p?'上穿':'下穿';
+  if(AL.trDraw) for(const d of DR.list){ if(!d.alert||!ALT.includes(d.type)) continue; const L=drLevel(d,t); if(X(L)) alFire('d|'+d.id,`🔔 BTC ${up}${DNAME[d.type]||'画线'} ${fmtP(L)}（现价 ${fmtP(c)}） ${hm(t)}`); }
+  if(AL.trPdh){ const L=pdhGet(), s=L.length&&L[L.length-1].cur?L[L.length-1]:null; if(s) for(const [v,n] of [[s.h,'PDH'],[s.l,'PDL']]) if(X(v)) alFire(n+'|'+s.d,`🔔 BTC ${up} ${n} ${fmtP(v)}（现价 ${fmtP(c)}） ${hm(t)}`); } }
+// 结构事件：K线收盘后才出现，用 seen 集合去重；第一次扫描（载入历史 / 退出回放后）只登记不提醒
+function alStruct(){ const fresh=!AS.base; AS.base=true; const ev=[];
+  for(const w of WS){ if(!w||!w.bars.length) continue; const R=smcGet(w); if(!R) continue; const tfn=w.tf, bs=w.bars;
+    for(const S of R.setups){ ev.push(['s|'+tfn+'|'+S.ts+'|'+S.dir,AL.trSmc,S.ts+SEC[tfn],`🔔 BTC ${tfn} SMC 入场计划（CHoCH→FVG）${S.dir>0?'做多':'做空'} 挂单 ${fmtP(S.entry)} 止损 ${fmtP(S.sl)}`]);
+      if(S.fillK!=null) ev.push(['f|'+tfn+'|'+S.ts+'|'+S.dir,AL.trSmc,bs[S.fillK].ts+SEC[tfn],`🔔 BTC ${tfn} SMC ${S.dir>0?'多':'空'}单回踩成交 ${fmtP(S.entry)}`]); }
+    if(w===WH) for(const B of R.breaks){ ev.push(['b|'+B.ts+'|'+B.dir,AL.trSmc,B.ts+3600,`🔔 BTC 1H ${B.type} ${B.dir>0?'向上':'向下'} 收盘越过 ${fmtP(B.p)}（收 ${fmtP(bs[B.k].c)}）`]);
+      // 策略 F：收盘越过摆动点 ≥0.1%，量 ≥1.5×均量，实体 ≥50%
+      const b=bs[B.k], m=maAt(w,B.k), body=Math.abs(b.c-b.o)/Math.max(b.h-b.l,1e-9), beyond=B.dir*(b.c-B.p)/B.p*100;
+      if(beyond>=0.1&&body>=0.5&&(m==null||b.v>=1.5*m)) ev.push(['F|'+B.ts+'|'+B.dir,AL.trBrk,B.ts+3600,`🔔 BTC 1H 收盘${B.dir>0?'突破摆动高点':'跌破摆动低点'} ${fmtP(B.p)}（收 ${fmtP(b.c)}，策略 F）`]); } }
+  const t=nowS(); for(const [k,on,te,txt] of ev){ if(AS.seen.has(k)) continue; AS.seen.add(k); if(!fresh&&on&&t-te<2*3600) alFire(k,txt+' '+hm(t)); } }
+function alTick(tf,b){ if(RP.on||!READY){ AS.prev=null; AS.base=false; return; } if(tf==='1m') alPrice(b.c); alStruct(); }
+function alLogUi(){ const e=$('alLog'); if(!e) return; e.innerHTML=ALL.length?ALL.map(x=>`<div><span>${tStr(x.t)}</span>${x.text.replace(/</g,'&lt;')}</div>`).join(''):'<div class="nil">还没有提醒</div>'; }
+function alUi(){ for(const el of document.querySelectorAll('#alScrim [data-a]')){ const k=el.dataset.a; if(el.type==='checkbox') el.checked=!!AL[k]; else el.value=AL[k]||''; }
+  const n=$('alNf'); if(n) n.textContent='Notification' in window?({granted:'已允许',denied:'已拒绝（去浏览器设置打开）',default:'未授权'})[Notification.permission]:'此浏览器不支持';
+  const b=$('alBtn'); if(b) b.classList.toggle('on',AL.tgOn||AL.bkOn||AL.nfOn); alLogUi(); }
+function alInitUi(){ const sc=$('alScrim'), open=v=>{ sc.classList.toggle('open',v); if(v) alUi(); };
+  $('alBtn').onclick=()=>open(true); $('alDone').onclick=()=>open(false); sc.onclick=e=>{ if(e.target===sc) open(false); };
+  sc.addEventListener('change',e=>{ const el=e.target, k=el.dataset&&el.dataset.a; if(!k) return; AL[k]=el.type==='checkbox'?el.checked:el.value.trim(); alSave();
+    if(k==='nfOn'&&el.checked&&'Notification' in window&&Notification.permission==='default') Notification.requestPermission().then(alUi); alUi(); });
+  sc.addEventListener('click',async e=>{ const b=e.target.closest('button[data-x]'); if(!b) return; const x=b.dataset.x, msg=$('alMsg');
+    for(const el of sc.querySelectorAll('input[data-a]')) if(el.type!=='checkbox') AL[el.dataset.a]=el.value.trim(); alSave();
+    if(x==='chat'){ if(!AL.tgTok){ msg.textContent='先填 Bot Token'; return; } msg.textContent='获取中…';
+      try{ const j=await (await fetch(`https://api.telegram.org/bot${AL.tgTok}/getUpdates`)).json(); if(!j.ok){ msg.textContent='失败：'+(j.description||'Token 不对'); return; }
+        const m=[...j.result].reverse().map(u=>u.message||u.channel_post||u.my_chat_member).find(m=>m&&m.chat); if(!m){ msg.textContent='没找到消息：先在 Telegram 给你的 bot 发一句话，再按一次'; return; }
+        AL.tgChat=String(m.chat.id); alSave(); alUi(); msg.textContent='已填入 Chat ID：'+AL.tgChat; }catch(err){ msg.textContent='网络错误'; } return; }
+    if(x==='nfp'){ if('Notification' in window) await Notification.requestPermission(); alUi(); return; }
+    msg.textContent='发送中…'; const r=await alSend(`🔔 vp-app 测试提醒 · BTC 现价 ${$('last').textContent} ${hm(nowS())}`,x); msg.textContent=r.length?r.join('　'):'没填好，发不了'; });
+  $('alClr').onclick=()=>{ ALL=[]; try{ localStorage.removeItem(ALOG); }catch(e){} alLogUi(); }; alUi(); }
 function loadScript(src){ return new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 async function boot(){
   if(!window.LightweightCharts){ try{ await loadScript('https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js'); }catch(e){ status('图表库载入失败'); return; } }
-  WH=mkWin('h',$('w1'),()=>'1H',14); WL=mkWin('l',$('w2'),()=>CFG.tf,SPACING[CFG.tf]); WS=[WH,WL]; drLoad(); for(const w of WS) drAttach(w); initUi(); drInitUi(); requestAnimationFrame(loop);
+  WH=mkWin('h',$('w1'),()=>'1H',14); WL=mkWin('l',$('w2'),()=>CFG.tf,SPACING[CFG.tf]); WS=[WH,WL]; drLoad(); for(const w of WS) drAttach(w); initUi(); drInitUi(); alInitUi(); requestAnimationFrame(loop);
   status('载入中…'); ticker(); setInterval(ticker,300000);
   try{ const [m]=await Promise.all([latest('1m',300),loadWin(WH),loadWin(WL)]); M1.bars=merge(m,M1.bars); M1.ver++; if(M1.bars.length) price(M1.bars[M1.bars.length-1].c); }
   catch(e){ status('载入失败：'+e.message); console.warn(e); }
   READY=true; connect(); status(''); ensure(); }
-window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},pdhGet,VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById};
+window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,onBar,alTick,alFire,get AL(){return AL;},AS,get ALL(){return ALL;},drLevel,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},pdhGet,VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById};
 boot();
 
 </script>
