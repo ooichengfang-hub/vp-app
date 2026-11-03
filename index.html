@@ -144,6 +144,13 @@ main{grid-template-columns:40px 1fr 1fr}
 .dmt [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(30,30,32,.92);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none}
 @media (max-width:820px){main{grid-template-columns:1fr}.tvb{flex-direction:row;flex-wrap:wrap;align-self:stretch;position:sticky;top:0;padding:3px 6px;justify-content:flex-start}.tvb hr{width:.5px;height:22px;margin:0 3px}.tvb .fly{left:0;top:calc(100% + 6px)}.tvb [data-tip]:hover::after{display:none}}
 .al-in{flex:1.4;min-width:0;border:0;background:var(--seg);border-radius:8px;padding:7px 9px;font:inherit;font-size:14px;color:var(--text)}.al-b{flex:1;color:var(--accent);font-weight:500;font-size:15px;padding:10px 0}.al-s{color:var(--sub);font-size:14px}.al-msg{font-size:13px;color:var(--accent);padding:8px 12px 0;min-height:18px}.al-warn{font-size:12.5px;line-height:1.5;background:rgba(255,159,10,.14);color:var(--text);border-radius:12px;padding:10px 12px;margin:4px 0}.al-log{max-height:200px;overflow:auto;font-size:12.5px}.al-log div{padding:7px 12px;border-top:.5px solid var(--sep)}.al-log div:first-child{border-top:0}.al-log span{color:var(--sub);margin-right:8px;font-variant-numeric:tabular-nums}.al-log .nil{color:var(--sub)}#alBtn.on{color:var(--accent)}
+.ch .mx{margin-left:auto;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--sub);flex:none;transition:background .2s,color .2s}
+.ch .seg+.mx{margin-left:0}.ch .mx:hover{background:var(--seg);color:var(--text)}.ch .mx:active{opacity:.6}.ch .mx svg{width:17px;height:17px}.ch .mx .rs{display:none}
+body.mx .ch .mx .ex{display:none}body.mx .ch .mx .rs{display:block}body.mx .ch .mx{color:var(--accent)}
+.ch{user-select:none;-webkit-user-select:none}
+body.mx-h1 #w2,body.mx-ltf #w1{display:none}
+body.mx main{grid-template-columns:40px 1fr}
+@media (max-width:820px){body.mx main{grid-template-columns:1fr}body.mx .card{height:max(420px,calc(100svh - 150px))}}
 </style>
 </head>
 <body>
@@ -164,11 +171,11 @@ main{grid-template-columns:40px 1fr 1fr}
 <main>
   <nav class="tvb" id="tvb" aria-label="绘图工具"></nav>
   <section class="card" id="w1">
-    <div class="ch"><h2>1 小时</h2><span class="note" title="成交量分布由 1 分钟K线估算（按每根K线高低区间平均分配成交额），不是逐笔成交">每根K线附该小时成交量分布</span></div>
+    <div class="ch"><h2>1 小时</h2><span class="note" title="成交量分布由 1 分钟K线估算（按每根K线高低区间平均分配成交额），不是逐笔成交">每根K线附该小时成交量分布</span><button class="mx" data-mx="h1" aria-label="放大窗口" title="放大 / 还原（双击标题栏，Esc 还原）"><svg class="ex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><svg class="rs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg></button></div>
     <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
   </section>
   <section class="card" id="w2">
-    <div class="ch"><h2 id="w2t">5 分钟</h2><div class="seg" id="tfSeg"></div></div>
+    <div class="ch"><h2 id="w2t">5 分钟</h2><div class="seg" id="tfSeg"></div><button class="mx" data-mx="ltf" aria-label="放大窗口" title="放大 / 还原（双击标题栏，Esc 还原）"><svg class="ex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><svg class="rs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg></button></div>
     <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
   </section>
 </main>
@@ -386,7 +393,7 @@ const SYM='BTC-USDT-SWAP', API='https://www.okx.com/api/v5/', TZ=8*3600, ct=t=>t
 const SEC={'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1H':3600}, LTFS=['1m','3m','5m','15m','30m'];
 const TFN={'1m':'1 分钟','3m':'3 分钟','5m':'5 分钟','15m':'15 分钟','30m':'30 分钟'}, TFS={'1m':'1分','3m':'3分','5m':'5分','15m':'15分','30m':'30分'};
 const SPACING={'1m':4,'3m':6,'5m':9,'15m':14,'30m':22};
-const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24,pdh:true,fvg:true};
+const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24,pdh:true,fvg:true,max:null};
 const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10],fvgMin:[0.01,1],slBuf:[0,0.5],tp1:[0.5,5],tp2:[0.5,10],smcExp:[3,200]};
 const DEC={fvgMin:2,slBuf:2,tp1:1,tp2:1}, rnd=(k,v)=>{ const f=10**(DEC[k]||0); return Math.round(v*f)/f; };
 const FONT='-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang SC",system-ui,sans-serif';
@@ -399,7 +406,7 @@ const hourOf=t=>Math.floor(t/3600)*3600;
 
 // ---------- 设置 ----------
 function loadCfg(){ let c={}; try{ c=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){} c=Object.assign({},DEF,c); if(!LTFS.includes(c.tf)) c.tf=DEF.tf;
-  for(const k in LIMS){ const v=+c[k]; c[k]=rnd(k,Math.min(LIMS[k][1],Math.max(LIMS[k][0],isFinite(v)&&c[k]!==null&&c[k]!==''?v:DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine','smc','smcBos','smcFvg','smcSet','smcMid','pdh','fvg']) c[k]=!!c[k]; return c; }
+  for(const k in LIMS){ const v=+c[k]; c[k]=rnd(k,Math.min(LIMS[k][1],Math.max(LIMS[k][0],isFinite(v)&&c[k]!==null&&c[k]!==''?v:DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine','smc','smcBos','smcFvg','smcSet','smcMid','pdh','fvg']) c[k]=!!c[k]; if(!['h1','ltf'].includes(c.max)) c.max=null; return c; }
 let CFG=loadCfg(), CFGV=1; const saveCfg=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(CFG)); }catch(e){} };
 
 // ---------- OKX REST（限流 8 次/秒） ----------
@@ -669,8 +676,20 @@ function initUi(){ $('tfSeg').innerHTML=LTFS.map(t=>`<button data-tf="${t}">${TF
   rpInitUi(); $('msBtn').onclick=()=>{ CFG.ms=!CFG.ms; cfgUi(); applyCfg('ms'); }; msUi(); $('smcBtn').onclick=()=>{ CFG.smc=!CFG.smc; cfgUi(); applyCfg('smc'); }; smcUi(); $('pdhBtn').onclick=()=>{ CFG.pdh=!CFG.pdh; cfgUi(); applyCfg('pdh'); }; pdhUi(); $('fvgBtn').onclick=()=>{ CFG.fvg=!CFG.fvg; cfgUi(); applyCfg('fvg'); }; fvgUi();
   for(const el of document.querySelectorAll('[data-k]')) el.addEventListener('change',()=>{ const k=el.dataset.k; if(el.type==='checkbox'){ CFG[k]=el.checked; applyCfg(k); } else setNum(k,el.value); });
   for(const b of document.querySelectorAll('[data-f]')) b.onclick=()=>setNum(b.dataset.f,CFG[b.dataset.f]+(+b.dataset.d));
-  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); smcUi(); pdhUi(); fvgUi(); };
+  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); smcUi(); pdhUi(); fvgUi(); maxUi(); };
+  maxInit();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme); }
+// 窗口放大 / 还原：CFG.max = null | 'h1' | 'ltf'；隐藏的窗口照常更新数据和提醒
+function maxUi(){ const m=CFG.max, B=document.body; B.classList.toggle('mx',!!m); B.classList.toggle('mx-h1',m==='h1'); B.classList.toggle('mx-ltf',m==='ltf');
+  for(const b of document.querySelectorAll('.ch .mx')){ const on=m===b.dataset.mx; b.setAttribute('aria-pressed',on); b.setAttribute('aria-label',on?'还原两个窗口':'放大窗口'); b.title=on?'还原（Esc / 双击标题栏）':'放大（双击标题栏也可以）'; }
+  if(m&&typeof WS!=='undefined'&&WS){ const hid=m==='h1'?WL:WH; if(hid){ if(ACTIVE===hid) ACTIVE=null; clearSync(hid); clearSync(other(hid)); } }
+  if(typeof WS!=='undefined'&&WS) for(const w of WS){ w.sig=''; w.dsig=''; w.lgDirty=true; if(w.cd) w.cd._k=''; } }
+function setMax(m){ m=['h1','ltf'].includes(m)?m:null; if(m===CFG.max) return; CFG.max=m; saveCfg(); maxUi(); }
+function maxInit(){ for(const b of document.querySelectorAll('.ch .mx')) b.onclick=e=>{ e.stopPropagation(); setMax(CFG.max===b.dataset.mx?null:b.dataset.mx); };
+  for(const [id,k] of [['w1','h1'],['w2','ltf']]){ const ch=$(id).querySelector('.ch'); ch.addEventListener('dblclick',e=>{ if(e.target.closest('button,input,select')) return; setMax(CFG.max===k?null:k); }); }
+  addEventListener('keydown',e=>{ if(e.key!=='Escape'||!CFG.max) return; if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')) return;
+    if(document.querySelector('.scrim.open')||(typeof RP!=='undefined'&&RP.sel)||(typeof DR!=='undefined'&&(DR.pend||DR.tool||DR.sel))) return; setMax(null); },true);
+  maxUi(); }
 function applyTheme(){ T=readTheme(); for(const w of WS){ w.chart.applyOptions(chartOpts(w.key)); w.cs.applyOptions({upColor:T.up,downColor:T.dn,wickUpColor:T.up,wickDownColor:T.dn}); w.ma.applyOptions({color:T.accent}); w.vs.setData(w.bars.map(vBar)); w.sig=''; } }
 
 // ---------- 回放 ----------
