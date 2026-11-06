@@ -141,6 +141,7 @@ main{grid-template-columns:40px 1fr 1fr}
 .dmt[hidden]{display:none}.dmt>button{min-width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--text);font-size:11px;font-weight:600;padding:0 4px;position:relative}.dmt>button:hover{background:var(--seg)}.dmt>button.on{color:var(--accent)}.dmt>button[hidden]{display:none}
 .dmt svg{width:17px;height:17px;fill:none}.dmt i{width:16px;height:16px;border-radius:4px;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}.dmt-n{font-size:11px;color:var(--text);opacity:.6;padding:0 6px 0 4px;white-space:nowrap}
 .dmt-pal{position:absolute;top:calc(100% + 6px);left:30px;display:grid;grid-template-columns:repeat(4,22px);gap:6px;padding:8px;border-radius:10px;background:var(--pill);box-shadow:0 6px 22px rgba(0,0,0,.2);border:.5px solid var(--line)}.dmt-pal[hidden]{display:none}.dmt-pal button{width:22px;height:22px;border-radius:6px}
+.dmt-vp{position:absolute;top:calc(100% + 6px);left:0;min-width:200px;display:flex;flex-direction:column;gap:7px;padding:10px 12px;border-radius:10px;background:var(--pill);box-shadow:0 6px 22px rgba(0,0,0,.2);border:.5px solid var(--line);z-index:9}.dmt-vp[hidden]{display:none}.dmt-vp label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--sub)}.dmt-vp label.chk{justify-content:flex-start}.dmt-vp input[type=number],.dmt-vp select{width:72px;border:0;background:var(--field);border-radius:7px;padding:5px 7px;font:inherit;font-size:13px;color:var(--text)}.dmt-vp input[type=checkbox]{width:15px;height:15px}
 .dmt [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(30,30,32,.92);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none}
 @media (max-width:820px){main{grid-template-columns:1fr}.tvb{flex-direction:row;flex-wrap:wrap;align-self:stretch;position:sticky;top:0;padding:3px 6px;justify-content:flex-start}.tvb hr{width:.5px;height:22px;margin:0 3px}.tvb .fly{left:0;top:calc(100% + 6px)}.tvb [data-tip]:hover::after{display:none}}
 .al-in{flex:1.4;min-width:0;border:0;background:var(--seg);border-radius:8px;padding:7px 9px;font:inherit;font-size:14px;color:var(--text)}.al-b{flex:1;color:var(--accent);font-weight:500;font-size:15px;padding:10px 0}.al-s{color:var(--sub);font-size:14px}.al-msg{font-size:13px;color:var(--accent);padding:8px 12px 0;min-height:18px}.al-warn{font-size:12.5px;line-height:1.5;background:rgba(255,159,10,.14);color:var(--text);border-radius:12px;padding:10px 12px;margin:4px 0}.al-log{max-height:200px;overflow:auto;font-size:12.5px}.al-log div{padding:7px 12px;border-top:.5px solid var(--sep)}.al-log div:first-child{border-top:0}.al-log span{color:var(--sub);margin-right:8px;font-variant-numeric:tabular-nums}.al-log .nil{color:var(--sub)}#alBtn.on{color:var(--accent)}
@@ -770,11 +771,23 @@ function rpInitUi(){ const d=new Date((minNow()-86400+TZ)*1000); $('rpDate').val
 let WH, WL, WS=[], READY=false;
 // ---------- 画线工具（仿 TradingView 交互，自研实现；价格+时间坐标，两窗口共用，按品种存 localStorage） ----------
 const DKEY='vp2_draw_'+SYM, DCKEY='vp2_drawcfg', DCOLS=['#2962ff','#f23645','#089981','#ff9800','#9c27b0','#00bcd4','#787b86','#e91e63'];
-const NPT={tl:2,ray:2,hl:1,hr:1,vl:1,ch:3,fib:2,rect:2,range:2,long:1,short:1,text:1};
-const DNAME={tl:'趋势线',ray:'射线',hl:'水平线',hr:'水平射线',vl:'垂直线',ch:'平行通道',fib:'斐波那契回撤',rect:'矩形',range:'价格区间',long:'多头仓位',short:'空头仓位',text:'文字'};
+const NPT={tl:2,ray:2,hl:1,hr:1,vl:1,ch:3,fib:2,rect:2,range:2,vp:2,long:1,short:1,text:1};
+const DNAME={tl:'趋势线',ray:'射线',hl:'水平线',hr:'水平射线',vl:'垂直线',ch:'平行通道',fib:'斐波那契回撤',rect:'矩形',range:'价格区间',vp:'固定范围 VP',long:'多头仓位',short:'空头仓位',text:'文字'};
 const FIBL=[0,0.236,0.382,0.5,0.618,0.786,1];
 const DR={list:[],v:0,tool:null,cur:'cross',sel:null,selW:null,hov:null,mag:0,magLast:1,stay:false,hide:false,lockAll:false,pend:null,drag:null,snap:null,col:DCOLS[0],undo:[],redo:[]};
 const MC=document.createElement('canvas').getContext('2d');
+// 固定范围 VP（FRVP）：用 DS()（1m，回放时只用已收盘）计算；缓存不进 localStorage
+const FRVC=new Map();
+const frvpRange=d=>{ const t0=Math.min(d.pts[0].t,d.pts[1].t), t1=Math.max(d.pts[0].t,d.pts[1].t); return {t0,t1}; };
+function frvpProf(d){ if(!d||!d.pts||d.pts.length<2) return null; const {t0,t1}=frvpRange(d); if(!(t1>t0)) return null;
+  const rows=Math.max(2,Math.min(80,+(d.rows!=null?d.rows:24)|0)), va=Math.max(50,Math.min(95,+(d.va!=null?d.va:70)));
+  const key=[t0.toFixed(3),t1.toFixed(3),rows,va,DV()].join('|'), id=d.id||'pend';
+  const c=FRVC.get(id); if(c&&c.key===key) return c.p;
+  const bs=DS(); if(!bs.length){ FRVC.set(id,{key,p:null}); return null; }
+  if(!RP.on&&M1.bars.length&&t0<M1.bars[0].ts&&!M1.end) loadM1Until(t0);
+  const i=VPC.lowerIdx(bs,t0), j=VPC.lowerIdx(bs,t1), slice=bs.slice(i,j);
+  const p=slice.length?VPC.profile(slice,rows,va):null; FRVC.set(id,{key,p}); return p; }
+function frvpEnsure(d){ if(!d||d.type!=='vp') return; const {t0}=frvpRange(d); if(!RP.on&&M1.bars.length&&t0<M1.bars[0].ts&&!M1.end) loadM1Until(t0); }
 function drLoad(){ try{ const a=JSON.parse(localStorage.getItem(DKEY)||'[]'); if(Array.isArray(a)) DR.list=a.filter(d=>d&&d.id&&d.type).map(d=>{ if(!d.pts&&d.p1){ d.pts=[d.p1]; if(d.p2) d.pts.push(d.p2); delete d.p1; delete d.p2; if(d.type==='h') d.type='hl'; if(d.type==='ray'&&d.pts.length===1) d.type='hr'; } return d; }).filter(d=>d.pts&&d.pts.length); }catch(e){}
   try{ const c=JSON.parse(localStorage.getItem(DCKEY)||'{}'); for(const k of ['mag','magLast','stay','hide','lockAll','cur','col']) if(c[k]!=null) DR[k]=c[k]; }catch(e){} }
 const drSave=()=>{ try{ localStorage.setItem(DKEY,JSON.stringify(DR.list)); }catch(e){} };
@@ -805,10 +818,14 @@ const okP=p=>p&&p.x!=null&&p.y!=null&&isFinite(p.x)&&isFinite(p.y);
 function hs(w,d){ const {pw,ph}=paneWH(w), A=d.pts.map(q=>P2(w,q)), out=[];
   if(d.type==='hl'){ if(A[0].y!=null) out.push({x:pw/2,y:A[0].y,k:0}); }
   else if(d.type==='vl'){ if(A[0].x!=null) out.push({x:A[0].x,y:ph/2,k:0}); }
+  else if(d.type==='vp'){ const p=frvpProf(d), xl=Math.min(A[0].x??1e9,A[1].x??1e9), xr=Math.max(A[0].x??-1e9,A[1].x??-1e9);
+    const yt=p?w.cs.priceToCoordinate(p.hi):(A[0].y!=null&&A[1].y!=null?Math.min(A[0].y,A[1].y):null), yb=p?w.cs.priceToCoordinate(p.lo):(A[0].y!=null&&A[1].y!=null?Math.max(A[0].y,A[1].y):null);
+    if(yt!=null&&yb!=null&&isFinite(xl)&&isFinite(xr)){ const ym=(yt+yb)/2; out.push({x:xl,y:ym,k:A[0].x<=A[1].x?0:1}); out.push({x:xr,y:ym,k:A[0].x<=A[1].x?1:0}); } }
   else if(d.type==='long'||d.type==='short'){ const a=A[0], x1=tToX(w,d.t2), yt=w.cs.priceToCoordinate(d.tp), ys=w.cs.priceToCoordinate(d.sl); if(okP(a)){ out.push({x:a.x,y:a.y,k:0}); if(yt!=null) out.push({x:a.x,y:yt,k:'tp'}); if(ys!=null) out.push({x:a.x,y:ys,k:'sl'}); if(x1!=null) out.push({x:x1,y:a.y,k:'t2'}); } }
   else A.forEach((a,i)=>{ if(okP(a)) out.push({x:a.x,y:a.y,k:i}); });
   return out; }
 function drApply(d,k,q){ if(d.type==='hl'){ d.pts[0]={t:d.pts[0].t,p:q.p}; return; } if(d.type==='vl'){ d.pts[0]={t:q.t,p:d.pts[0].p}; return; }
+  if(d.type==='vp'&&(k===0||k===1)){ d.pts[k]={t:q.t,p:d.pts[k].p}; frvpEnsure(d); return; }
   if(k==='tp') d.tp=q.p; else if(k==='sl') d.sl=q.p; else if(k==='t2') d.t2=Math.max(q.t,d.pts[0].t+60); else d.pts[k]={t:q.t,p:q.p}; }
 function drShift(o,dt,dp){ const d=JSON.parse(JSON.stringify(o)); if(d.type==='hl') dt=0; if(d.type==='vl') dp=0; d.pts=d.pts.map(q=>({t:q.t+dt,p:q.p+dp})); if(d.tp!=null){ d.tp+=dp; d.sl+=dp; d.t2+=dt; } return d; }
 function chOff(a,b,c){ const k=Math.abs(b.x-a.x)<1e-6?0:(b.y-a.y)/(b.x-a.x); return c.y-(a.y+k*(c.x-a.x)); }
@@ -822,6 +839,7 @@ function bodyDist(w,d,x,y){ const {pw}=paneWH(w), A=d.pts.map(q=>P2(w,q)), a=A[0
   case 'ch': { const c=A[2]; if(!okP(a)||!okP(b)||!okP(c)) return 1e9; const off=chOff(a,b,c), e=d.ext?extEnd(a,b,pw):b; const d1=segD(x,y,a.x,a.y,e.x,e.y), d2=segD(x,y,a.x,a.y+off,e.x,e.y+off); let m=Math.min(d1,d2);
     if(x>=Math.min(a.x,e.x)&&x<=Math.max(a.x,e.x)){ const k=(e.y-a.y)/((e.x-a.x)||1e-9), yl=a.y+k*(x-a.x); if((y-yl)*(y-yl-off)<=0) m=Math.min(m,3); } return m; }
   case 'fib': case 'rect': case 'range': { if(!okP(a)||!okP(b)) return 1e9; const x1=(d.ext&&d.type!=='range')?pw:b.x; return inBox(a.x,a.y,x1,b.y)?3:1e9; }
+  case 'vp': { if(!okP(a)||!okP(b)) return 1e9; const p=frvpProf(d); const yt=p?w.cs.priceToCoordinate(p.hi):Math.min(a.y,b.y), yb=p?w.cs.priceToCoordinate(p.lo):Math.max(a.y,b.y); if(yt==null||yb==null) return 1e9; return inBox(a.x,yt,b.x,yb)?3:1e9; }
   case 'long': case 'short': { if(!okP(a)) return 1e9; const x1=tToX(w,d.t2), yt=w.cs.priceToCoordinate(d.tp), ys=w.cs.priceToCoordinate(d.sl); return (x1!=null&&yt!=null&&ys!=null&&inBox(a.x,yt,x1,ys))?3:1e9; }
   case 'text': { const bb=txtBox(w,d); return bb&&inBox(bb.x0,bb.y0,bb.x1,bb.y1)?2:1e9; } }
   return 1e9; }
@@ -858,10 +876,26 @@ function drShape(o,w,d,pw,ph,sel,hov,pend){ const A=d.pts.map(q=>P2(w,q)), a=A[0
     o.lineWidth=1.5; o.strokeStyle='#787b86'; L(a,{x:x1,y:a.y}); o.restore(); const xm=(a.x+x1)/2;
     lbl(o,'目标 '+fmtP(d.tp)+'  '+pct((d.tp-e)/e*100),xm,yt+(yt<a.y?-14:14),'#fff','#089981','c'); lbl(o,'止损 '+fmtP(d.sl)+'  '+pct((d.sl-e)/e*100),xm,ys+(ys<a.y?-14:14),'#fff','#f23645','c');
     lbl(o,(lg?'多头':'空头')+' 入场 '+fmtP(e)+'  盈亏比 '+rr.toFixed(2),xm,a.y+(lg?14:-14),'#fff','#787b86','c'); break; }
+  case 'vp': { if(!okP(a)||!okP(b)) return; const p=frvpProf(d), xl=Math.min(a.x,b.x), xr=Math.max(a.x,b.x), bw=Math.max(1,xr-xl);
+    const Y=v=>w.cs.priceToCoordinate(v); let yt,yb; if(p){ yt=Y(p.hi); yb=Y(p.lo); } else { yt=Math.min(a.y,b.y); yb=Math.max(a.y,b.y); }
+    if(yt==null||yb==null) return; o.save(); o.setLineDash([]);
+    o.strokeStyle=col; o.lineWidth=d.lw||1; o.globalAlpha=sel||hov||pend?.9:.55; o.strokeRect(xl+.5,Math.min(yt,yb)+.5,bw,Math.abs(yb-yt)); o.globalAlpha=.06; o.fillStyle=col; o.fillRect(xl,Math.min(yt,yb),bw,Math.abs(yb-yt)); o.globalAlpha=1;
+    if(p&&p.max>0){ const maxW=bw*Math.max(.2,Math.min(1,(d.widthPct!=null?d.widthPct:80)/100)), right=d.side==='right', xBase=right?xr-maxW:xl, split=!!d.split;
+      for(let k=0;k<p.rows;k++){ const v=p.vol[k]; if(!(v>0)) continue; const y1=Y(p.lo+(k+1)*p.st), y0=Y(p.lo+k*p.st); if(y1==null||y0==null) continue;
+        const h=Math.abs(y0-y1), gap=h>3?1:0, L=Math.max(1,maxW*v/p.max), yy=Math.min(y0,y1)+gap*.5, hh=Math.max(1,h-gap), inVa=k>=p.a&&k<=p.z;
+        if(split){ const u=p.up[k], dn=Math.max(0,v-u), Lu=L*(u/v), Ld=L-Lu; if(right){ if(Ld>0){ o.fillStyle=hexA(T.dn,inVa?.5:.28); o.fillRect(xBase+maxW-Ld,yy,Ld,hh); } if(Lu>0){ o.fillStyle=hexA(T.up,inVa?.55:.32); o.fillRect(xBase+maxW-L,yy,Lu,hh); } }
+          else { if(Lu>0){ o.fillStyle=hexA(T.up,inVa?.55:.32); o.fillRect(xBase,yy,Lu,hh); } if(Ld>0){ o.fillStyle=hexA(T.dn,inVa?.5:.28); o.fillRect(xBase+Lu,yy,Ld,hh); } } }
+        else { o.fillStyle=k===p.poc?T.accA(.75):`rgba(${T.vp},${inVa?.42:.2})`; if(right) o.fillRect(xBase+maxW-L,yy,L,hh); else o.fillRect(xBase,yy,L,hh); } }
+      const xL=xl, xR=d.extendPoc?pw:xr; o.lineWidth=2; hline(o,Y(p.pocP),xL,xR,T.accent,2); o.lineWidth=1;
+      hline(o,Y(p.vah),xL,xR,T.valine,1,[4,3]); hline(o,Y(p.val),xL,xR,T.valine,1,[4,3]);
+      o.font='600 10px '+FONT; o.fillStyle=T.accent; o.textAlign='left'; const lx=Math.min(xr+4,pw-4); o.fillText('POC '+fmtP(p.pocP),lx,Y(p.pocP)+3);
+      o.fillStyle=T.valine; o.fillText('VAH '+fmtP(p.vah),lx,Y(p.vah)+3); o.fillText('VAL '+fmtP(p.val),lx,Y(p.val)+3); }
+    else if(pend){ o.font='600 11px '+FONT; o.fillStyle=col; o.textAlign='center'; o.fillText('FRVP', (xl+xr)/2, (yt+yb)/2); }
+    o.restore(); break; }
   case 'text': { if(!okP(a)) return; o.save(); o.font='600 13px '+FONT; o.textAlign='left'; o.fillText(d.text||'',a.x+4,a.y); if(sel||hov){ const bb=txtBox(w,d); o.lineWidth=1; o.setLineDash([3,3]); o.strokeRect(bb.x0,bb.y0,bb.x1-bb.x0,bb.y1-bb.y0); } o.restore(); break; } }
   if(sel||pend){ o.setLineDash([]); for(const h of hs(w,d)){ o.beginPath(); o.arc(h.x,h.y,5,0,7); o.fillStyle=T.dark?'#131722':'#fff'; o.fill(); o.lineWidth=2; o.strokeStyle=col; o.stroke(); } } }
 function drDraw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.chart.timeScale(), vr=ts.getVisibleLogicalRange(), bs=w.bars; const ref=bs.length?bs[bs.length-1].c:1;
-  const sig=[W0,H0,vr?vr.from.toFixed(3)+','+vr.to.toFixed(3):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),ts.options().barSpacing,w.ver,bs.length,DR.v,T.dark].join('|'); if(sig===w.dsig) return; w.dsig=sig;
+  const sig=[W0,H0,vr?vr.from.toFixed(3)+','+vr.to.toFixed(3):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),ts.options().barSpacing,w.ver,bs.length,DR.v,T.dark,DV()].join('|'); if(sig===w.dsig) return; w.dsig=sig;
   const o=fit(w.dw,W0,H0); if(!bs.length) return; const {pw,ph}=paneWH(w); o.save(); o.beginPath(); o.rect(0,0,pw,ph); o.clip();
   if(!DR.hide){ for(const d of DR.list) drShape(o,w,d,pw,ph,d.id===DR.sel,d.id===DR.hov,false); }
   if(DR.pend) drShape(o,w,DR.pend,pw,ph,false,false,true);
@@ -880,6 +914,7 @@ const IC={
  ch:'<path d="M3 15L15 3M9 21L21 9"/><circle cx="3" cy="15" r="1.6"/><circle cx="15" cy="3" r="1.6"/><circle cx="21" cy="9" r="1.6"/>',
  fib:'<path d="M3 4h18M3 9h18M3 13h18M3 17h18M3 21h18" stroke-width="1.4"/>', rect:'<rect x="3.5" y="6" width="17" height="12" rx="1"/><circle cx="3.5" cy="6" r="1.6"/><circle cx="20.5" cy="18" r="1.6"/>',
  range:'<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4M4 3h16M4 21h16"/>',
+ vp:'<path d="M4 20V11M8 20V7M12 20v-9M16 20V9M20 20V5" stroke-width="2"/><path d="M3 20h18" stroke-width="1.6"/>',
  long:'<rect x="3" y="3" width="18" height="9" fill="#089981" fill-opacity=".35" stroke="none"/><rect x="3" y="12" width="18" height="6" fill="#f23645" fill-opacity=".35" stroke="none"/><path d="M3 12h18"/>',
  short:'<rect x="3" y="6" width="18" height="6" fill="#f23645" fill-opacity=".35" stroke="none"/><rect x="3" y="12" width="18" height="9" fill="#089981" fill-opacity=".35" stroke="none"/><path d="M3 12h18"/>',
  text:'<path d="M5 5h14M12 5v15M9 20h6"/>', mag:'<path d="M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z"/><path d="M6 7h4M14 7h4"/>',
@@ -890,10 +925,11 @@ const IC={
  ext:'<path d="M3 18L13 8"/><path d="M13 8l8-8" stroke-dasharray="2 2.5"/><circle cx="3" cy="18" r="1.6"/><circle cx="13" cy="8" r="1.6"/>', edit:'<path d="M4 20l4-1L19 8l-3-3L5 16z"/>'};
 const svg=(k,extra)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"${extra||''}>${IC[k]}</svg>`;
 const GROUPS=[{g:'cur',items:[['cross','十字光标'],['arrow','箭头']]},{g:'line',items:[['tl','趋势线（按住 Shift 画水平/垂直/45°）'],['ray','射线（按住 Shift 画水平/垂直/45°）'],['hl','水平线'],['hr','水平射线'],['vl','垂直线'],['ch','平行通道（按住 Shift 锁定基线角度）']]},{g:'fib',items:[['fib','斐波那契回撤（按住 Shift 锁定方向）']]},
-  {g:'shape',items:[['rect','矩形']]},{g:'meas',items:[['range','价格区间 / 测量（按住 Shift 锁定）']]},{g:'pos',items:[['long','多头仓位'],['short','空头仓位']]},{g:'text',items:[['text','文字']]}];
-const GSEL={cur:'cross',line:'tl',fib:'fib',shape:'rect',meas:'range',pos:'long',text:'text'};
+  {g:'shape',items:[['rect','矩形']]},{g:'vp',items:[['vp','固定范围成交量分布 FRVP（点起点再点终点 / 拖时间范围）']]},{g:'meas',items:[['range','价格区间 / 测量（按住 Shift 锁定）']]},{g:'pos',items:[['long','多头仓位'],['short','空头仓位']]},{g:'text',items:[['text','文字']]}];
+const GSEL={cur:'cross',line:'tl',fib:'fib',shape:'rect',vp:'vp',meas:'range',pos:'long',text:'text'};
 function setTool(t){ if(DMT&&t) DMT.hidden=true; DR.pend=null; DR.tool=t; DR.snap=null; for(const w of WS) w.body.dataset.cur=t?'draw':DR.cur; drBump(); drUi(); }
-function drCreate(type,pts,w){ const d={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),type,pts:pts.map(q=>({t:q.t,p:q.p})),color:type==='fib'?'#787b86':DR.col,lw:type==='fib'||type==='range'?1:2,ls:0,ext:false};
+function drCreate(type,pts,w){ const d={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),type,pts:pts.map(q=>({t:q.t,p:q.p})),color:type==='fib'?'#787b86':DR.col,lw:type==='fib'||type==='range'||type==='vp'?1:2,ls:0,ext:false};
+  if(type==='vp'){ d.rows=24; d.va=70; d.widthPct=80; d.side='left'; d.split=false; d.extendPoc=false; frvpEnsure(d); }
   if(type==='long'||type==='short'){ const {ph}=paneWH(w), span=Math.abs(w.cs.coordinateToPrice(0)-w.cs.coordinateToPrice(ph))||d.pts[0].p*0.02, dist=span*0.07, e=d.pts[0].p, s=type==='long'?1:-1; d.tp=e+s*2*dist; d.sl=e-s*dist; d.t2=d.pts[0].t+24*SEC[w.tf]; }
   if(type==='text'){ const s=prompt('输入文字','文字'); if(s==null||!s.trim()){ setTool(DR.stay?DR.tool:null); return null; } d.text=s.trim(); }
   const before=drSnapS(); DR.list.push(d); drPush(before); DR.sel=d.id; DR.selW=w; drSave(); if(!DR.stay) setTool(null); else { DR.pend=null; drBump(); } drUi(); return d; }
@@ -905,7 +941,7 @@ function shiftC(w,an,q){ const a=P2(w,an); if(!okP(a)||q.x==null||q.y==null) ret
 function shiftPend(w,q,e){ const pd=DR.pend; if(!e||!e.shiftKey||!pd||pd.pts.length!==2||!SHT.includes(pd.type)) return q; return shiftC(w,pd.pts[0],q); }
 function shiftAnchor(d,k){ if(!SHT.includes(d.type)&&d.type!=='rect') return null; if(k===0) return d.pts[1]; if(k===1) return d.pts[0]; return null; }
 function drPlace(w,q){ const t=DR.tool, N=NPT[t], P={t:q.t,p:q.p};
-  if(!DR.pend){ if(N===1){ drCreate(t,[P],w); return; } DR.pend={type:t,pts:[P,{...P}],color:t==='fib'?'#787b86':DR.col,lw:t==='fib'||t==='range'?1:2,ls:0,ext:false}; drBump(); return; }
+  if(!DR.pend){ if(N===1){ drCreate(t,[P],w); return; } DR.pend={type:t,pts:[P,{...P}],color:t==='fib'?'#787b86':DR.col,lw:t==='fib'||t==='range'||t==='vp'?1:2,ls:0,ext:false}; if(t==='vp'){ DR.pend.rows=24; DR.pend.va=70; DR.pend.widthPct=80; DR.pend.side='left'; DR.pend.split=false; DR.pend.extendPoc=false; } drBump(); return; }
   const pd=DR.pend; pd.pts[pd.pts.length-1]=P; if(pd.pts.length>=N){ DR.pend=null; drCreate(pd.type,pd.pts,w); } else { pd.pts.push({...P}); drBump(); } }
 function drDel(){ const d=drById(DR.sel); if(!d) return; const before=drSnapS(); DR.list=DR.list.filter(x=>x!==d); DR.sel=null; drPush(before); drSave(); drBump(); drUi(); }
 function drClear(){ if(!DR.list.length) return; if(!confirm('删除全部 '+DR.list.length+' 个绘图？（可用 Ctrl+Z 撤销）')) return; const before=drSnapS(); DR.list=[]; DR.sel=null; drPush(before); drSave(); drBump(); drUi(); }
@@ -921,7 +957,7 @@ function drMoveG(e){ const g=DR.drag; if(g){ const q=evPt(g.w,e); if(q.t==null||
     let nd; if(g.k==null){ let dt=q.t-g.s.t, dp=q.p-g.s.p; if(e.shiftKey){ if(Math.abs(q.x-g.s.x)>=Math.abs(q.y-g.s.y)) dp=0; else dt=0; } nd=drShift(o,dt,dp); }
     else { let qq=q; const an=e.shiftKey?shiftAnchor(o,g.k):null; if(an) qq=shiftC(g.w,an,q); drApply(o,g.k,qq); nd=o; } Object.assign(g.d,nd); g.moved=true; DR.snap=q.snap?{w:g.w,t:q.t,p:q.p}:null; g.w.body.dataset.cur='grab'; drBump(); return; }
   if(DR.pend){ const w=WS.find(x=>{ const r=x.body.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }); if(!w) return; let q=evPt(w,e); if(q.t==null||q.p==null) return; q=shiftPend(w,q,e); DR.pend.pts[DR.pend.pts.length-1]={t:q.t,p:q.p}; drBump(); } }
-function drUpG(e){ for(const w of WS) w.own=false; const g=DR.drag; if(g){ DR.drag=null; if(g.moved){ drPush(g.before); drSave(); } DR.snap=null; drBump(); drUi(); return; }
+function drUpG(e){ for(const w of WS) w.own=false; const g=DR.drag; if(g){ DR.drag=null; if(g.moved){ if(g.d&&g.d.type==='vp') frvpEnsure(g.d); drPush(g.before); drSave(); } DR.snap=null; drBump(); drUi(); return; }
   const dn=DR.down; DR.down=null; if(dn&&DR.pend&&DR.pend.pts.length===dn.n+2-(dn.n?1:0)&&Math.hypot(e.clientX-dn.x,e.clientY-dn.y)>8){ const q=evPt(dn.w,e); if(q.t!=null&&q.p!=null) drPlace(dn.w,shiftPend(dn.w,q,e)); } }
 function drHover(w,e){ if(DR.drag) return; if(!e.target.closest||!e.target.closest('.chart')){ return; } const q=evPt(w,e); let ch=false;
   const sn=q.snap&&q.t!=null?{w,t:q.t,p:q.p,b:q.bar}:null; if(JSON.stringify(sn&&[sn.t,sn.p,w.key])!==JSON.stringify(DR.snap&&[DR.snap.t,DR.snap.p,DR.snap.w.key])){ DR.snap=sn; ch=true; }
@@ -944,7 +980,9 @@ function drUi(){ const bar=$('tvb'); if(!bar) return; const inG=g=>GROUPS.find(x
   $('tvUndo').disabled=!DR.undo.length; $('tvRedo').disabled=!DR.redo.length; $('tvDel').disabled=!DR.list.length; }
 function dmtSync(d){ if(!DMT) return; DMT.querySelector('[data-a=col] i').style.background=d.color; DMT.querySelector('[data-a=lw]').textContent=(d.lw||2)+'px';
   DMT.querySelector('[data-a=ls]').innerHTML=`<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18" stroke-dasharray="${['','5 3','1 3.5'][d.ls||0]}"/></svg>`;
-  const ex=DMT.querySelector('[data-a=ext]'); ex.hidden=!['tl','ch','fib','rect'].includes(d.type); ex.classList.toggle('on',!!d.ext); DMT.querySelector('[data-a=txt]').hidden=d.type!=='text';
+  const ex=DMT.querySelector('[data-a=ext]'); ex.hidden=!['tl','ch','fib','rect','vp'].includes(d.type); ex.classList.toggle('on',d.type==='vp'?!!d.extendPoc:!!d.ext); ex.dataset.tip=d.type==='vp'?'向右延伸 POC/VAH/VAL':'向右延伸'; DMT.querySelector('[data-a=txt]').hidden=d.type!=='text';
+  const vs=DMT.querySelector('[data-a=vpset]'); vs.hidden=d.type!=='vp'; const vp=DMT.querySelector('.dmt-vp'); if(d.type==='vp'){ DMT.querySelector('[data-vp=rows]').value=d.rows||24; DMT.querySelector('[data-vp=va]').value=d.va||70; DMT.querySelector('[data-vp=widthPct]').value=d.widthPct!=null?d.widthPct:80; DMT.querySelector('[data-vp=split]').checked=!!d.split; DMT.querySelector('[data-vp=side]').value=d.side==='right'?'right':'left'; } else if(vp) vp.hidden=true;
+  DMT.querySelector('[data-a=lw]').hidden=d.type==='vp'; DMT.querySelector('[data-a=ls]').hidden=d.type==='vp';
   const bl=DMT.querySelector('[data-a=bell]'); bl.hidden=!ALT.includes(d.type); bl.classList.toggle('on',!!d.alert); bl.style.opacity=d.alert?1:.35; const lk=DMT.querySelector('[data-a=lock]'); lk.classList.toggle('on',!!d.lock); lk.innerHTML=svg(d.lock?'lock':'unlock'); DMT.querySelector('.dmt-n').textContent=DNAME[d.type]||''; }
 function drInitUi(){ const bar=$('tvb'); if(!bar) return; let h='';
   for(const G of GROUPS){ h+=`<div class="tg" data-g="${G.g}"><button class="tb" data-tip=""></button>${G.items.length>1?`<button class="ta" aria-label="更多"><svg viewBox="0 0 8 8"><path d="M2 1l4 3-4 3z" fill="currentColor"/></svg></button><div class="fly" hidden>${G.items.map(i=>`<button data-t="${i[0]}">${svg(i[0])}<span>${i[1]}</span></button>`).join('')}</div>`:''}</div>`; if(G.g==='cur') h+='<hr>'; }
@@ -960,14 +998,17 @@ function drInitUi(){ const bar=$('tvb'); if(!bar) return; let h='';
     else if(b.id==='tvStay'){ DR.stay=!DR.stay; drSaveCfg(); drUi(); } else if(b.id==='tvLock'){ DR.lockAll=!DR.lockAll; drSaveCfg(); drUi(); } else if(b.id==='tvHide'){ DR.hide=!DR.hide; if(DR.hide) DR.sel=null; drSaveCfg(); drBump(); drUi(); }
     else if(b.id==='tvUndo') drUndo(); else if(b.id==='tvRedo') drRedo(); else if(b.id==='tvDel') drClear();
     else if(g){ const t=GSEL[g]; if(g==='cur'){ DR.cur=t; setTool(null); } else setTool(DR.tool===t?null:t); } });
-  document.addEventListener('pointerdown',e=>{ if(!e.target.closest('.tvb')) closeFly(); if(!e.target.closest('.dmt')&&DMT) DMT.querySelector('.dmt-pal').hidden=true; },true);
+  document.addEventListener('pointerdown',e=>{ if(!e.target.closest('.tvb')) closeFly(); if(!e.target.closest('.dmt')&&DMT){ DMT.querySelector('.dmt-pal').hidden=true; DMT.querySelector('.dmt-vp').hidden=true; } },true);
   DMT=document.createElement('div'); DMT.className='dmt'; DMT.hidden=true;
-  DMT.innerHTML=`<span class="dmt-n"></span><button data-a="col" data-tip="颜色"><i></i></button><button data-a="lw" data-tip="线宽"></button><button data-a="ls" data-tip="线型"></button><button data-a="ext" data-tip="向右延伸">${svg('ext')}</button><button data-a="txt" data-tip="编辑文字">${svg('edit')}</button><button data-a="bell" data-tip="价格穿越时提醒">🔔</button><button data-a="lock" data-tip="锁定"></button><button data-a="del" data-tip="删除（Delete）">${svg('trash')}</button><div class="dmt-pal" hidden>${DCOLS.map(c=>`<button data-c="${c}" style="background:${c}"></button>`).join('')}</div>`;
+  DMT.innerHTML=`<span class="dmt-n"></span><button data-a="col" data-tip="颜色"><i></i></button><button data-a="lw" data-tip="线宽"></button><button data-a="ls" data-tip="线型"></button><button data-a="ext" data-tip="向右延伸">${svg('ext')}</button><button data-a="vpset" data-tip="VP 设置">⚙</button><button data-a="txt" data-tip="编辑文字">${svg('edit')}</button><button data-a="bell" data-tip="价格穿越时提醒">🔔</button><button data-a="lock" data-tip="锁定"></button><button data-a="del" data-tip="删除（Delete）">${svg('trash')}</button><div class="dmt-pal" hidden>${DCOLS.map(c=>`<button data-c="${c}" style="background:${c}"></button>`).join('')}</div><div class="dmt-vp" hidden><label>层数 <input data-vp="rows" type="number" min="8" max="80" step="1"></label><label>价值区% <input data-vp="va" type="number" min="50" max="95" step="1"></label><label>宽度% <input data-vp="widthPct" type="number" min="20" max="100" step="5"></label><label>锚边 <select data-vp="side"><option value="left">左</option><option value="right">右</option></select></label><label class="chk"><input data-vp="split" type="checkbox"> 涨跌量分色</label></div>`;
   DMT.addEventListener('pointerdown',e=>e.stopPropagation()); DMT.addEventListener('mousedown',e=>e.stopPropagation());
   DMT.addEventListener('click',e=>{ const b=e.target.closest('button'); const d=drById(DR.sel); if(!b||!d) return; const a=b.dataset.a;
     if(b.dataset.c){ DR.col=b.dataset.c; drSaveCfg(); drEdit(d,x=>x.color=b.dataset.c); DMT.querySelector('.dmt-pal').hidden=true; return; }
-    if(a==='col'){ const p=DMT.querySelector('.dmt-pal'); p.hidden=!p.hidden; } else if(a==='lw') drEdit(d,x=>x.lw=((x.lw||2)%4)+1); else if(a==='ls') drEdit(d,x=>x.ls=((x.ls||0)+1)%3);
-    else if(a==='ext') drEdit(d,x=>x.ext=!x.ext); else if(a==='lock') drEdit(d,x=>x.lock=!x.lock); else if(a==='bell') drEdit(d,x=>x.alert=!x.alert); else if(a==='del') drDel(); else if(a==='txt'){ const s=prompt('编辑文字',d.text); if(s!=null&&s.trim()) drEdit(d,x=>x.text=s.trim()); } });
+    if(a==='col'){ const p=DMT.querySelector('.dmt-pal'); p.hidden=!p.hidden; DMT.querySelector('.dmt-vp').hidden=true; } else if(a==='lw') drEdit(d,x=>x.lw=((x.lw||2)%4)+1); else if(a==='ls') drEdit(d,x=>x.ls=((x.ls||0)+1)%3);
+    else if(a==='ext') drEdit(d,x=>{ if(x.type==='vp') x.extendPoc=!x.extendPoc; else x.ext=!x.ext; }); else if(a==='vpset'){ const p=DMT.querySelector('.dmt-vp'); p.hidden=!p.hidden; DMT.querySelector('.dmt-pal').hidden=true; }
+    else if(a==='lock') drEdit(d,x=>x.lock=!x.lock); else if(a==='bell') drEdit(d,x=>x.alert=!x.alert); else if(a==='del') drDel(); else if(a==='txt'){ const s=prompt('编辑文字',d.text); if(s!=null&&s.trim()) drEdit(d,x=>x.text=s.trim()); } });
+  DMT.querySelector('.dmt-vp').addEventListener('change',e=>{ const d=drById(DR.sel); if(!d||d.type!=='vp') return; const el=e.target, k=el.dataset.vp; if(!k) return;
+    drEdit(d,x=>{ if(k==='rows') x.rows=Math.max(8,Math.min(80,+el.value||24)); else if(k==='va') x.va=Math.max(50,Math.min(95,+el.value||70)); else if(k==='widthPct') x.widthPct=Math.max(20,Math.min(100,+el.value||80)); else if(k==='side') x.side=el.value==='right'?'right':'left'; else if(k==='split') x.split=!!el.checked; FRVC.delete(x.id); }); });
   addEventListener('pointermove',drMoveG); addEventListener('pointerup',drUpG); addEventListener('pointercancel',drUpG);
   addEventListener('keydown',e=>{ if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')) return; const mod=e.ctrlKey||e.metaKey;
     if(mod&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); e.shiftKey?drRedo():drUndo(); return; } if(mod&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); drRedo(); return; }
@@ -991,9 +1032,10 @@ async function alSend(text,only){ const out=[], tit='vp-app 提醒';
 function alFire(key,text){ const t=nowS(), last=AS.cd.get(key); if(last&&t-last<ACD) return false; AS.cd.set(key,t);
   ALL.unshift({t,text}); ALL.length=Math.min(ALL.length,50); try{ localStorage.setItem(ALOG,JSON.stringify(ALL)); }catch(e){} alLogUi(); alSend(text); return true; }
 function drLevel(d,t){ if(d.type==='hl') return d.pts[0].p; if(d.type==='hr') return t>=d.pts[0].t?d.pts[0].p:null;
+  if(d.type==='vp'){ const p=frvpProf(d); return p?p.pocP:null; }
   if((d.type==='tl'||d.type==='ray')&&d.pts.length===2){ const [a,b]=d.pts; if(a.t===b.t) return null; const v=a.p+(b.p-a.p)*(t-a.t)/(b.t-a.t), lo=Math.min(a.t,b.t), hi=Math.max(a.t,b.t);
     if(d.type==='ray') return (b.t>a.t?t>=a.t:t<=a.t)?v:null; return t>=lo&&(t<=hi||d.ext)?v:null; } return null; }
-const ALT=['hl','hr','tl','ray'];
+const ALT=['hl','hr','tl','ray','vp'];
 // 价格穿越：每次实时 1 分钟推送调用一次（全局一次，不按窗口，所以两个窗口不会重复）
 function alPrice(c){ const p=AS.prev; AS.prev=c; if(p==null||p===c) return; const t=nowS(), X=L=>L!=null&&(p-L)*(c-L)<=0&&p!==L;
   const up=c>p?'上穿':'下穿';
@@ -1035,7 +1077,7 @@ async function boot(){
   try{ const [m]=await Promise.all([latest('1m',300),loadWin(WH),loadWin(WL)]); M1.bars=merge(m,M1.bars); M1.ver++; if(M1.bars.length) price(M1.bars[M1.bars.length-1].c); }
   catch(e){ status('载入失败：'+e.message); console.warn(e); }
   READY=true; connect(); status(''); ensure(); }
-window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,onBar,alTick,alFire,get AL(){return AL;},AS,get ALL(){return ALL;},drLevel,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},pdhGet,VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById};
+window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,onBar,alTick,alFire,get AL(){return AL;},AS,get ALL(){return ALL;},drLevel,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},pdhGet,VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById,frvpProf,frvpRange};
 boot();
 
 </script>
