@@ -259,6 +259,7 @@ body.mx main{grid-template-columns:40px 1fr}
       <div class="rowi"><label for="c_smcBos">BOS / CHoCH 线</label><span class="sw"><input type="checkbox" id="c_smcBos" data-k="smcBos"><i></i></span></div>
       <div class="rowi"><label for="c_fvg">FVG 缺口框（= 顶栏 FVG 按钮，SMC 关也能显示）</label><span class="sw"><input type="checkbox" id="c_fvg" data-k="fvg"><i></i></span></div>
       <div class="rowi"><label for="c_smcSet">入场计划 + 统计</label><span class="sw"><input type="checkbox" id="c_smcSet" data-k="smcSet"><i></i></span></div>
+      <div class="rowi"><label>SMC 字体大小（px）</label><span class="step"><button data-d="-1" data-f="smcFont" aria-label="A-">−</button><input id="c_smcFont" data-k="smcFont" type="number" min="9" max="24" step="1" inputmode="numeric"><button data-d="1" data-f="smcFont" aria-label="A+">+</button></span></div>
       <div class="rowi"><label for="c_smcMid">用 FVG 50% 中点入场（关 = 近端边）</label><span class="sw"><input type="checkbox" id="c_smcMid" data-k="smcMid"><i></i></span></div>
       <div class="rowi"><label>FVG 最小缺口 %（FVG 框和 SMC 共用）</label><span class="step"><button data-d="-0.01" data-f="fvgMin">−</button><input id="c_fvgMin" data-k="fvgMin" type="number" min="0.01" max="1" step="0.01" inputmode="decimal"><button data-d="0.01" data-f="fvgMin">+</button></span></div>
       <div class="rowi"><label>止损缓冲 %</label><span class="step"><button data-d="-0.01" data-f="slBuf">−</button><input id="c_slBuf" data-k="slBuf" type="number" min="0" max="0.5" step="0.01" inputmode="decimal"><button data-d="0.01" data-f="slBuf">+</button></span></div>
@@ -394,8 +395,8 @@ const SYM='BTC-USDT-SWAP', API='https://www.okx.com/api/v5/', TZ=8*3600, ct=t=>t
 const SEC={'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1H':3600}, LTFS=['1m','3m','5m','15m','30m'];
 const TFN={'1m':'1 分钟','3m':'3 分钟','5m':'5 分钟','15m':'15 分钟','30m':'30 分钟'}, TFS={'1m':'1分','3m':'3分','5m':'5分','15m':'15分','30m':'30分'};
 const SPACING={'1m':4,'3m':6,'5m':9,'15m':14,'30m':22};
-const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24,pdh:true,fvg:true,lv:true,max:null};
-const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10],fvgMin:[0.01,1],slBuf:[0,0.5],tp1:[0.5,5],tp2:[0.5,10],smcExp:[3,200]};
+const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24,pdh:true,fvg:true,lv:true,smcFont:14,max:null};
+const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10],fvgMin:[0.01,1],slBuf:[0,0.5],tp1:[0.5,5],tp2:[0.5,10],smcExp:[3,200],smcFont:[9,24]};
 const DEC={fvgMin:2,slBuf:2,tp1:1,tp2:1}, rnd=(k,v)=>{ const f=10**(DEC[k]||0); return Math.round(v*f)/f; };
 const FONT='-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang SC",system-ui,sans-serif';
 const p2=n=>String(n).padStart(2,'0');
@@ -600,15 +601,16 @@ function fvgDraw(w,u,a,z,Y,pw){ w.fvgN=0; w.fvgOpen=0; const R=smcGet(w); if(!R)
     const col=f.dir>0?T.up:T.dn, al=e!=null?(T.dark?.07:.05):f.mit!=null?(T.dark?.13:.10):(T.dark?.26:.18), top=Math.min(y1,y2), h=Math.max(1,Math.abs(y2-y1)), wd=Math.max(1,x2-x1+sp/2);
     u.fillStyle=hexA2(col,al); u.fillRect(x1-sp/2,top,wd,h);
     if(e==null){ u.strokeStyle=hexA2(col,f.mit==null?.45:.25); u.lineWidth=1; u.strokeRect(Math.round(x1-sp/2)+.5,Math.round(top)+.5,Math.max(1,Math.round(wd)),Math.max(1,Math.round(h)));
-      if(h>=9&&wd>40){ u.font='600 9px '+FONT; u.textAlign='right'; u.textBaseline='middle'; u.fillStyle=hexA2(col,.8); u.fillText('FVG',Math.min(pw,x2)-4,top+h/2); u.textBaseline='alphabetic'; u.textAlign='left'; } }
+      const fsF=CFG.smcFont||14; if(h>=fsF*.7&&wd>fsF*3){ u.font='700 '+fsF+'px '+FONT; u.textAlign='right'; u.textBaseline='middle'; u.fillStyle=hexA2(col,.85); u.fillText('FVG',Math.min(pw,x2)-4,top+h/2); u.textBaseline='alphabetic'; u.textAlign='left'; } }
     w.fvgN++; } }
 function smcDraw(w,u,o,a,z,Y,pw,ph){ const EN=T.dark?'#ff9f0a':'#ff9500', R=smcGet(w); w.smN={b:0,f:0,s:0}; if(!R) return; const ts=w.chart.timeScale(), X=i=>ts.logicalToCoordinate(i), last=R.n-1;
   const sp=Math.max(1,(X(1)??1)-(X(0)??0)), halo=T.dark?'rgba(0,0,0,.75)':'rgba(255,255,255,.88)';
-  const txt=(t,x,y,col,al)=>{ o.textAlign=al||'center'; o.lineWidth=3; o.strokeStyle=halo; o.strokeText(t,x,y); o.fillStyle=col; o.fillText(t,x,y); };
-  o.font='600 9.5px '+FONT; o.lineJoin='round';
+  const fs=CFG.smcFont||14, dy=Math.round(fs*.42), dy2=Math.round(fs*1.05), lw=Math.max(2.5,fs*.22), minL=Math.max(40,fs*3.2);
+  const txt=(t,x,y,col,al)=>{ o.textAlign=al||'center'; o.lineWidth=lw; o.strokeStyle=halo; o.strokeText(t,x,y); o.fillStyle=col; o.fillText(t,x,y); };
+  o.font='700 '+fs+'px '+FONT; o.lineJoin='round';
   if(CFG.smcBos){ for(const b of R.breaks){ if(b.k<a-1||b.i>z+1) continue; const x1=X(b.i), x2=X(b.k), y=Y(b.p); if(x1==null||x2==null||y==null) continue; const col=b.dir>0?T.up:T.dn, ch=b.type==='CHoCH';
       o.save(); o.strokeStyle=col; o.globalAlpha=ch?.95:.75; o.lineWidth=ch?1.5:1; o.setLineDash(ch?[5,3]:[3,3]); o.beginPath(); o.moveTo(x1,Math.round(y)+.5); o.lineTo(x2,Math.round(y)+.5); o.stroke(); o.restore();
-      txt(b.type,(x1+x2)/2,b.dir>0?y-4:y+11,col); w.smN.b++; } }
+      txt(b.type,(x1+x2)/2,b.dir>0?y-dy:y+dy2,col); w.smN.b++; } }
   if(CFG.smcSet){ for(const S of R.setups){ const end=S.exitK!=null?S.exitK:S.st==='wait'?Math.min(S.k+CFG.smcExp,last+CFG.smcExp):last+2; if(end<a-1||S.k>z+1) continue;
       const x1=X(S.k), x2=X(end), ye=Y(S.entry), ys=Y(S.sl), y1=Y(S.tp1), y2=Y(S.tp2); if(x1==null||x2==null||ye==null||ys==null||y2==null) continue;
       const nofill=S.fillK==null, dim=S.st==='inv'||S.st==='exp', L=x2-x1; o.save(); if(dim) o.globalAlpha=.45;
@@ -618,9 +620,9 @@ function smcDraw(w,u,o,a,z,Y,pw,ph){ const EN=T.dark?'#ff9f0a':'#ff9500', R=smcG
       o.setLineDash([]); const d=S.dir, mk=X(S.k); o.fillStyle=d>0?T.up:T.dn; o.beginPath(); const my=d>0?Y(Math.min(...w.bars.slice(S.k,S.k+1).map(b=>b.l)))+10:Y(Math.max(...w.bars.slice(S.k,S.k+1).map(b=>b.h)))-10;
       if(d>0){ o.moveTo(mk,my-5); o.lineTo(mk-4.5,my+3); o.lineTo(mk+4.5,my+3); } else { o.moveTo(mk,my+5); o.lineTo(mk-4.5,my-3); o.lineTo(mk+4.5,my-3); } o.fill();
       if(S.fillK!=null){ const fx=X(S.fillK); if(fx!=null){ o.fillStyle=EN; o.beginPath(); o.arc(fx,ye,3,0,7); o.fill(); o.strokeStyle=halo; o.lineWidth=1.5; o.stroke(); } }
-      if(L>46&&!dim){ txt((d>0?'多 ':'空 ')+fmtP(S.entry),x1+3,d>0?ye-4:ye+11,EN,'left'); txt('SL',x1+3,d>0?ys+11:ys-4,T.dn,'left'); txt('TP1',x1+3,d>0?y1-4:y1+11,T.up,'left'); txt('TP2',x1+3,d>0?y2-4:y2+11,T.up,'left'); }
-      else if(dim) txt((d>0?'多 ':'空 ')+SMC_ST[S.st],x1+3,d>0?ye-4:ye+11,T.text,'left');
-      if(S.exitK!=null&&!dim){ const ex=X(S.exitK); if(ex!=null) txt(fR(S.r),ex+3,(S.r>0?Math.min(ye,y2)-4:Math.max(ye,ys)+11),S.r>0?T.up:T.dn,'left'); }
+      if(L>minL&&!dim){ txt((d>0?'多 ':'空 ')+fmtP(S.entry),x1+3,d>0?ye-dy:ye+dy2,EN,'left'); txt('SL',x1+3,d>0?ys+dy2:ys-dy,T.dn,'left'); txt('TP1',x1+3,d>0?y1-dy:y1+dy2,T.up,'left'); txt('TP2',x1+3,d>0?y2-dy:y2+dy2,T.up,'left'); }
+      else if(dim) txt((d>0?'多 ':'空 ')+SMC_ST[S.st],x1+3,d>0?ye-dy:ye+dy2,T.text,'left');
+      if(S.exitK!=null&&!dim){ const ex=X(S.exitK); if(ex!=null) txt(fR(S.r),ex+3,(S.r>0?Math.min(ye,y2)-dy:Math.max(ye,ys)+dy2),S.r>0?T.up:T.dn,'left'); }
       o.restore(); w.smN.s++; } }
   o.textAlign='left'; }
 // 市场结构 HH / HL / LH / LL：只用已收盘K线（实时：最新一根在走不算；回放：按回放时钟）
