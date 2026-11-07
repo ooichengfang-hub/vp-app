@@ -112,7 +112,8 @@ body.rp-on main{padding-bottom:128px}
 @media (max-width:820px){
   main{grid-template-columns:1fr;height:auto;gap:12px;padding:12px max(12px,env(safe-area-inset-right)) 20px max(12px,env(safe-area-inset-left))}
   .card{height:max(320px,calc((100svh - 100px)/2));min-height:320px}
-  .bar{gap:10px;padding:8px max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left))}
+  .bar{gap:10px;padding:8px max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left));overflow-x:auto}
+  .bar .icon{flex:none}
   #last{font-size:19px}.brand b{font-size:15px}.px{margin-left:6px}
   #st{display:none}
   .bar .icon{width:32px;height:32px}.bar{gap:8px}
@@ -152,6 +153,21 @@ body.mx .ch .mx .ex{display:none}body.mx .ch .mx .rs{display:block}body.mx .ch .
 body.mx-h1 #w2,body.mx-ltf #w1{display:none}
 body.mx main{grid-template-columns:40px 1fr}
 @media (max-width:820px){body.mx main{grid-template-columns:1fr}body.mx .card{height:max(420px,calc(100svh - 150px))}}
+.icon.liq{font-size:11px;letter-spacing:-.4px}
+.liqrow{position:relative;height:52px;flex:none;margin:0 4px 8px;border-top:.5px solid var(--line);background:var(--card)}
+.liqrow[hidden]{display:none!important}
+.liqrow canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+@media (max-width:820px){
+  .bar{flex-wrap:wrap;row-gap:6px;overflow:visible}
+  .sp{display:none}
+  .liqrow{height:44px;margin-bottom:6px}
+}
+.ch{flex-wrap:wrap}
+.liqsrc{flex:1 0 100%;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:10px;line-height:1.35;color:var(--sub);padding:1px 0 3px;min-width:0}
+.liqsrc[hidden]{display:none!important}
+.liqsrc .dot{width:6px;height:6px;border-radius:50%;background:var(--ter);flex:none;align-self:center}
+.liqsrc.on .dot{background:var(--up)}
+.liqsrc .lab{color:var(--text);font-weight:500}
 </style>
 </head>
 <body>
@@ -166,6 +182,7 @@ body.mx main{grid-template-columns:40px 1fr}
   <button class="icon ms smc" id="pdhBtn" aria-label="前一天高低点 PDH/PDL" title="前一天高点 / 低点 PDH / PDL（UTC+8 分日，开/关）">PDH</button>
   <button class="icon ms smc" id="fvgBtn" aria-label="FVG 缺口" title="FVG 公平价值缺口（多 绿 / 空 红，开/关）">FVG</button>
   <button class="icon ms smc" id="lvBtn" aria-label="缩量竖线" title="小周期：成交量低于 MA20 的K线画红色竖线（开/关）">V&lt;MA</button>
+  <button class="icon ms smc liq" id="liqBtn" aria-label="实际观察到的多空清算量" title="币安 U 本位 BTCUSDT 已经发生的强平快照。红＝多头清算，绿＝空头清算。Binance BTCUSDT · 官方快照 · 非完整总量（开/关）">清算</button>
   <button class="icon" id="alBtn" aria-label="提醒" title="提醒（Telegram / iPhone / 浏览器）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></button>
   <button class="icon" id="rpBtn" aria-label="回放" title="K线回放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg></button>
   <button class="icon" id="setBtn" aria-label="设置" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
@@ -173,12 +190,14 @@ body.mx main{grid-template-columns:40px 1fr}
 <main>
   <nav class="tvb" id="tvb" aria-label="绘图工具"></nav>
   <section class="card" id="w1">
-    <div class="ch"><h2>1 小时</h2><span class="note" title="成交量分布由 1 分钟K线估算（按每根K线高低区间平均分配成交额），不是逐笔成交">每根K线附该小时成交量分布</span><button class="mx" data-mx="h1" aria-label="放大窗口" title="放大 / 还原（双击标题栏，Esc 还原）"><svg class="ex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><svg class="rs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg></button></div>
+    <div class="ch"><h2>1 小时</h2><span class="note" title="成交量分布由 1 分钟K线估算（按每根K线高低区间平均分配成交额），不是逐笔成交">每根K线附该小时成交量分布</span><button class="mx" data-mx="h1" aria-label="放大窗口" title="放大 / 还原（双击标题栏，Esc 还原）"><svg class="ex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><svg class="rs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg></button><div class="liqsrc" id="liqSrc1" hidden><i class="dot"></i><span class="st"></span><span class="lab">Binance BTCUSDT · 官方快照 · 非完整总量</span></div></div>
     <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
+    <div class="liqrow" id="liqRow1" hidden><canvas></canvas></div>
   </section>
   <section class="card" id="w2">
-    <div class="ch"><h2 id="w2t">5 分钟</h2><div class="seg" id="tfSeg"></div><button class="mx" data-mx="ltf" aria-label="放大窗口" title="放大 / 还原（双击标题栏，Esc 还原）"><svg class="ex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><svg class="rs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg></button></div>
+    <div class="ch"><h2 id="w2t">5 分钟</h2><div class="seg" id="tfSeg"></div><button class="mx" data-mx="ltf" aria-label="放大窗口" title="放大 / 还原（双击标题栏，Esc 还原）"><svg class="ex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></svg><svg class="rs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg></button><div class="liqsrc" id="liqSrc2" hidden><i class="dot"></i><span class="st"></span><span class="lab">Binance BTCUSDT · 官方快照 · 非完整总量</span></div></div>
     <div class="body"><canvas class="vp"></canvas><div class="chart"></div><canvas class="ov"></canvas><canvas class="dw"></canvas><div class="lg"></div><div class="cd"></div></div>
+    <div class="liqrow" id="liqRow2" hidden><canvas></canvas></div>
   </section>
 </main>
 <div class="rp" id="rp" hidden>
@@ -274,6 +293,13 @@ body.mx main{grid-template-columns:40px 1fr}
       <div class="rowi"><label for="c_cd">在最新价下方显示</label><span class="sw"><input type="checkbox" id="c_cd" data-k="cd"><i></i></span></div>
     </div>
     <div class="foot">每个窗口倒数到自己周期的K线收盘（右窗口跟随所选周期），最后 10 秒变橙色。</div>
+    <div class="grp-t">实际清算量（观察到的）</div>
+    <div class="grp">
+      <div class="rowi"><label for="c_liq">在两个窗口底部显示</label><span class="sw"><input type="checkbox" id="c_liq" data-k="liq"><i></i></span></div>
+    </div>
+    <div class="foot">红柱是多头被强平（币安 SELL），绿柱是空头被强平（币安 BUY），单位是已成交名义 USDT（成交数量 z × 成交均价 ap）。未成交的委托量不算。柱子跟各自窗口的周期对齐，默认 5 分钟和 1 小时；右边这根还在走，会标成进行中。K线仍是 OKX BTC-USDT-SWAP，清算只按时间对齐，不是 OKX 的清算，也不是两家交易所相加。</div>
+    <div class="foot">数据来自币安 U 本位公开流 wss://fstream.binance.com/market/ws/btcusdt@forceOrder，不需要 API Key。官方文档写明：2026-04-14 起每个品种每 1000 毫秒最多推送一笔「最大的」强平快照（更早的文档写的是「最新的一笔」）；2021-04-27 起就不是逐笔。所以即使一直连着，也不是全市场清算总量，对不齐 CoinGlass 那种全历史。这里不用 CoinGlass，也不回补它的数据。推送里没有订单号：完全相同的快照会丢掉；5 秒内委托价和委托量没变、成交量只增不减的，只加上新增的 z×ap。这可能把极少见的同价同量新订单当成同一笔，断线超过 5 秒后也可能把同一笔的累计成交再记一次。</div>
+    <div class="foot">打开这个页面前的区间是空的，不会编一段历史。断线、页面休眠、以及关掉浏览器之后，都留成中断，不是 0。连着但没有推送，只表示没观察到快照，不保证市场上真的没有清算。关掉「清算」按钮或放大另一个窗口，都不会停止接收。记录只留在这台浏览器里（大约 7 天或 2 万条）。标签页被系统杀掉或浏览器关掉，就不再记录。</div>
     <div class="grp-t">联动</div>
     <div class="grp">
       <div class="rowi"><label for="c_sync">两窗口十字线同步</label><span class="sw"><input type="checkbox" id="c_sync" data-k="sync"><i></i></span></div>
@@ -284,6 +310,7 @@ body.mx main{grid-template-columns:40px 1fr}
   </div>
 </div>
 <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="liq.js"></script>
 <script>
 // 每小时成交量分布（VP）核心：纯函数，浏览器和 node 单元测试共用
 const VPC=(function(){
@@ -396,7 +423,7 @@ const SYM='BTC-USDT-SWAP', API='https://www.okx.com/api/v5/', TZ=8*3600, ct=t=>t
 const SEC={'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1H':3600}, LTFS=['1m','3m','5m','15m','30m'];
 const TFN={'1m':'1 分钟','3m':'3 分钟','5m':'5 分钟','15m':'15 分钟','30m':'30 分钟'}, TFS={'1m':'1分','3m':'3分','5m':'5分','15m':'15分','30m':'30分'};
 const SPACING={'1m':4,'3m':6,'5m':9,'15m':14,'30m':22};
-const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24,pdh:true,fvg:true,lv:true,smcFont:14,max:null};
+const M1_CAP_DAYS=14, KEY='vp2_cfg', DEF={tf:'5m',vp:true,rows:24,va:70,vaLines:true,ma:true,maN:20,sync:true,cd:true,vt:true,vtSpark:false,vtThr:15,ms:true,msN:3,msLine:true,smc:true,smcBos:true,smcFvg:true,smcSet:true,smcMid:false,fvgMin:0.05,slBuf:0.05,tp1:1.5,tp2:2,smcExp:24,pdh:true,fvg:true,lv:true,liq:true,smcFont:14,max:null};
 const LIMS={rows:[8,80],va:[50,95],maN:[2,200],vtThr:[5,60],msN:[2,10],fvgMin:[0.01,1],slBuf:[0,0.5],tp1:[0.5,5],tp2:[0.5,10],smcExp:[3,200],smcFont:[9,24]};
 const DEC={fvgMin:2,slBuf:2,tp1:1,tp2:1}, rnd=(k,v)=>{ const f=10**(DEC[k]||0); return Math.round(v*f)/f; };
 const FONT='-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang SC",system-ui,sans-serif';
@@ -409,7 +436,7 @@ const hourOf=t=>Math.floor(t/3600)*3600;
 
 // ---------- 设置 ----------
 function loadCfg(){ let c={}; try{ c=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){} c=Object.assign({},DEF,c); if(!LTFS.includes(c.tf)) c.tf=DEF.tf;
-  for(const k in LIMS){ const v=+c[k]; c[k]=rnd(k,Math.min(LIMS[k][1],Math.max(LIMS[k][0],isFinite(v)&&c[k]!==null&&c[k]!==''?v:DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine','smc','smcBos','smcFvg','smcSet','smcMid','pdh','fvg','lv']) c[k]=!!c[k]; if(!['h1','ltf'].includes(c.max)) c.max=null; return c; }
+  for(const k in LIMS){ const v=+c[k]; c[k]=rnd(k,Math.min(LIMS[k][1],Math.max(LIMS[k][0],isFinite(v)&&c[k]!==null&&c[k]!==''?v:DEF[k]))); } for(const k of ['vp','vaLines','ma','sync','cd','vt','vtSpark','ms','msLine','smc','smcBos','smcFvg','smcSet','smcMid','pdh','fvg','lv','liq']) c[k]=!!c[k]; if(!['h1','ltf'].includes(c.max)) c.max=null; return c; }
 let CFG=loadCfg(), CFGV=1; const saveCfg=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(CFG)); }catch(e){} };
 
 // ---------- OKX REST（限流 8 次/秒） ----------
@@ -527,7 +554,7 @@ function bars(x,w,p,x0,maxLen,alpha){ const Y=v=>w.cs.priceToCoordinate(v), vp=T
 function hline(x,y,x0,x1,col,wid,dash){ if(y==null) return; x.strokeStyle=col; x.lineWidth=wid; x.setLineDash(dash||[]); x.beginPath(); x.moveTo(x0,Math.round(y)+0.5); x.lineTo(x1,Math.round(y)+0.5); x.stroke(); x.setLineDash([]); }
 function draw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.chart.timeScale(), vr=ts.getVisibleLogicalRange(), bs=w.bars;
   const ref=bs.length?bs[bs.length-1].c:1, sp=ts.options().barSpacing;
-  const sig=[W0,H0,vr?vr.from.toFixed(2)+','+vr.to.toFixed(2):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),sp,w.ver,DV(),CFGV,T.dark,Math.floor(NOW()/60),w.sync?w.sync.i+':'+w.sync.ts:'-',WH&&WH.ver,WH&&WH.bars.length,CFG.pdh].join('|');
+  const sig=[W0,H0,vr?vr.from.toFixed(2)+','+vr.to.toFixed(2):'',w.cs.priceToCoordinate(ref),w.cs.priceToCoordinate(ref*1.01),sp,w.ver,DV(),CFGV,T.dark,Math.floor(NOW()/60),w.sync?w.sync.i+':'+w.sync.ts:'-',WH&&WH.ver,WH&&WH.bars.length,CFG.pdh,CFG.liq?1:0,LQ?LQ.ver:0,LQ?LQ.conn:''].join('|');
   if(sig===w.sig) return; w.sig=sig;
   const u=fit(w.cvU,W0,H0), o=fit(w.cvO,W0,H0); w.drawn=0; w.vtN=0; w.vtL=0; w.msN=0; w.smN={b:0,f:0,s:0}; PILLS=[]; if(!vr||!bs.length) return;
   const pw=ts.width(), ph=H0-ts.height(); for(const x of [u,o]){ x.save(); x.beginPath(); x.rect(0,0,pw,ph); x.clip(); }
@@ -561,6 +588,7 @@ function draw(w){ const W0=w.body.clientWidth, H0=w.body.clientHeight, ts=w.char
   if(CFG.smc) smcDraw(w,u,o,a,z,Y,pw,ph);
   if(CFG.ms) msDraw(w,o,a,z,Y,pw,ph);
   pdhDraw(w,o,Y,pw,ph);
+  liqDraw(w);
   for(const x of [u,o]) x.restore(); }
 // 缩量竖线（只画小周期窗口）：已收盘K线 成交量 < SMA20(含本根，与成交量 MA 同算法) → 细红竖线
 const LV_N=20;
@@ -641,9 +669,11 @@ function msDraw(w,o,a,z,Y,pw,ph){ const sw=msGet(w), ts=w.chart.timeScale(); w.m
   o.textAlign='left'; }
 function legend(w){ w.lgDirty=false; const bs=w.bars; if(!bs.length){ w.lg.textContent=''; return; }
   const i=w.hov!=null&&w.hov>=0&&w.hov<bs.length?w.hov:bs.length-1, b=bs[i], m=maAt(w,i), H=hourOf(b.ts), p=CFG.vp?prof(H):null, cls=b.c>=b.o?'up':'dn';
+  const lp=CFG.liq?liqPhrase(liqAt(w,i)):'';
   w.lg.innerHTML=`<div><span class="t">${tStr(b.ts)}</span>开 <b>${fmtP(b.o)}</b> 高 <b>${fmtP(b.h)}</b> 低 <b>${fmtP(b.l)}</b> 收 <b class="${cls}">${fmtP(b.c)}</b></div>`+
     `<div>量 <b>${fmtV(b.v)}</b>${m!=null?` · MA${CFG.maN} <b class="acc">${fmtV(m)}</b>`:''}</div>`+
-    (CFG.vt?vtLeg(trend(H)):'')+smcLeg(w)+(p?`<div>${hh(H)}–${hh(H+3600)} · POC <b class="acc">${fmtP(p.pocP)}</b> · VAH <b>${fmtP(p.vah)}</b> · VAL <b>${fmtP(p.val)}</b></div>`:''); }
+    (CFG.vt?vtLeg(trend(H)):'')+smcLeg(w)+(p?`<div>${hh(H)}–${hh(H+3600)} · POC <b class="acc">${fmtP(p.pocP)}</b> · VAH <b>${fmtP(p.vah)}</b> · VAL <b>${fmtP(p.val)}</b></div>`:'')+
+    (lp?`<div>${lp}</div>`:''); }
 function vtLeg(t){ if(!t||t.dir==null) return t&&t.live?`<div>量能 · 进行中（${t.n}/12 段完成，至少需要 2 段）</div>`:''; const c=t.dir===1?'up':t.dir===-1?'dn':'';
   const sl=t.slope==null?'':` · 斜率 <b>${t.slope>=0?'+':''}${t.slope.toFixed(1)}%/5分</b>`;
   return t.live?`<div>量能 <b class="${c}">${vtArr(t.dir)} ${vtName(t.dir)}</b> 进行中（${t.n}/12 段）· 近段 vs 早段 <b class="${c}">${sgn(t.half)}</b>${sl} · 同时段 vs 上小时 <b>${sgn(t.pace)}</b></div>`
@@ -655,6 +685,79 @@ function countdown(w){ const el=w.cd, bs=w.bars; if(!CFG.cd||!bs.length){ if(el.
   const txt=fmtCd(rem), warn=rem<=10, bg=b.c>=b.o?T.up:T.dn, k=[txt,warn,bg,Math.round(y),pw,w.body.clientWidth].join('|'); if(k===el._k) return; el._k=k;
   el.textContent=txt; el.classList.toggle('warn',warn); el.style.background=bg; el.style.left=(pw+1)+'px'; el.style.width=Math.max(0,w.body.clientWidth-pw-2)+'px'; el.style.top=Math.round(y+9)+'px'; el.style.display='block'; el.dataset.rem=Math.floor(rem); }
 function loop(){ for(const w of WS){ try{ draw(w); drDraw(w); if(w.lgDirty) legend(w); countdown(w); }catch(e){ console.error(e); } } requestAnimationFrame(loop); }
+
+// ---------- 实际清算量：币安公开 forceOrder 快照。隐藏图层、放大窗口、回放都不停止接收 ----------
+const LIQAPI=window.LIQ||null;
+let LQ=LIQAPI?LIQAPI.emptyState(Date.now()):null, liqSock=null, liqTry=0, liqTimer=0, liqSaveT=0, liqBeatAt=Date.now(), liqReady=false;
+const LIQ_LS='vp2_liq';
+function liqPhrase(b){ if(!b||b.status==='future') return '';
+  const amt=`多 <b class="dn">${fmtV(b.long)}</b> · 空 <b class="up">${fmtV(b.short)}</b> USDT`;
+  if(b.status==='missing') return '清算 · 此区间没有记录（不回补历史）';
+  if(b.status==='gap') return '清算 · '+(b.inProgress?'进行中 · ':'')+'连接中断或页面休眠，这段不补，也不当成 0';
+  if(b.status==='partial') return '清算 · '+(b.inProgress?'进行中 · ':'')+'只覆盖了部分时间 · '+amt;
+  if(b.status==='zero') return '清算 · 观察到 0（不代表实际没有清算）';
+  if(b.status==='open') return b.n?`清算 · 进行中 · ${amt}（不是完整总量）`:'清算 · 进行中 · 观察到 0（不代表实际没有清算）';
+  return `清算 · ${amt}`; }
+function liqAt(w,i){ if(!LIQAPI||!LQ||!CFG.liq||!w.bars[i]) return null; const S=SEC[w.tf]*1000, t0=w.bars[i].ts*1000; return LIQAPI.bucket(LQ,t0,t0+S,NOW()*1000); }
+function liqHatch(x,x0,y0,wdt,h){ x.save(); x.beginPath(); x.rect(x0,y0,wdt,h); x.clip(); x.strokeStyle=T.dark?'rgba(235,235,245,.38)':'rgba(60,60,67,.34)'; x.lineWidth=1;
+  for(let i=-h;i<wdt+h;i+=4){ x.beginPath(); x.moveTo(x0+i,y0+h); x.lineTo(x0+i+h,y0); x.stroke(); } x.restore(); }
+function liqDraw(w){ const row=w.el.querySelector('.liqrow'); w.liqN=0; if(!row) return; row.hidden=!CFG.liq; if(!CFG.liq||!LIQAPI||!LQ) return;
+  const cv=row.querySelector('canvas'), ts=w.chart.timeScale(), bs=w.bars, vr=ts.getVisibleLogicalRange();
+  const W0=row.clientWidth, H0=row.clientHeight; if(W0<8||H0<8) return; const x=fit(cv,W0,H0); if(!vr||!bs.length) return;
+  const pw=ts.width(), sp=ts.options().barSpacing, a=Math.max(0,Math.floor(vr.from)), z=Math.min(bs.length-1,Math.ceil(vr.to)), S=SEC[w.tf], view=NOW()*1000, rows=[];
+  let max=1, any=false; for(let i=a;i<=z;i++){ const b=LIQAPI.bucket(LQ,bs[i].ts*1000,(bs[i].ts+S)*1000,view); rows.push(b); if(b.long>0||b.short>0) any=true; if(b.long>max) max=b.long; if(b.short>max) max=b.short; }
+  x.fillStyle=T.dark?'rgba(255,255,255,.28)':'rgba(60,60,67,.28)'; x.fillRect(0,H0-1,pw,1);
+  if(any){ x.font='600 10px '+FONT; x.textAlign='right'; x.textBaseline='top'; x.fillStyle=T.text; x.fillText(fmtV(max)+' USDT',Math.max(36,pw-4),2); }
+  for(let k=0;k<rows.length;k++){ const b=rows[k], xc=ts.logicalToCoordinate(a+k); if(xc==null||b.status==='missing'||b.status==='future') continue;
+    const x0=xc-sp/2+0.5, bw=Math.max(1,sp-1); if(x0>pw||x0+bw<0) continue;
+    const top=14, base=H0-3, room=Math.max(6,base-top);
+    if(b.status==='gap'||b.status==='partial'){ x.fillStyle=T.dark?'rgba(255,255,255,.1)':'rgba(60,60,67,.14)'; x.fillRect(x0,top,bw,base-top); liqHatch(x,x0,top,bw,base-top); }
+    const gap=Math.max(0.4,bw*0.08), hw=Math.max(0.8,(bw-gap)/2);
+    const hL=b.long>0?Math.max(2,b.long/max*room):0, hS=b.short>0?Math.max(2,b.short/max*room):0;
+    x.save(); x.globalAlpha=(b.status==='open'||b.status==='partial')?0.8:0.95;
+    if(hL){ x.fillStyle=T.dn; x.fillRect(x0,base-hL,hw,hL); }
+    if(hS){ x.fillStyle=T.up; x.fillRect(x0+hw+gap,base-hS,hw,hS); }
+    if(b.status==='zero'||(b.status==='open'&&!(b.long>0)&&!(b.short>0))){ x.globalAlpha=1; x.fillStyle=T.dark?'rgba(235,235,245,.55)':'rgba(60,60,67,.45)'; x.fillRect(x0,base,bw,1); }
+    if(b.inProgress){ x.globalAlpha=.8; x.strokeStyle=T.text; x.lineWidth=1; x.setLineDash([2,2]); x.strokeRect(Math.round(x0)+.5,top+.5,Math.max(1,bw-1),base-top-1); }
+    x.restore(); w.liqN++; }
+  x.globalAlpha=1; x.setLineDash([]); x.textAlign='left'; }
+function liqStatusText(){ if(!LQ) return '未连接'; const st=LQ.conn==='open'?'已连接':(liqTry?'重新连接中':'未连接'); const t0=LQ.startedAt?tStr(LQ.startedAt/1000):'—'; return st+' · 记录自 '+t0+' · 红多 / 绿空'; }
+function liqUi(){ const on=!!CFG.liq, b=$('liqBtn'); if(b){ b.classList.toggle('on',on); b.setAttribute('aria-pressed',on?'true':'false'); }
+  const st=liqStatusText();
+  for(const id of ['liqSrc1','liqSrc2']){ const el=$(id); if(!el) continue; el.hidden=!on; el.classList.toggle('on',!!(LQ&&LQ.conn==='open')); const s=el.querySelector('.st'); if(s) s.textContent=st; el.title=st+' · '+(LIQAPI?LIQAPI.SOURCE_LABEL:''); }
+  for(const id of ['liqRow1','liqRow2']){ const el=$(id); if(el) el.hidden=!on; }
+  if(typeof WS!=='undefined'&&WS) for(const w of WS){ w.sig=''; w.lgDirty=true; } }
+function liqTouch(){ if(typeof WS!=='undefined'&&WS) for(const w of WS){ w.sig=''; w.lgDirty=true; } liqUi(); }
+function liqPayload(){ if(!LIQAPI||!LQ) return null; const raw=LIQAPI.serialize(LQ); raw.seen=Date.now(); return raw; }
+function liqIdb(){ return new Promise((res,rej)=>{ if(typeof indexedDB==='undefined') return rej(new Error('no idb')); const r=indexedDB.open('vp2_liq',1);
+  r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function liqIdbSet(raw){ return liqIdb().then(db=>new Promise((res,rej)=>{ const tx=db.transaction('kv','readwrite'); tx.objectStore('kv').put(raw,'state'); tx.oncomplete=()=>{ try{ db.close(); }catch(e){} res(); }; tx.onerror=()=>rej(tx.error); })); }
+function liqIdbGet(){ return liqIdb().then(db=>new Promise((res,rej)=>{ const q=db.transaction('kv','readonly').objectStore('kv').get('state'); q.onsuccess=()=>{ try{ db.close(); }catch(e){} res(q.result||null); }; q.onerror=()=>rej(q.error); })); }
+async function liqSaveNow(){ if(!LQ) return false; const raw=liqPayload(); if(!raw) return false;
+  try{ let pack=raw, s=JSON.stringify(pack); if(s.length>1500000) pack=Object.assign({},raw,{events:raw.events.slice(-2000)}); localStorage.setItem(LIQ_LS,JSON.stringify(pack)); }catch(e){}
+  try{ await liqIdbSet(raw); }catch(e){} return true; }
+function liqScheduleSave(){ clearTimeout(liqSaveT); liqSaveT=setTimeout(()=>{ liqSaveNow(); },400); }
+async function liqLoad(){ let raw=null; try{ raw=await liqIdbGet(); }catch(e){}
+  if(!raw){ try{ raw=JSON.parse(localStorage.getItem(LIQ_LS)||'null'); }catch(e){ raw=null; } }
+  LQ=LIQAPI.hydrate(raw, Date.now()); if(!(LQ.startedAt>0)) LQ.startedAt=Date.now(); }
+function liqConnect(){ if(!LIQAPI||!LQ) return; if(liqSock&&(liqSock.readyState===0||liqSock.readyState===1)) return; let s;
+  try{ s=new WebSocket(LIQAPI.LIQ_URL); }catch(e){ return liqReconnect(); }
+  liqSock=s;
+  s.onopen=()=>{ liqTry=0; LIQAPI.coverOpen(LQ, Date.now()); LQ.ver++; liqTouch(); liqScheduleSave(); };
+  s.onmessage=e=>{ let r; try{ r=LIQAPI.ingest(LQ, e.data, Date.now()); }catch(err){ return; } if(r&&r.changed){ liqTouch(); liqScheduleSave(); } };
+  s.onerror=()=>{};
+  s.onclose=()=>{ if(liqSock!==s) return; liqSock=null; LIQAPI.coverClose(LQ, Date.now()); LQ.ver++; liqReconnect(); liqTouch(); liqScheduleSave(); }; }
+function liqReconnect(){ if(liqTimer||!LIQAPI) return; liqTry++; liqTimer=setTimeout(()=>{ liqTimer=0; liqConnect(); }, LIQAPI.backoffMs(liqTry)); }
+function liqMarkSleep(reopen){ if(!LIQAPI||!LQ) return; const now=Date.now(), jumped=now-liqBeatAt>5000; LIQAPI.coverClose(LQ, jumped?liqBeatAt:now);
+  if(reopen&&liqSock&&liqSock.readyState===1) LIQAPI.coverOpen(LQ, now); LQ.ver++; liqBeatAt=now; liqTouch(); liqSaveNow(); }
+function liqBeat(){ const now=Date.now(); if(now-liqBeatAt>5000) liqMarkSleep(true); liqBeatAt=now; }
+async function liqBoot(){ if(!LIQAPI) return; await liqLoad(); liqReady=true; liqConnect(); liqUi();
+  setInterval(liqBeat,1000);
+  window.addEventListener('pagehide',()=>liqMarkSleep(false));
+  window.addEventListener('freeze',()=>liqMarkSleep(false));
+  window.addEventListener('pageshow',e=>{ if(!e.persisted) return; liqBeatAt=Date.now(); if(!(liqSock&&liqSock.readyState===1)) liqConnect(); else { LIQAPI.coverOpen(LQ, Date.now()); LQ.ver++; liqTouch(); } });
+  document.addEventListener('resume',()=>{ liqBeatAt=Date.now(); if(liqSock&&liqSock.readyState===1){ LIQAPI.coverOpen(LQ, Date.now()); LQ.ver++; liqTouch(); } else liqConnect(); }); }
+function liqIngest(m,t){ if(!LIQAPI||!LQ) return null; const r=LIQAPI.ingest(LQ,m,t==null?Date.now():t); if(r&&r.changed){ liqTouch(); liqScheduleSave(); } return r; }
 
 // ---------- 实时 ----------
 let ws=null, pingT=0, retry=0, wsDown=false, open24=null;
@@ -677,7 +780,7 @@ function setTf(tf){ if(!LTFS.includes(tf)||tf===CFG.tf) return; const old=CFG.tf
   WL.bars=[]; render(WL); WL.chart.timeScale().applyOptions({barSpacing:SPACING[tf]}); if(RP.on){ WL.gen++; if(!RP.loading) rpRender(WL,true); rpUi(); return Promise.resolve(true); } return loadWin(WL).catch(e=>status('载入失败：'+e.message)); }
 function segUi(){ $('w2t').textContent=TFN[CFG.tf]; for(const b of $('tfSeg').children) b.classList.toggle('on',b.dataset.tf===CFG.tf); }
 function cfgUi(){ for(const el of document.querySelectorAll('[data-k]')){ const k=el.dataset.k; if(el.type==='checkbox') el.checked=!!CFG[k]; else el.value=CFG[k]; } }
-function applyCfg(k){ saveCfg(); if(k==='vtThr'){ CFGV++; TC.clear(); } if(k==='vt') for(const w of WS) w.chart.applyOptions(chartOpts(w.key)); if(k==='rows'||k==='va'||k==='vp'||k==='vaLines'){ CFGV++; PC.clear(); if(k==='vp'&&CFG.vp) ensure(); } if(k==='ms') msUi(); if(k==='smc') smcUi(); if(k==='pdh') pdhUi(); if(k==='fvg') fvgUi(); if(k==='lv') lvUi(); if(k==='sync'&&!CFG.sync){ clearSync(WH); clearSync(WL); } if(k==='ma'||k==='maN') for(const w of WS) setMa(w); for(const w of WS){ w.sig=''; w.lgDirty=true; } }
+function applyCfg(k){ saveCfg(); if(k==='vtThr'){ CFGV++; TC.clear(); } if(k==='vt') for(const w of WS) w.chart.applyOptions(chartOpts(w.key)); if(k==='rows'||k==='va'||k==='vp'||k==='vaLines'){ CFGV++; PC.clear(); if(k==='vp'&&CFG.vp) ensure(); } if(k==='ms') msUi(); if(k==='smc') smcUi(); if(k==='pdh') pdhUi(); if(k==='fvg') fvgUi(); if(k==='lv') lvUi(); if(k==='liq') liqUi(); if(k==='sync'&&!CFG.sync){ clearSync(WH); clearSync(WL); } if(k==='ma'||k==='maN') for(const w of WS) setMa(w); for(const w of WS){ w.sig=''; w.lgDirty=true; } }
 function smcUi(){ const b=$('smcBtn'); if(b){ b.classList.toggle('on',CFG.smc); b.setAttribute('aria-pressed',CFG.smc); } }
 function fvgUi(){ const b=$('fvgBtn'); if(b){ b.classList.toggle('on',CFG.fvg); b.setAttribute('aria-pressed',CFG.fvg); } }
 function pdhUi(){ const b=$('pdhBtn'); if(b){ b.classList.toggle('on',CFG.pdh); b.setAttribute('aria-pressed',CFG.pdh); } }
@@ -686,10 +789,10 @@ function setNum(k,v){ const [lo,hi]=LIMS[k]; v=rnd(k,Math.min(hi,Math.max(lo,+v)
 function initUi(){ $('tfSeg').innerHTML=LTFS.map(t=>`<button data-tf="${t}">${TFS[t]}</button>`).join(''); $('tfSeg').onclick=e=>{ const b=e.target.closest('button'); if(b) setTf(b.dataset.tf); }; segUi(); cfgUi();
   const open=v=>$('scrim').classList.toggle('open',v); $('setBtn').onclick=()=>open(true); $('setDone').onclick=()=>open(false); $('scrim').onclick=e=>{ if(e.target.id==='scrim') open(false); };
   addEventListener('keydown',e=>{ if(e.key==='Escape'){ open(false); if(RP.sel) rpSelect(false); } if(!RP.on||/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||''))) return; if(e.key===' '){ e.preventDefault(); rpToggle(); } else if(e.key==='ArrowRight'){ e.preventDefault(); rpPause(); rpStep(); } });
-  rpInitUi(); $('msBtn').onclick=()=>{ CFG.ms=!CFG.ms; cfgUi(); applyCfg('ms'); }; msUi(); $('smcBtn').onclick=()=>{ CFG.smc=!CFG.smc; cfgUi(); applyCfg('smc'); }; smcUi(); $('pdhBtn').onclick=()=>{ CFG.pdh=!CFG.pdh; cfgUi(); applyCfg('pdh'); }; pdhUi(); $('fvgBtn').onclick=()=>{ CFG.fvg=!CFG.fvg; cfgUi(); applyCfg('fvg'); }; fvgUi(); $('lvBtn').onclick=()=>{ CFG.lv=!CFG.lv; cfgUi(); applyCfg('lv'); }; lvUi();
+  rpInitUi(); $('msBtn').onclick=()=>{ CFG.ms=!CFG.ms; cfgUi(); applyCfg('ms'); }; msUi(); $('smcBtn').onclick=()=>{ CFG.smc=!CFG.smc; cfgUi(); applyCfg('smc'); }; smcUi(); $('pdhBtn').onclick=()=>{ CFG.pdh=!CFG.pdh; cfgUi(); applyCfg('pdh'); }; pdhUi(); $('fvgBtn').onclick=()=>{ CFG.fvg=!CFG.fvg; cfgUi(); applyCfg('fvg'); }; fvgUi(); $('lvBtn').onclick=()=>{ CFG.lv=!CFG.lv; cfgUi(); applyCfg('lv'); }; lvUi(); $('liqBtn').onclick=()=>{ CFG.liq=!CFG.liq; cfgUi(); applyCfg('liq'); }; liqUi();
   for(const el of document.querySelectorAll('[data-k]')) el.addEventListener('change',()=>{ const k=el.dataset.k; if(el.type==='checkbox'){ CFG[k]=el.checked; applyCfg(k); } else setNum(k,el.value); });
   for(const b of document.querySelectorAll('[data-f]')) b.onclick=()=>setNum(b.dataset.f,CFG[b.dataset.f]+(+b.dataset.d));
-  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); smcUi(); pdhUi(); fvgUi(); lvUi(); maxUi(); };
+  $('reset').onclick=()=>{ const tf=CFG.tf; CFG=Object.assign({},DEF,{tf}); cfgUi(); CFGV++; PC.clear(); TC.clear(); applyCfg('maN'); applyCfg('vt'); msUi(); smcUi(); pdhUi(); fvgUi(); lvUi(); liqUi(); maxUi(); };
   maxInit();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme); }
 // 窗口放大 / 还原：CFG.max = null | 'h1' | 'ltf'；隐藏的窗口照常更新数据和提醒
@@ -1072,12 +1175,12 @@ function alInitUi(){ const sc=$('alScrim'), open=v=>{ sc.classList.toggle('open'
 function loadScript(src){ return new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
 async function boot(){
   if(!window.LightweightCharts){ try{ await loadScript('https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js'); }catch(e){ status('图表库载入失败'); return; } }
-  WH=mkWin('h',$('w1'),()=>'1H',14); WL=mkWin('l',$('w2'),()=>CFG.tf,SPACING[CFG.tf]); WS=[WH,WL]; drLoad(); for(const w of WS) drAttach(w); initUi(); drInitUi(); alInitUi(); requestAnimationFrame(loop);
+  WH=mkWin('h',$('w1'),()=>'1H',14); WL=mkWin('l',$('w2'),()=>CFG.tf,SPACING[CFG.tf]); WS=[WH,WL]; drLoad(); for(const w of WS) drAttach(w); initUi(); drInitUi(); alInitUi(); liqBoot(); requestAnimationFrame(loop);
   status('载入中…'); ticker(); setInterval(ticker,300000);
   try{ const [m]=await Promise.all([latest('1m',300),loadWin(WH),loadWin(WL)]); M1.bars=merge(m,M1.bars); M1.ver++; if(M1.bars.length) price(M1.bars[M1.bars.length-1].c); }
   catch(e){ status('载入失败：'+e.message); console.warn(e); }
   READY=true; connect(); status(''); ensure(); }
-window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,onBar,alTick,alFire,get AL(){return AL;},AS,get ALL(){return ALL;},drLevel,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},pdhGet,VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById,frvpProf,frvpRange};
+window.__vp={TC,trend,RP,get PR(){return PR;},rpStart,rpExit,rpStep,onBar,alTick,alFire,get AL(){return AL;},AS,get ALL(){return ALL;},drLevel,get WH(){return WH;},get WL(){return WL;},M1,PC,prof,get CFG(){return CFG;},pdhGet,VPC,setTf,get READY(){return READY;},get ws(){return ws;},smcGet,DR,tToX,xToT,drDel,setTool,drUndo,drRedo,hs,evPt,drById,frvpProf,frvpRange,LIQ:LIQAPI,get LQ(){return LQ;},liqIngest,liqSave:liqSaveNow,get liqSock(){return liqSock;},get liqReady(){return liqReady;},liqPhrase,liqAt};
 boot();
 
 </script>
