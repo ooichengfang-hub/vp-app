@@ -1,0 +1,11 @@
+{
+  "name": "vp-app",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/liq.test.js",
+    "test:ui": "node test/browser.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.15.0"
+  }
+}
