@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0d12">
+<meta name="description" content="阿图行情：Binance USD-M 公开 K 线、成交额均线、主动买卖差和本页观察到的强平。只读，不能下单。">
+<link rel="icon" href="data:,">
+<title>阿图行情</title>
+<link rel="stylesheet" href="./css/terminal.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <b>阿图行情</b>
+      <span>Binance USD-M 公开数据</span>
+    </div>
+    <div class="px">
+      <span id="symbol-name" class="chg">BTCUSDT</span>
+      <span id="last" class="last">—</span>
+      <span id="chg" class="chg">24h 不可用</span>
+    </div>
+    <div class="tfs" role="group" aria-label="周期">
+      <button type="button" class="tf" data-tf="1m">1m</button>
+      <button type="button" class="tf" data-tf="5m">5m</button>
+      <button type="button" class="tf" data-tf="15m">15m</button>
+      <button type="button" class="tf" data-tf="30m">30m</button>
+      <button type="button" class="tf" data-tf="1h" aria-pressed="true">1H</button>
+      <button type="button" class="tf" data-tf="4h">4H</button>
+      <button type="button" class="tf" data-tf="1d">1D</button>
+    </div>
+    <label class="sma">SMA
+      <span class="step">
+        <button type="button" id="sma-dec" aria-label="减小均线周期">−</button>
+        <input id="sma" type="number" min="2" max="200" step="1" value="20" aria-label="成交额 SMA 周期">
+        <button type="button" id="sma-inc" aria-label="增大均线周期">+</button>
+      </span>
+    </label>
+    <div class="toggles" role="group" aria-label="副图">
+      <button type="button" id="tg-volume" aria-pressed="true">成交额</button>
+      <button type="button" id="tg-delta" aria-pressed="true">买卖差</button>
+      <button type="button" id="tg-liq" aria-pressed="true">强平</button>
+    </div>
+    <div class="pills">
+      <span id="st-hist" class="pill" data-mode="wait">历史未请求</span>
+      <span id="st-kline" class="pill" data-mode="wait">实时K线未连接</span>
+      <span id="st-liq" class="pill" data-mode="wait">强平未连接</span>
+    </div>
+    <button type="button" id="reload">重试</button>
+    <button type="button" id="help-btn">数据说明</button>
+  </header>
+  <nav class="tools" aria-label="画线">
+    <button type="button" id="tool-cross" aria-pressed="true" aria-label="十字线">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+    <button type="button" id="tool-h" aria-pressed="false" aria-label="水平线">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12h16"/><path d="M8 8v8M16 8v8" stroke-width="1.2"/></svg>
+    </button>
+    <button type="button" id="tool-t" aria-pressed="false" aria-label="趋势线">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 18 L19 6"/><circle cx="5" cy="18" r="1.4" fill="currentColor"/><circle cx="19" cy="6" r="1.4" fill="currentColor"/></svg>
+    </button>
+    <hr>
+    <button type="button" id="tool-del" aria-label="删除选中画线">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 7h12M9 7V5h6v2M8 7l1 13h6l1-13"/></svg>
+    </button>
+  </nav>
+  <main class="main">
+    <div id="banner" class="banner" hidden></div>
+    <div class="panes">
+      <section class="pane price" id="pane-price">
+        <div class="ph">
+          <b id="price-title">BTCUSDT</b>
+          <span id="src-price" class="sub"></span>
+          <span id="leg-price" class="leg"></span>
+        </div>
+        <div class="cvwrap">
+          <div id="cv-price" class="cv"></div>
+          <canvas id="draw"></canvas>
+        </div>
+      </section>
+      <section class="pane sub" id="pane-volume">
+        <div class="ph">
+          <b id="volume-title">成交额</b>
+          <span id="src-volume" class="sub"></span>
+          <span id="leg-volume" class="leg"></span>
+        </div>
+        <div class="cvwrap"><div id="cv-volume" class="cv"></div></div>
+      </section>
+      <section class="pane sub" id="pane-delta">
+        <div class="ph">
+          <b id="delta-title">主动买卖成交额差（替代指标）</b>
+          <span id="src-delta" class="sub warn"></span>
+          <span id="leg-delta" class="leg"></span>
+        </div>
+        <div class="cvwrap"><div id="cv-delta" class="cv"></div></div>
+      </section>
+      <section class="pane sub" id="pane-liq">
+        <div class="ph">
+          <b id="liq-title">强平观察（仅本页）</b>
+          <span id="src-liq" class="sub warn"></span>
+          <span id="leg-liq" class="leg"></span>
+        </div>
+        <div class="cvwrap">
+          <div id="cv-liq" class="cv"></div>
+          <canvas id="hatch"></canvas>
+        </div>
+      </section>
+    </div>
+  </main>
+  <aside class="side">
+    <h2>合约概览</h2>
+    <div id="ov" class="ov"></div>
+    <h2>自选报价</h2>
+    <div class="whead"><span>合约</span><span>最新</span><span>24h</span><span>成交额</span></div>
+    <div id="watch"></div>
+    <p id="watch-src" class="foot"></p>
+    <p class="foot">本站只读。没有下单、登录或付费。关页后强平观察停止，这段时间留空，不会补 0。</p>
+    <p class="foot">图表组件：TradingView Lightweight Charts 4.2.3（Apache-2.0）。本站与 TradingView、Binance、CoinGlass 没有隶属关系。Binance 只是行情来源。</p>
+  </aside>
+</div>
+<div id="help" class="scrim" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="help-title">
+    <button type="button" class="close" id="help-close">关闭</button>
+    <h3 id="help-title">这些数字从哪来，和聚合行情图有什么不同</h3>
+    <p>阿图行情只读 Binance USD-M 的公开接口，不需要密钥，也不能下单。接口失败时图是空的，页面不会塞入示例价格。</p>
+    <h4>价格和成交额</h4>
+    <ul>
+      <li>历史 K 线：<code>GET https://fapi.binance.com/fapi/v1/klines</code>，最多 500 根。</li>
+      <li>实时 K 线：<code>wss://fstream.binance.com/market/ws/&lt;symbol&gt;@kline_&lt;interval&gt;</code>。2026-04-23 起这条流在 <code>/market</code>，不在旧的 <code>/ws</code>。</li>
+      <li>成交额是 K 线的 quote asset volume，单位 USDT。黄色线是它的简单移动平均，默认 20 根，包含当根。</li>
+      <li>这是 Binance 这一家的永续合约，不是多交易所合成价。</li>
+    </ul>
+    <h4>主动买卖差不是订单簿 Bid/Ask Delta</h4>
+    <p>常见聚合行情网站上的 Aggregated Futures Bid &amp; Ask Delta，是多家交易所订单簿的买卖盘差额。本栏不是订单簿 Bid/Ask Delta，也不是全交易所汇总。Binance 公开接口没有那份历史。这里用的是同一根官方 K 线里的主动成交：主动卖出额 = 总成交额 − 主动买入额，差值 = 2×主动买入成交额 − 总成交额。正数表示主动买成交额更大。</p>
+    <h4>强平柱只包括这只浏览器实际看到的快照</h4>
+    <ul>
+      <li>地址：<code>wss://fstream.binance.com/market/ws/&lt;symbol&gt;@forceOrder</code>。文档写明 2026-04-14 起每个品种大约每 1000 毫秒只推送最大的一笔，不是逐笔清单。</li>
+      <li>快照没有订单号。SELL 记成多头被强平（红、向下），BUY 记成空头被强平（绿、向上）。金额 = 已成交数量 z×ap，不用委托量 q×p。</li>
+      <li>5 秒内、委托价和委托量都没变、z 没有变小，才当成同一笔的后续，只加金额增量。完全相同的快照不加。超过 5 秒就按新快照整段计入，因此可能把同一笔再加一次，也可能把碰巧同价同量的新单并掉。两种偏差都写在图上，不假装有订单号。</li>
+      <li>连接之前、断线、页面隐藏超过 15 秒、以及关掉页面的时间都留空，不画成 0。斜线是中断。柱顶黄线表示这根还没走完，或只覆盖了一部分。没有预存的历史强平。</li>
+      <li>这里只有 Binance USD-M 这一路公开快照，不是全网清算总量。</li>
+    </ul>
+    <h4>报价</h4>
+    <p>右侧价格来自 <code>GET /fapi/v1/ticker/24hr</code>。标记价和资金费率来自 <code>/fapi/v1/premiumIndex</code>，未平仓来自 <code>/fapi/v1/openInterest</code>（交易所返回的数量，没有换算成名义金额）。哪一路失败，那一路就写失败原因。</p>
+    <p>画线、周期、均线周期和副图开关记在这只浏览器的 localStorage。观察记录最多留 7 天、2 万条。时间轴用本机时区，K 线按序号等距排列。</p>
+    <p>本站与 TradingView、Binance、CoinGlass 没有隶属关系。Binance 只是公开行情来源。</p>
+  </div>
+</div>
+<script src="./js/vendor/lightweight-charts.standalone.production.js"></script>
+<script src="./js/liq.js"></script>
+<script src="./js/market.js"></script>
+<script src="./js/charts.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
