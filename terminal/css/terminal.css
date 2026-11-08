@@ -126,6 +126,9 @@ button:disabled { cursor: default; opacity: 0.4; }
   flex-direction: column;
 }
 .banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
   margin: 8px 10px 0;
   padding: 8px 10px;
   border-radius: 8px;
@@ -133,6 +136,16 @@ button:disabled { cursor: default; opacity: 0.4; }
   color: #ffd0d6;
   font-size: 12px;
   line-height: 1.45;
+}
+.banner[hidden] { display: none !important; }
+.banner p { margin: 0; flex: 1; }
+#banner-retry {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 93, 115, 0.45);
+  border-radius: 8px;
+  background: #2a151c;
+  color: var(--text);
 }
 .panes { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .pane { min-height: 0; display: flex; flex-direction: column; border-bottom: 1px solid var(--line); }
@@ -186,9 +199,9 @@ button:disabled { cursor: default; opacity: 0.4; }
 .side h2 { margin: 12px 0 6px; font-size: 12px; font-weight: 650; color: var(--muted); }
 .side h2:first-child { margin-top: 0; }
 .ov { display: grid; gap: 4px; font-variant-numeric: tabular-nums; font-size: 12px; }
-.ov div { display: flex; justify-content: space-between; gap: 8px; }
-.ov dt { color: var(--faint); }
-.ov dd { margin: 0; text-align: right; }
+.ov div { display: flex; justify-content: space-between; gap: 8px; min-width: 0; }
+.ov dt { color: var(--faint); flex: none; }
+.ov dd { margin: 0; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 .side-err, .foot {
   color: var(--warn);
   font-size: 11px;

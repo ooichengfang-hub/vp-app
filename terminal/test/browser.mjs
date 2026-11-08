@@ -90,6 +90,7 @@ function installFixture() {
     const failHist = location.search.includes('history=fail');
     const failTick = location.search.includes('ticker=fail');
     if (u.pathname.endsWith('/fapi/v1/klines')) {
+      if (location.search.includes('history=throw')) throw new TypeError('Failed to fetch');
       if (failHist) {
         return json({ code: 0, msg: "Service unavailable from a restricted location according to 'b. Eligibility'" }, 451);
       }
@@ -460,6 +461,32 @@ async function main() {
     check(!/75860\.8/.test(empty.watch), 'failed ticker must not show fixture prices');
     check(scriptErrors(badBag).length === 0, 'error-state console ' + scriptErrors(badBag).join(' | '));
     await shot(bad, 'terminal-history-error');
+    await bad.goto(`http://127.0.0.1:${PORT}/?history=throw&ticker=fail`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await bad.waitForFunction(() => {
+      const t = document.getElementById('banner-text').textContent || '';
+      return t.includes('没有读到 HTTP 状态') && t.includes('未填入任何替代数据') && !t.includes('HTTP 451');
+    }, { timeout: 15000 });
+    const beforeKlines = await bad.evaluate(() => window.__urls.filter(u => u.includes('/fapi/v1/klines')).length);
+    await bad.click('#banner-retry');
+    await bad.waitForFunction(n => window.__urls.filter(u => u.includes('/fapi/v1/klines')).length > n, { timeout: 10000 }, beforeKlines);
+    const opaque = await bad.evaluate(() => {
+      const urls = window.__urls.filter(u => u.includes('/fapi/v1/klines'));
+      return {
+        bars: window.__atu.getBars().length,
+        last: document.getElementById('last').textContent,
+        banner: document.getElementById('banner-text').textContent,
+        urls: urls,
+        liq: document.getElementById('pane-liq').hidden
+      };
+    });
+    check(opaque.bars === 0, 'unreadable history leaves no candles, got ' + opaque.bars);
+    check(opaque.last === '—', 'unreadable history invents a last price: ' + opaque.last);
+    check(!/HTTP 451/.test(opaque.banner), 'unreadable failure must not invent status 451');
+    check(opaque.urls.length >= 2, 'retry did not request klines again');
+    check(opaque.urls.every(u => u.startsWith('https://fapi.binance.com/fapi/v1/klines')), 'retry left the documented host ' + opaque.urls.join(','));
+    check(opaque.liq === false, 'liquidation pane removed');
+    check(scriptErrors(badBag).length === 0, 'opaque-refusal console ' + scriptErrors(badBag).join(' | '));
+    await shot(bad, 'terminal-unreadable-refusal');
     await bad.close();
     await page.close();
   } finally {

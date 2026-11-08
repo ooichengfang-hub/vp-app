@@ -67,7 +67,10 @@
     </button>
   </nav>
   <main class="main">
-    <div id="banner" class="banner" hidden></div>
+    <div id="banner" class="banner" hidden>
+      <p id="banner-text"></p>
+      <button type="button" id="banner-retry">重试</button>
+    </div>
     <div class="panes">
       <section class="pane price" id="pane-price">
         <div class="ph">
@@ -127,7 +130,7 @@
     <p>阿图行情只读 Binance USD-M 的公开接口，不需要密钥，也不能下单。接口失败时图是空的，页面不会塞入示例价格。</p>
     <h4>价格和成交额</h4>
     <ul>
-      <li>历史 K 线：<code>GET https://fapi.binance.com/fapi/v1/klines</code>，最多 500 根。</li>
+      <li>历史 K 线：浏览器直接 <code>GET https://fapi.binance.com/fapi/v1/klines</code>，最多 500 根，不附加密钥，也不换域名。官方 General Info 写明基础地址是这个，并把这类行情标成无需密钥的公开接口；该页没有单独承诺 CORS。读得到状态码时，横幅显示 HTTP 状态和原文。浏览器被跨域策略挡住、连状态码都读不到时，横幅不会编造 451，只说明没读到状态。重试仍打同一个地址。</li>
       <li>实时 K 线：<code>wss://fstream.binance.com/market/ws/&lt;symbol&gt;@kline_&lt;interval&gt;</code>。2026-04-23 起这条流在 <code>/market</code>，不在旧的 <code>/ws</code>。</li>
       <li>成交额是 K 线的 quote asset volume，单位 USDT。黄色线是它的简单移动平均，默认 20 根，包含当根。</li>
       <li>这是 Binance 这一家的永续合约，不是多交易所合成价。</li>

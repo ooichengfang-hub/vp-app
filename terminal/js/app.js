@@ -84,7 +84,7 @@
     try {
       res = await fetch(url, { cache: 'no-store' });
     } catch (e) {
-      const err = new Error('没有连上接口');
+      const err = new Error('浏览器没有读到 HTTP 状态。没有连上，或服务端的拒绝响应没有浏览器可读的跨域头。这不是「没有这根 K 线」的确认');
       err.network = true;
       err.url = url;
       throw err;
@@ -107,7 +107,7 @@
     state.histText = text || '';
     state.histBad = !!text;
     node.hidden = !text;
-    node.textContent = text || '';
+    $('banner-text').textContent = text || '';
   }
   function setPill(id, mode, text) {
     const node = $(id);
@@ -193,11 +193,18 @@
     const blank = bucket.status === 'missing' || bucket.status === 'gap' || bucket.status === 'future';
     $('leg-liq').textContent = (blank ? '' : side + ' · ') + M.statusText(bucket.status);
   }
+  function brief(msg) {
+    if (!msg) return '';
+    if (msg.indexOf('没有读到 HTTP 状态') >= 0) return '没有读到状态';
+    return msg.length > 56 ? msg.slice(0, 56) + '…' : msg;
+  }
   function renderWatch() {
     const root = $('watch');
     root.textContent = '';
     if (state.tickerError) {
-      root.appendChild(el('p', 'side-err', '24h 报价失败：' + state.tickerError + '。未填入替代报价。'));
+      const note = el('p', 'side-err', '24h 报价失败：' + brief(state.tickerError) + '。未填入替代报价。');
+      note.title = state.tickerError;
+      root.appendChild(note);
     }
     M.WATCH.forEach(function (sym) {
       const btn = document.createElement('button');
@@ -240,16 +247,16 @@
     if (tick && Number.isFinite(tick.high) && Number.isFinite(tick.low)) {
       root.appendChild(row('24h 高 / 低', M.fmtPx(tick.high) + ' / ' + M.fmtPx(tick.low)));
     } else {
-      root.appendChild(row('24h 高 / 低', state.tickerError ? '不可用' : '等待报价', !!state.tickerError));
+      root.appendChild(row('24h 高 / 低', state.tickerError ? brief(state.tickerError) : '等待报价', !!state.tickerError));
     }
     if (state.premium && state.premium.mark) root.appendChild(row('标记价格', M.fmtPx(state.premium.mark)));
-    else root.appendChild(row('标记价格', state.premiumError || '等待', !!state.premiumError));
+    else root.appendChild(row('标记价格', state.premiumError ? brief(state.premiumError) : '等待', !!state.premiumError));
     if (state.premium && typeof state.premium.rate === 'number') {
       const next = state.premium.next > 0 ? ' · 下次 ' + M.fmtClock(state.premium.next) : '';
       root.appendChild(row('资金费率', (state.premium.rate * 100).toFixed(4) + '%' + next));
-    } else root.appendChild(row('资金费率', state.premiumError || '等待', !!state.premiumError));
+    } else root.appendChild(row('资金费率', state.premiumError ? brief(state.premiumError) : '等待', !!state.premiumError));
     if (state.oi && state.oi.oi != null) root.appendChild(row('未平仓', M.fmtCompact(state.oi.oi) + ' ' + M.baseAsset(state.symbol)));
-    else root.appendChild(row('未平仓', state.oiError || '等待', !!state.oiError));
+    else root.appendChild(row('未平仓', state.oiError ? brief(state.oiError) : '等待', !!state.oiError));
     root.appendChild(row('来源', 'premiumIndex · openInterest'));
   }
   function publishBars(reset) {
@@ -292,13 +299,13 @@
       if (!parsed.bars.length) {
         state.historyOk = false;
         if (!state.bars.length) charts.setMarket([], state.sma, true);
-        setBanner('历史 K 线返回空数组（GET /fapi/v1/klines）。未填入任何替代数据。');
+        setBanner('历史 K 线返回空数组（GET /fapi/v1/klines）。未填入任何替代数据。请点「重试」。重试仍请求同一个 fapi.binance.com 地址。');
         setPill('st-hist', 'bad', '历史为空');
-      renderHeader();
-      renderLegend();
-      renderWatch();
-      return;
-    }
+        renderHeader();
+        renderLegend();
+        renderWatch();
+        return;
+      }
       state.bars = parsed.bars;
       state.historyOk = true;
       const skip = parsed.skipped ? '，另有 ' + parsed.skipped + ' 根无法解析已丢弃' : '';
@@ -314,8 +321,8 @@
       state.historyOk = false;
       if (!state.bars.length) charts.setMarket([], state.sma, true);
       const status = e.status ? ('HTTP ' + e.status + '，') : '';
-      setBanner('历史 K 线失败（' + status + 'GET /fapi/v1/klines）。' + e.message + '。未填入任何替代数据。图上只会留下已经从实时 K 线流收到的柱，更早的时间留空。');
-      setPill('st-hist', 'bad', e.status ? ('历史 ' + e.status) : '历史失败');
+      setBanner('历史 K 线失败（' + status + 'GET /fapi/v1/klines）。' + e.message + '。未填入任何替代数据。图上只会留下已经从实时 K 线流收到的柱，更早的时间留空。请点「重试」。重试仍请求同一个 fapi.binance.com 地址，不换线路。');
+      setPill('st-hist', 'bad', e.status ? ('历史 ' + e.status) : '历史未读到');
       renderHeader();
       renderLegend();
       renderWatch();
@@ -524,6 +531,7 @@
     $('tool-t').addEventListener('click', function () { selectTool('t'); });
     $('tool-del').addEventListener('click', function () { charts.deleteSelected(); });
     $('reload').addEventListener('click', function () { applyMarket(state.symbol, state.interval); });
+    $('banner-retry').addEventListener('click', function () { applyMarket(state.symbol, state.interval); });
     $('help-btn').addEventListener('click', function () { $('help').hidden = false; });
     $('help-close').addEventListener('click', function () { $('help').hidden = true; });
     $('help').addEventListener('click', function (ev) { if (ev.target === $('help')) $('help').hidden = true; });
